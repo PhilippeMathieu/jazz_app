@@ -37,4 +37,38 @@ Stack : TypeScript, Vite, Tone.js (piano échantillonné), service worker pour l
 
 ## Installer sur iPhone
 
-Ouvrir l'URL GitHub Pages dans Safari → Partager → « Sur l'écran d'accueil ».
+1. Ouvrir https://philippemathieu.github.io/jazz_app/ dans Safari.
+2. Partager → « Sur l'écran d'accueil ».
+
+L'appli fonctionne ensuite hors ligne.
+
+## Développement
+
+```bash
+npm install
+npm run dev      # serveur local
+npm test         # tests de la théorie et du moteur d'analyse
+npm run build    # build de production (dist/)
+```
+
+Chaque push sur `main` lance les tests, le build et le déploiement GitHub Pages.
+
+## Format des grilles
+
+```
+title: Autumn Leaves
+key: Gm
+tempo: 132
+style: swing        # swing | bossa | blues
+level: 1
+[A]
+| Cm7 | F7 | B♭maj7 | E♭maj7 |
+| Aø7 | D7♭9 | Gm6 | Gm6 |
+```
+
+Une mesure par cellule ; deux accords dans une cellule se partagent la mesure ; `%` répète la mesure précédente.
+
+## Crédits
+
+- Piano : Salamander Grand Piano V3 par Alexander Holm, licence CC BY 3.0.
+- Polices : Big Shoulders Display, IBM Plex Sans et IBM Plex Mono (SIL Open Font License).
