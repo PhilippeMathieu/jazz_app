@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import { isBlackKey } from '../core/theory/notes';
 
-export type Mark = 'hit' | 'sel' | 'ok' | 'bad' | 'miss';
+export type Mark = 'hit' | 'sel' | 'ok' | 'bad' | 'miss' | 'soft';
 interface Props {
   lo: number;
   hi: number;
@@ -11,6 +11,8 @@ interface Props {
   onKey?: (midi: number) => void;
   /** Centre le défilement sur ces notes (clavier large). */
   center?: number[];
+  /** Occupe toute la largeur disponible. */
+  fit?: boolean;
 }
 
 const W = 22;
@@ -18,7 +20,7 @@ const H = 100;
 const BW = 14;
 const BH = 62;
 
-export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center }: Props) {
+export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const whites: number[] = [];
   for (let m = lo; m <= hi; m++) if (!isBlackKey(m)) whites.push(m);
@@ -46,9 +48,9 @@ export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center }: Pro
   return (
     <div class="kbwrap" ref={wrap}>
       <svg
-        class={'kbsvg' + (onKey ? ' fit inter' : '')}
+        class={'kbsvg' + (onKey || fit ? ' fit' : '') + (onKey ? ' inter' : '')}
         viewBox={`0 0 ${width} ${H + 1}`}
-        width={onKey ? undefined : width}
+        width={onKey || fit ? undefined : width}
         role="img"
         aria-label="Clavier de piano"
         onPointerDown={down}
@@ -60,7 +62,7 @@ export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center }: Pro
             <g key={m}>
               <rect class={`kw ${c}`} data-m={m} x={x + 0.5} y={0.5} width={W - 1} height={H} rx={3} />
               {labels[m] ? (
-                <text class={'kl' + (c && c !== 'miss' ? ' on' : '')} x={x + W / 2} y={H - 8}>{labels[m]}</text>
+                <text class={'kl' + (c && c !== 'miss' && c !== 'soft' ? ' on' : '')} x={x + W / 2} y={H - 8}>{labels[m]}</text>
               ) : m % 12 === 0 ? (
                 <text class="kl oct" x={x + W / 2} y={H - 8}>{`C${m / 12 - 1}`}</text>
               ) : null}
@@ -73,7 +75,7 @@ export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center }: Pro
           return (
             <g key={m}>
               <rect class={`kb ${c}`} data-m={m} x={x} y={0.5} width={BW} height={BH} rx={2} />
-              {labels[m] ? <text class={'kl dk' + (c && c !== 'miss' ? ' on' : '')} x={x + BW / 2} y={BH - 7}>{labels[m]}</text> : null}
+              {labels[m] ? <text class={'kl dk' + (c && c !== 'miss' && c !== 'soft' ? ' on' : '')} x={x + BW / 2} y={BH - 7}>{labels[m]}</text> : null}
             </g>
           );
         })}

@@ -289,3 +289,89 @@ input[type='range'] { width: 100%; accent-color: var(--accent); }
 .ch .bk { display: block; width: 100%; }
 .sym, .rn { display: block; }
 .statbar { grid-template-columns: minmax(0, 1.3fr) 1fr 6.6em; }
+
+/* Analyse express */
+.levels.three { grid-template-columns: repeat(3, 1fr); }
+.seg.wide { display: flex; }
+.seg.wide button { flex: 1; padding: 10px; font-size: 14px; }
+.record { display: flex; flex-direction: column; gap: 2px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.record b { font-family: var(--mono); font-size: 15px; font-weight: 600; }
+.timebar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.timebar span { display: block; height: 100%; background: var(--accent); transition: width 100ms linear; }
+.seqcard { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.seqhead { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.seqchords { display: flex; flex-wrap: wrap; gap: 6px; }
+.seqchord {
+  flex: 1 1 0; min-width: 4.4em; border: 1px solid var(--line); border-radius: 10px; padding: 8px 8px 6px; background: var(--bg);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.seqchord .sym { font-size: 26px; }
+.seqchord .rn { font-size: 12px; min-height: 1.2em; }
+.seqchord.focus { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.prompt { margin: 2px 0 0; font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1.05; text-transform: none; letter-spacing: 0.01em; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.choices.long { grid-template-columns: 1fr; }
+.choice {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 12px; min-height: 58px; padding: 10px 12px;
+  font-family: var(--mono); font-size: 18px; font-weight: 600; text-align: center;
+}
+.choices.long .choice { font-family: var(--body); font-size: 16px; text-align: left; min-height: 50px; }
+.choices.two .choice { min-height: 76px; font-size: 26px; }
+.choice:active:not(:disabled) { background: var(--surface-2); }
+.choice:disabled { opacity: 0.5; }
+.choice.is-ok { opacity: 1; border-color: var(--ok); background: var(--ok-soft); color: var(--ok); }
+.choice.is-bad { opacity: 1; border-color: var(--bad); background: var(--bad-soft); color: var(--bad); }
+.result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.result > div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.result b { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; }
+.result b small { font-size: 18px; color: var(--muted); }
+.result span { font-size: 12px; color: var(--muted); }
+.mistakes { display: flex; flex-direction: column; gap: 8px; }
+.mistake { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+.mistake .verdict { font-size: 14px; }
+.kw.soft { fill: #f2dfb4; stroke: var(--key-line); }
+.kb.soft { fill: #6b5216; stroke: #6b5216; }
+.kl.dk.soft-l { fill: #fff; }
+
+/* Improviser */
+.live {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px; box-shadow: 0 8px 18px -12px #000;
+}
+.live-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.live .big-sym { font-family: var(--display); font-weight: 800; font-size: 40px; line-height: 0.95; }
+.live .rn-big { font-family: var(--mono); font-size: 15px; color: var(--accent); }
+.scale-name b { font-size: 16px; }
+.scale-notes { display: flex; flex-wrap: wrap; gap: 4px 10px; font-family: var(--mono); font-size: 16px; color: var(--muted); }
+.scale-notes .ct { color: var(--accent); font-weight: 600; }
+.why { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.guide-pair { display: flex; flex-direction: column; gap: 2px; font-size: 15px; }
+.guide-pair b { font-family: var(--mono); font-size: 17px; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.dot.a { background: var(--accent); }
+.dot.b { background: var(--ok); }
+.next-line { font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 6px; }
+.bar.compact { min-height: 52px; padding-top: 14px; }
+.tips { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.tips h2, .list-title { margin: 6px 0 0; font-family: var(--display); font-weight: 700; font-size: 20px; text-transform: uppercase; letter-spacing: 0.02em; }
+.tips ol { margin: 8px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+@media (max-height: 700px) { .live .why { display: none; } }
+
+/* Formulaires */
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.field label { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.field input, .field textarea, .field select {
+  font: inherit; font-size: 16px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+.field textarea { font-family: var(--mono); font-size: 15px; line-height: 1.5; resize: vertical; }
+.field input:focus, .field textarea:focus, .field select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.field-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.field-row .field { flex: 1 1 30%; }
+.next:disabled { opacity: 0.4; }
+.row-wrap { display: flex; flex-direction: column; gap: 4px; }
+.row-wrap .linkbtn { align-self: flex-end; margin-right: 4px; }
+.topbar .btn.primary { padding: 7px 12px; }
+.chart-head .btn { padding: 6px 12px; font-size: 13px; }
+.field-row .field.k { flex: 2 1 45%; }
+.field-row .field.t { flex: 1 1 18%; }

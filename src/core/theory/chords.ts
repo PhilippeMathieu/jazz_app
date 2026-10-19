@@ -95,9 +95,31 @@ export interface Chord {
   bass?: Note;
 }
 
-export function parseChord(input: string): Chord | null {
+// Notations rencontrées dans les applis de grilles (françaises, brésiliennes, guitare) : C7M, G7(9), A7(b9)…
+const LENIENT: Record<string, string> = {
+  '7M': 'maj7', '7M9': 'maj9', maj79: 'maj9', M79: 'maj9', '7M#11': 'maj7#11', '7+': '7#5', 'm7M': 'mM7', 'm7M9': 'mM7',
+  m79: 'm9', m711: 'm11', m7911: 'm11', '79': '9', '713': '13', '7913': '13', '7b913': '7b9', '74': '7sus4', '7sus49': '9sus4',
+  '4': 'sus4', '2': 'maj', sus2: 'maj', add9: 'maj', madd9: 'min', '5': 'maj', '6add9': '69', m6add9: 'm6', m69: 'm6', '7/9': '9',
+  '7/13': '13', '7/b9': '7b9', '7/#9': '7#9', '7/#11': '7#11', '7/b13': '7b13', 'm7/9': 'm9', 'm7/11': 'm11', '7M/9': 'maj9'
+};
+const EXTENSION_TAIL = /^[0-9b#,/+addsusMmajo°ø()\-]*$/;
+
+function lenientQuality(key: string): string | null {
+  if (LENIENT[key]) return LENIENT[key];
+  let best = '';
+  for (const k of Object.keys(ALIASES)) if (k && key.startsWith(k) && k.length > best.length) best = k;
+  if (best && EXTENSION_TAIL.test(key.slice(best.length))) return ALIASES[best];
+  return null;
+}
+
+/**
+ * Lit un symbole d'accord. En mode tolérant (import de grilles), accepte aussi C7M, G7(9),
+ * A7(b9), Bm7(b5) et ignore les extensions inconnues plutôt que de rejeter l'accord.
+ */
+export function parseChord(input: string, lenient = false): Chord | null {
   const r = parseNote(input.trim());
   if (!r) return null;
+  if (lenient && /^[a-z]/.test(r.rest) && !/^(m|maj|min|mi|sus|add|dim|aug|alt|o7)/.test(r.rest)) return null;
   let rest = r.rest;
   let bass: Note | undefined;
   const slash = rest.lastIndexOf('/');
@@ -109,7 +131,7 @@ export function parseChord(input: string): Chord | null {
     }
   }
   const key = normalizeSuffix(rest);
-  const id = ALIASES[key] ?? ALIASES[rest] ?? null;
+  const id = ALIASES[key] ?? ALIASES[rest] ?? (lenient ? lenientQuality(normalizeSuffix(rest.replace(/[(),]/g, ''))) : null);
   if (!id) return null;
   return { root: r.note, quality: id, bass };
 }

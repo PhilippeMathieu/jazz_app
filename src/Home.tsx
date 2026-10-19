@@ -17,7 +17,15 @@ export function Home() {
           <span class="glyph">ii–V</span>
           <div>
             <h2>Lire et analyser</h2>
-            <p>5 grilles analysées, play-along, transposition dans les 12 tonalités.</p>
+            <p>Grilles analysées, play-along, transposition, import de tes grilles.</p>
+          </div>
+          <span class="go"><ChevronIcon /></span>
+        </a>
+        <a class="pillar" href="#/express">
+          <span class="glyph">60s</span>
+          <div>
+            <h2>Analyse express</h2>
+            <p>Degrés, schémas, 9 ou ♭9, guide tones : le plus vite possible.</p>
           </div>
           <span class="go"><ChevronIcon /></span>
         </a>
@@ -29,13 +37,13 @@ export function Home() {
           </div>
           <span class="go"><ChevronIcon /></span>
         </a>
-        <a class="pillar soon" href="#/impro">
+        <a class="pillar" href="#/impro">
           <span class="glyph">↝</span>
           <div>
             <h2>Improviser</h2>
-            <p>Gammes, guide tones, notes cibles.</p>
+            <p>La gamme de chaque accord et les guide tones, en direct sur le play-along.</p>
           </div>
-          <span class="tag">Lot 3</span>
+          <span class="go"><ChevronIcon /></span>
         </a>
       </nav>
       <p class="credits">

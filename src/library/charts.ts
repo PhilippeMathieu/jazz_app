@@ -1,4 +1,6 @@
 import { Chart, parseChart } from '../core/chart/model';
+import { EXERCISES } from './exercises';
+import { userCharts } from './userCharts';
 
 // Grilles d'accords uniquement (pas de mélodies). Format : voir parseChart.
 const SOURCES: Record<string, string> = {
@@ -95,4 +97,7 @@ notes: Le standard des modulations : A♭, C, E♭, G, E, retour en A♭. Suis l
 };
 
 export const LIBRARY: Chart[] = Object.entries(SOURCES).map(([id, src]) => parseChart(src, id));
-export const chartById = (id: string) => LIBRARY.find((c) => c.id === id);
+
+/** Cherche dans les standards, les exercices et les grilles importées. */
+export const chartById = (id: string): Chart | undefined =>
+  LIBRARY.find((c) => c.id === id) ?? EXERCISES.find((c) => c.id === id) ?? userCharts().find((c) => c.id === id);

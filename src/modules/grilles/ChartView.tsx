@@ -1,65 +1,28 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { Chart, flatten, keyName, keyLabel, transposeChart } from '../../core/chart/model';
 import { analyze } from '../../core/analysis/analyze';
 import { chordNotes, chordSymbol, spellInChord } from '../../core/theory/chords';
 import { noteName, signedPc } from '../../core/theory/notes';
-import { ChartPlayer, Position } from '../../core/player/player';
-import { audio, chord as playChord, now, onLoadState, LoadState } from '../../core/audio/engine';
+import { audio, chord as playChord, now } from '../../core/audio/engine';
 import { displayVoicing } from '../../core/audio/voicing';
 import { Keyboard, Mark } from '../../ui/Keyboard';
-import { BackIcon, PlayIcon, StopIcon } from '../../ui/icons';
+import { BackIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 import { load, save } from '../../core/storage';
-
-interface Prefs {
-  tempo: Record<string, number>;
-  bass: boolean;
-  comp: boolean;
-  drums: boolean;
-  countIn: boolean;
-  analysis: boolean;
-}
-const DEFAULT_PREFS: Prefs = { tempo: {}, bass: true, comp: true, drums: true, countIn: true, analysis: true };
+import { PlayerBar, usePlayer } from '../../ui/PlayerBar';
 
 export function ChartView({ chart: original }: { chart: Chart }) {
-  const [prefs, setPrefs] = useState<Prefs>(() => load('grille-prefs', DEFAULT_PREFS));
+  const [view, setView] = useState(() => load('grille-view', { analysis: true }));
   const [shift, setShift] = useState(0);
-  const [pos, setPos] = useState<Position | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
-  const [loadState, setLoadState] = useState<LoadState>('idle');
-  const player = useRef<ChartPlayer | null>(null);
-  const tempo = prefs.tempo[original.id] ?? original.tempo;
-
-  useEffect(() => onLoadState(setLoadState), []);
-  useEffect(() => save('grille-prefs', prefs), [prefs]);
+  useEffect(() => save('grille-view', view), [view]);
 
   const chart = useMemo(() => transposeChart(original, shift), [original, shift]);
   const flat = useMemo(() => flatten(chart), [chart]);
   const an = useMemo(() => analyze(chart), [chart]);
-
-  // Le lecteur est recréé quand la grille ou l'instrumentation change.
-  useEffect(() => {
-    const wasPlaying = player.current?.playing;
-    player.current?.stop();
-    player.current = new ChartPlayer(
-      chart,
-      { tempo, bass: prefs.bass, comp: prefs.comp, drums: prefs.drums, countIn: prefs.countIn },
-      setPos
-    );
-    if (wasPlaying) player.current.start(pos?.bar ?? 0);
-    return () => player.current?.stop();
-  }, [chart, prefs.bass, prefs.comp, prefs.drums, prefs.countIn]);
-
-  const toggle = () => {
-    const p = player.current!;
-    if (p.playing) p.stop();
-    else p.start(selected !== null ? flat[selected].bar : 0);
-  };
-  const setTempo = (bpm: number) => {
-    player.current?.setTempo(bpm);
-    setPrefs((p) => ({ ...p, tempo: { ...p.tempo, [original.id]: bpm } }));
-  };
-  const flip = (k: keyof Omit<Prefs, 'tempo'>) => setPrefs((p) => ({ ...p, [k]: !p[k] }));
+  const player = usePlayer(chart, original.id, original.tempo);
+  const pos = player.pos;
+  const flip = () => setView((v) => ({ analysis: !v.analysis }));
 
   // Lignes de 4 mesures, avec retour à la ligne à chaque section.
   const rows = useMemo(() => {
@@ -93,7 +56,7 @@ export function ChartView({ chart: original }: { chart: Chart }) {
     return `bk${i === b.from ? ' l' : ''}${i === b.to ? ' r' : ''}${b.kind === 'iiSubV' ? ' sub' : ''}`;
   };
 
-  const show = prefs.analysis;
+  const show = view.analysis;
   const sel = selected !== null ? flat[selected] : null;
   const selAn = selected !== null ? an.chords[selected] : null;
 
@@ -114,6 +77,7 @@ export function ChartView({ chart: original }: { chart: Chart }) {
         <div class="topbar">
           <button class="back" aria-label="Retour" onClick={() => go('/grilles')}><BackIcon /></button>
           <h1>{chart.title}</h1>
+          <a class="btn primary" href={`#/impro/gammes/${original.id}`}>Improviser</a>
         </div>
 
         <div class="chart-head">
@@ -126,8 +90,8 @@ export function ChartView({ chart: original }: { chart: Chart }) {
             <button aria-label="Transposer un demi-ton plus haut" onClick={() => setShift((s) => s + 1)}>+</button>
           </div>
           <div class="seg" role="group" aria-label="Affichage de l'analyse">
-            <button aria-pressed={show} onClick={() => !show && flip('analysis')}>Analyse</button>
-            <button aria-pressed={!show} onClick={() => show && flip('analysis')}>Masquée</button>
+            <button aria-pressed={show} onClick={() => !show && flip()}>Analyse</button>
+            <button aria-pressed={!show} onClick={() => show && flip()}>Masquée</button>
           </div>
         </div>
         {chart.notes ? <p class="chart-notes">{chart.notes}</p> : null}
@@ -203,7 +167,7 @@ export function ChartView({ chart: original }: { chart: Chart }) {
             <div class="actions">
               <button class="btn" onClick={() => { audio(); playChord(voicing, now() + 0.02, 1.6, 0.55); }}>Écouter</button>
               <button class="btn" onClick={() => { audio(); voicing.forEach((m, i) => playChord([m], now() + 0.02 + i * 0.18, 1.2, 0.55)); }}>Arpège</button>
-              <button class="btn" onClick={() => player.current?.start(sel.bar)}>Jouer depuis la mesure {sel.bar + 1}</button>
+              <button class="btn" onClick={() => player.start(sel.bar)}>Jouer depuis la mesure {sel.bar + 1}</button>
               <button class="btn quiet" onClick={() => setSelected(null)}>Fermer</button>
             </div>
           </div>
@@ -212,30 +176,7 @@ export function ChartView({ chart: original }: { chart: Chart }) {
         )}
       </div>
 
-      <div class="player">
-        <div class="player-inner">
-          <div class="player-main">
-            <button class="play" aria-label={player.current?.playing ? 'Arrêter' : 'Lire la grille'} onClick={toggle}>
-              {pos || player.current?.playing ? <StopIcon /> : <PlayIcon />}
-            </button>
-            <div class="tempo">
-              <label for="tempo">
-                <span>Tempo</span>
-                <b>{tempo} BPM</b>
-              </label>
-              <input id="tempo" type="range" min={40} max={280} step={2} value={tempo} onInput={(e) => setTempo(Number((e.target as HTMLInputElement).value))} />
-            </div>
-          </div>
-          <div class="toggles">
-            <button class="chip" aria-pressed={prefs.bass} onClick={() => flip('bass')}>Basse</button>
-            <button class="chip" aria-pressed={prefs.comp} onClick={() => flip('comp')}>Piano</button>
-            <button class="chip" aria-pressed={prefs.drums} onClick={() => flip('drums')}>Batterie</button>
-            <button class="chip" aria-pressed={prefs.countIn} onClick={() => flip('countIn')}>Décompte</button>
-            {loadState === 'loading' ? <span class="loading">Chargement du piano…</span> : null}
-            {loadState === 'error' ? <span class="loading">Piano de secours (échantillons indisponibles)</span> : null}
-          </div>
-        </div>
-      </div>
+      <PlayerBar p={player} fromBar={selected !== null ? flat[selected].bar : 0} />
     </>
   );
 }

@@ -2,11 +2,12 @@
 
 Appli web installable (PWA) pour progresser en harmonie jazz au piano, pensée pour l'iPhone.
 
-## Piliers
+## Modules
 
-1. **Lire et analyser** : grilles d'accords, chiffrage en degrés, ii–V–I, centres tonaux, substitutions.
-2. **Improviser** : gamme par accord, guide tones, notes cibles, play-along.
-3. **Entendre** : reconnaissance d'accords et de progressions à l'oreille.
+1. **Lire et analyser** : grilles d'accords analysées (degrés, ii–V, centres tonaux, substitutions), play-along, transposition, import de grilles par copier-coller.
+2. **Analyse express** : questions chronométrées sur des suites d'accords (degré, schéma, tonalité, 9 ou ♭9, 3ce/7e, gamme), sprint 60 s ou série de 20, records.
+3. **Entendre** : reconnaissance d'accords et de progressions à l'oreille, construction au clavier.
+4. **Improviser** : gamme de chaque accord déduite de l'analyse, lignes de guide tones, clavier qui suit le play-along, ii–V–I dans les 12 tonalités.
 
 Plus tard : rythme (comping, swing, rythme harmonique).
 
@@ -30,10 +31,10 @@ Stack : TypeScript, Vite, Tone.js (piano échantillonné), service worker pour l
 
 ## Lots
 
-1. Socle : PWA, son piano, modèle de grille, moteur d'analyse, lecteur, oreille v1.
-2. Analyse : bibliothèque de grilles, exercices de chiffrage.
-3. Impro : play-along, guide tones, exercices guidés.
-4. Oreille : enrichissement.
+1. ✅ Socle : PWA, son piano, modèle de grille, moteur d'analyse, lecteur, oreille.
+2. ✅ Analyse express, import de grilles.
+3. ✅ Improviser : gammes, guide tones, 12 tonalités.
+4. À venir : écoute du jeu au micro, rythme, enrichissement de l'oreille.
 
 ## Installer sur iPhone
 
@@ -67,6 +68,8 @@ level: 1
 ```
 
 Une mesure par cellule ; deux accords dans une cellule se partagent la mesure ; `%` répète la mesure précédente.
+
+L'écran « Importer » accepte aussi du texte libre copié d'une autre appli : lignes d'accords au-dessus des paroles, sections `[Refrain]`, notations `C7M`, `G7(b9)`, `Bm7(b5)`. Sans barres de mesure, chaque accord occupe une mesure.
 
 ## Crédits
 

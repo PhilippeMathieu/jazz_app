@@ -348,3 +348,29 @@ export function analyze(chart: Chart): Analysis {
 
   return { chords: out, brackets, regions };
 }
+
+/** Devine la tonalité principale d'une suite d'accords (import de grilles). */
+export function guessKey(chords: Chord[]): Key {
+  if (!chords.length) return keyOnPc(0, 'major');
+  const first = chords[0];
+  const last = chords[chords.length - 1];
+  const isTonicOf = (c: Chord, pc: number, mode: Mode) => {
+    const f = fnOf(c);
+    return rootPc(c) === pc && ((mode === 'major' && f === 'maj') || (mode === 'minor' && f === 'min'));
+  };
+  let best = { cost: Infinity, pc: 0, mode: 'major' as Mode };
+  for (let pc = 0; pc < 12; pc++) {
+    for (const mode of ['major', 'minor'] as Mode[]) {
+      let cost = chords.reduce((s, c) => s + Math.min(fitCost(c, pc, mode), 3), 0) / chords.length;
+      if (isTonicOf(last, pc, mode)) cost -= 0.6;
+      if (isTonicOf(first, pc, mode)) cost -= 0.2;
+      // Une cadence V7 → I vers cette tonique est l'indice le plus fort.
+      const cadence = chords.some((c, i) => i > 0 && isTonicOf(c, pc, mode) && fnOf(chords[i - 1]) === 'dom' && mod(rootPc(chords[i - 1]) - pc, 12) === 7);
+      if (cadence) cost -= 0.5;
+      if (mode === 'minor') cost += 0.05;
+      if (cost < best.cost) best = { cost, pc, mode };
+    }
+  }
+  const hit = chords.find((c) => rootPc(c) === best.pc);
+  return hit ? { tonic: hit.root, mode: best.mode } : keyOnPc(best.pc, best.mode);
+}
