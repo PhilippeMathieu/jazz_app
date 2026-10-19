@@ -62,7 +62,7 @@ export function parseKey(s: string): Key | null {
 }
 
 /** Répartition des temps (entiers) quand n accords partagent une mesure (n ≤ temps par mesure). */
-export function splitBeats(n: number, beatsPerBar: number): number[] {
+function splitBeats(n: number, beatsPerBar: number): number[] {
   if (n <= 1) return [beatsPerBar];
   if (beatsPerBar === 4 && n === 3) return [2, 1, 1];
   const base = Math.floor(beatsPerBar / n);
@@ -172,7 +172,7 @@ export function chartToText(chart: Chart): string {
 
 /** Orthographe usuelle des tonalités (moins d'altérations). */
 const MAJOR_KEYS = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B'];
-const MINOR_KEYS = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'];
+const MINOR_KEYS = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 
 export function keyOnPc(pc: number, mode: Mode): Key {
   const name = (mode === 'major' ? MAJOR_KEYS : MINOR_KEYS)[mod(pc, 12)];

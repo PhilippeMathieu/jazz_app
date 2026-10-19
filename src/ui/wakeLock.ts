@@ -30,9 +30,6 @@ function acquire(): Promise<void> {
   return pending;
 }
 
-/** Le maintien de l'écran allumé est-il disponible dans ce navigateur ? */
-export const wakeLockSupported = () => typeof navigator !== 'undefined' && 'wakeLock' in navigator;
-
 if (typeof document !== 'undefined') {
   // Le verrou tombe quand l'appli passe en arrière-plan : on le reprend au retour.
   document.addEventListener('visibilitychange', () => {

@@ -162,7 +162,7 @@ function synthPiano(midi: number, t: number, dur: number, vel: number) {
   track(out, t + len);
 }
 
-export function chord(notes: number[], when: number, dur: number, vel = 0.5, strum = 0.012) {
+export function playChord(notes: number[], when: number, dur: number, vel = 0.5, strum = 0.012) {
   const v = vel / Math.sqrt(Math.max(1, notes.length / 3));
   notes.forEach((m, i) => piano(m, when + i * strum, dur, v));
 }

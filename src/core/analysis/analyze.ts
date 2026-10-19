@@ -22,6 +22,8 @@ export interface ChordAnalysis {
   resolution?: Resolution;
   /** Rôle dans un ii–V : « ii » ou « V ». */
   iiV?: 'ii' | 'V';
+  /** Dominante « backdoor » (♭VII7 qui ramène vers le I). */
+  backdoor?: boolean;
 }
 export interface Bracket {
   from: number;
@@ -55,7 +57,7 @@ const MAJOR: CostTable = {
   1: { dom: 1.2, dim: 0.5 },
   2: { min: 0, hdim: 1, dom: 1 },
   3: { maj: 1.5, dom: 1.2, dim: 0.5 },
-  4: { min: 0, dom: 1 },
+  4: { min: 0, dom: 0.5 },
   5: { maj: 0, min: 1, dom: 0.5 },
   6: { dim: 0.5, hdim: 1 },
   7: { dom: 0, maj: 0.3, min: 1.5 },
@@ -113,6 +115,9 @@ function romanNumeral(rootLetter: number, rootPcv: number, key: Key): string {
   return prefix + ROMANS[deg];
 }
 const romanOf = (c: Chord, key: Key) => romanNumeral(c.root.letter, rootPc(c), key) + romanSuffix(c);
+/** Degré d’un accord dans une tonalité donnée (ex. Dm7 en C → IIm7). */
+export const romanIn = romanOf;
+export { romanSuffix };
 
 interface Unit {
   chord: Chord;
@@ -132,6 +137,7 @@ export function analyze(chart: Chart): Analysis {
   const n = units.length;
   const next = (i: number) => (i + 1) % n; // la grille boucle
   const rp = (i: number) => rootPc(units[i].chord);
+  const unitBeats = (i: number) => units[i].idx.reduce((t, ix) => t + flat[ix].beats, 0);
   const fn = (i: number) => fnOf(units[i].chord);
 
   // 2. Résolutions et ii–V
@@ -165,7 +171,9 @@ export function analyze(chart: Chart): Analysis {
   // Préférence pour la tonalité de la grille : il faut des indices pour en sortir.
   const prior = (s: { pc: number; mode: Mode }) => (sameState(s, home) ? 0 : isRelative(s, home) ? 0.05 : 0.15);
   const local = (i: number, s: { pc: number; mode: Mode }) => {
-    let c = fitCost(units[i].chord, s.pc, s.mode, blues) + prior(s);
+    // Un accord tenu longtemps pèse plus lourd : 8 mesures de E♭m7 (So What) sont une tonalité, pas un accord de passage.
+    const bars = unitBeats(i) / chart.beatsPerBar;
+    let c = fitCost(units[i].chord, s.pc, s.mode, blues) * Math.min(3, 1 + 0.5 * Math.max(0, bars - 1)) + prior(s);
     const f = fn(i);
     const isTonic = rp(i) === s.pc && ((s.mode === 'major' && f === 'maj') || (s.mode === 'minor' && f === 'min'));
     if (isTonic) {
@@ -176,7 +184,11 @@ export function analyze(chart: Chart): Analysis {
       if (bonus && hasIIbefore(p)) bonus += 1;
       // Un m7 suivi d'une dominante à la quarte joue le rôle de ii, pas de tonique.
       if (s.mode === 'minor' && i + 1 < n && fn(i + 1) === 'dom' && mod(rp(i + 1) - rp(i), 12) === 5) bonus *= 0.25;
+      // Un mineur d'une mesure suivi d'un mineur à la quarte (Fm7 → B♭m7) enchaîne vers un II : pas une tonique.
+      if (s.mode === 'minor' && i + 1 < n && fn(i + 1) === 'min' && mod(rp(i + 1) - rp(i), 12) === 5 && unitBeats(i) <= chart.beatsPerBar) bonus *= 0.25;
       if (i === 0 || i === n - 1) bonus += 0.5;
+      // Accord tenu au moins 4 mesures : c'est un centre tonal (modal).
+      if (bars >= 4) bonus += 1;
       c -= bonus;
     }
     return c;
@@ -250,6 +262,17 @@ export function analyze(chart: Chart): Analysis {
 
   // 4. Chiffrage et explications
   const out: ChordAnalysis[] = new Array(flat.length);
+  // Backdoor : ♭VII7 (vu depuis la tonalité locale ou celle de la grille) qui va vers le I ou son substitut IIIm7.
+  const isBackdoor = (i: number) => {
+    if (fn(i) !== 'dom' || res[i]) return false;
+    const t = next(i);
+    const towardsTonic = (tonic: number) => rp(t) === tonic || (mod(rp(t) - tonic, 12) === 4 && fn(t) === 'min');
+    const s = states[keyIdx[i]];
+    if (s.mode === 'major' && mod(rp(i) - s.pc, 12) === 10 && towardsTonic(s.pc)) return true;
+    return chart.key.mode === 'major' && mod(rp(i) - chartPc, 12) === 10 && towardsTonic(chartPc);
+  };
+  const backdoors = units.map((_, i) => isBackdoor(i));
+  const homeName = keyLabel(chart.key);
   units.forEach((u, i) => {
     const key = unitKeys[i];
     const s = states[keyIdx[i]];
@@ -284,8 +307,17 @@ export function analyze(chart: Chart): Analysis {
         roman = 'SubV' + romanSuffix(c) + (targetIsTonic ? '' : '/' + targetRoman);
         explain = `Substitution tritonique : remplace ${eq} (même triton) et descend d'un demi-ton sur ${tSym}.`;
       }
-    } else if (f === 'dom' && s.mode === 'major' && deg === 10 && (rp(t) === s.pc || (mod(rp(t) - s.pc, 12) === 4 && fn(t) === 'min'))) {
-      explain = `Dominante « backdoor » (♭VII7) : emprunt au mineur, arrive sur ${tSym} sans passer par le V7.`;
+    } else if (backdoors[i]) {
+      const local = s.mode === 'major' && deg === 10;
+      explain = local
+        ? `Dominante « backdoor » (♭VII7) : emprunt au mineur, arrive sur ${tSym} sans passer par le V7.`
+        : `${roman} en ${kName} ; vu depuis ${homeName}, c'est le ♭VII7 « backdoor » qui ramène vers le I (ici ${tSym}).`;
+    } else if (f === 'dom' && fn(t) === 'min' && rp(t) === rp(i)) {
+      explain = `Le ${roman} devient ${tSym} : la dominante se transforme en II d’un ii–V (couleur, puis cadence).`;
+    } else if (asV && !r) {
+      explain = `V7 du ii–V, mais la résolution est évitée : la grille enchaîne sur ${tSym}.`;
+    } else if (asII && backdoors[asII.v]) {
+      explain = `IVm7 du « backdoor » : IVm7 → ♭VII7 → I, emprunté au mode mineur.`;
     } else if (asII) {
       const v = units[asII.v].chord;
       const targetPc = mod(rp(asII.v) + (asII.kind === 'iiV' ? 5 : 11), 12);
@@ -304,9 +336,9 @@ export function analyze(chart: Chart): Analysis {
       explain = `Diminué de passage : la basse monte d'un demi-ton vers ${tSym}.`;
     } else if (f === 'dim' && mod(rp(t) - rp(i), 12) === 11) {
       explain = `Diminué de passage : la basse descend d'un demi-ton vers ${tSym}.`;
-    } else if (f === 'dom' && s.mode === 'major' && deg === 0) {
+    } else if (blues && f === 'dom' && s.mode === 'major' && deg === 0) {
       explain = `Couleur blues : la tonique jouée en accord de 7.`;
-    } else if (f === 'dom' && s.mode === 'major' && deg === 5) {
+    } else if (blues && f === 'dom' && s.mode === 'major' && deg === 5) {
       explain = `Couleur blues : le IV joué en accord de 7.`;
     } else if (f === 'dom' && deg === 7) {
       explain = `Dominante de ${kName}, mais elle ne résout pas ici : la grille enchaîne sur ${tSym}.`;
@@ -318,17 +350,18 @@ export function analyze(chart: Chart): Analysis {
       explain = `Accord hors tonalité (${roman} en ${kName}).`;
     }
 
-    u.idx.forEach((ix, k) => {
-      const last = k === u.idx.length - 1;
+    // Un accord qui dure plusieurs mesures garde la même fonction sur chacune.
+    u.idx.forEach((ix) => {
       out[ix] = {
         index: ix,
         key,
         roman,
         explain,
         diatonic,
-        resolution: last ? r : undefined,
-        resolvesTo: last && r ? units[t].idx[0] : undefined,
-        iiV: asII ? 'ii' : asV ? 'V' : undefined
+        resolution: r,
+        resolvesTo: r ? units[t].idx[0] : undefined,
+        iiV: asII ? 'ii' : asV ? 'V' : undefined,
+        backdoor: backdoors[i] || undefined
       };
     });
   });

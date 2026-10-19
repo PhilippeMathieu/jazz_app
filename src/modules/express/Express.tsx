@@ -1,18 +1,21 @@
+// Analyse express : réglages, partie chronométrée, résultat.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { chordSymbol } from '../../core/theory/chords';
 import { keyLabel } from '../../core/chart/model';
-import { audio, bass, chord as playChord, now } from '../../core/audio/engine';
-import { voiceLead, bassRoot } from '../../core/audio/voicing';
+import { audio, bass, now, playChord } from '../../core/audio/engine';
+import { bassRoot, voiceLead } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
-import { BackIcon } from '../../ui/icons';
-import { go } from '../../ui/router';
-import { LEVELS, QTYPE_LABEL, QType, Question, Seq, makeRound } from './drill';
+import { TopBar } from '../../ui/Screen';
+import { Segmented } from '../../ui/Segmented';
+import { StatBars } from '../../ui/StatBars';
+import { SpeakerIcon } from '../../ui/icons';
+import { LEVELS, QTYPE_LABEL, QType, Question, Seq, Tally, isRight, makeRound } from './drill';
 
 type RunMode = 'sprint' | 'serie';
 const SPRINT_MS = 60_000;
 const SERIE_N = 20;
 
-interface Record_ {
+interface RunRecord {
   correct: number;
   total: number;
   ms: number;
@@ -20,10 +23,11 @@ interface Record_ {
 interface Saved {
   level: number;
   mode: RunMode;
-  records: Record<string, Record_>;
-  byType: Partial<Record<QType, { c: number; t: number; ms: number }>>;
+  records: Record<string, RunRecord>;
+  byType: Record<string, { c: number; t: number; ms: number }>;
+  byTemplate: Tally;
 }
-const DEFAULT: Saved = { level: 1, mode: 'sprint', records: {}, byType: {} };
+const DEFAULT: Saved = { level: 1, mode: 'sprint', records: {}, byType: {}, byTemplate: {} };
 
 interface Answer {
   q: Question;
@@ -33,7 +37,7 @@ interface Answer {
 }
 
 const fmt = (ms: number) => (ms / 1000).toFixed(1).replace('.', ',') + ' s';
-const better = (a: Record_, b: Record_ | undefined, mode: RunMode) =>
+const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
   !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 
 function playSeq(seq: Seq) {
@@ -51,245 +55,177 @@ function playSeq(seq: Seq) {
 export function Express() {
   const [saved, setSaved] = useState<Saved>(() => load('express', DEFAULT));
   const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup');
-  const [queue, setQueue] = useState<Question[]>([]);
   const [answers, setAnswers] = useState<Answer[]>([]);
-  const [current, setCurrent] = useState<Answer | null>(null);
   const [newRecord, setNewRecord] = useState(false);
-  const [, setTick] = useState(0);
-  const qStart = useRef(0);
-  const spent = useRef(0);
-  const finished = useRef(false);
-
   useEffect(() => save('express', saved), [saved]);
 
-  const { level, mode } = saved;
-  const q = queue[0];
-  const elapsedLive = spent.current + (phase === 'play' && !current ? performance.now() - qStart.current : 0);
-
-  useEffect(() => {
-    if (phase !== 'play') return;
-    const id = window.setInterval(() => {
-      setTick((t) => t + 1);
-      if (mode === 'sprint' && !current && spent.current + performance.now() - qStart.current >= SPRINT_MS) finish();
-    }, 100);
-    return () => clearInterval(id);
-  }, [phase, current, mode]);
-
-  const start = () => {
-    finished.current = false;
-    spent.current = 0;
-    setAnswers([]);
-    setCurrent(null);
-    setNewRecord(false);
-    setQueue(makeRound(level));
-    setPhase('play');
-    qStart.current = performance.now();
-  };
-
-  const next = () => {
-    if (finished.current) return;
-    setCurrent(null);
-    setQueue((qq) => {
-      const rest = qq.slice(1);
-      return rest.length ? rest : makeRound(level);
-    });
-    qStart.current = performance.now();
-  };
-
-  /** complete : la série ou le sprint est allé au bout (seul cas où un record compte). */
-  const finish = (list: Answer[] = answers, complete = true) => {
-    if (finished.current) return;
-    finished.current = true;
-    const res: Record_ = { correct: list.filter((a) => a.ok).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
+  const finish = (list: Answer[], complete: boolean) => {
+    const { level, mode } = saved;
+    const res: RunRecord = { correct: list.filter((a) => a.ok).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
     const key = `${level}-${mode}`;
     const rec = complete && res.total > 0 && better(res, saved.records[key], mode);
     setNewRecord(rec);
+    setAnswers(list);
     setSaved((s) => {
       const byType = { ...s.byType };
+      const byTemplate = { ...s.byTemplate };
       list.forEach((a) => {
         const b = byType[a.q.type] ?? { c: 0, t: 0, ms: 0 };
         byType[a.q.type] = { c: b.c + (a.ok ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
+        const id = a.q.seq.template.id;
+        const tt = byTemplate[id] ?? { c: 0, t: 0 };
+        byTemplate[id] = { c: tt.c + (a.ok ? 1 : 0), t: tt.t + 1 };
       });
-      return { ...s, byType, records: rec ? { ...s.records, [key]: res } : s.records };
+      return { ...s, byType, byTemplate, records: rec ? { ...s.records, [key]: res } : s.records };
     });
     setPhase('done');
   };
 
+  if (phase === 'play') return <Play saved={saved} onFinish={finish} />;
+  if (phase === 'done') return <Result saved={saved} answers={answers} newRecord={newRecord} onAgain={() => setPhase('play')} onSetup={() => setPhase('setup')} />;
+  return <Setup saved={saved} setSaved={setSaved} onStart={() => setPhase('play')} />;
+}
+
+// ---------------------------------------------------------------- Réglages
+
+function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: Saved) => Saved) => void; onStart: () => void }) {
+  const { level, mode } = saved;
+  const rec = saved.records[`${level}-${mode}`];
+  const types = (Object.keys(QTYPE_LABEL) as QType[]).filter((t) => saved.byType[t]);
+  return (
+    <div class="screen">
+      <TopBar title="Analyse express" />
+      <p class="intro">Une suite d’accords, trois questions dessus, le plus vite possible.</p>
+      <Segmented
+        cards
+        label="Niveau"
+        value={level}
+        onChange={(v) => setSaved((s) => ({ ...s, level: v }))}
+        options={LEVELS.map((l, i) => ({ value: i + 1, label: l.label, sub: l.desc }))}
+      />
+      <Segmented
+        label="Format"
+        value={mode}
+        onChange={(v) => setSaved((s) => ({ ...s, mode: v }))}
+        options={[
+          { value: 'sprint', label: 'Sprint 60 s' },
+          { value: 'serie', label: `${SERIE_N} questions` }
+        ]}
+      />
+      <p class="muted small">
+        Record : {rec ? (mode === 'sprint' ? `${rec.correct} justes sur ${rec.total}` : `${rec.correct}/${rec.total} en ${fmt(rec.ms)}`) : 'aucun pour l’instant'}. Le chrono
+        s’arrête pendant les explications.
+      </p>
+      <button class="btn primary block" onClick={onStart}>
+        Démarrer
+      </button>
+      {types.length ? (
+        <section>
+          <h2 class="label">Réussite par type de question</h2>
+          <StatBars
+            rows={types.map((t) => {
+              const b = saved.byType[t];
+              return { label: QTYPE_LABEL[t], c: b.c, t: b.t, value: `${Math.round((b.c / b.t) * 100)} % · ${fmt(b.ms / b.t)}` };
+            })}
+          />
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- Partie
+
+/** Chrono isolé : il se met à jour sans redessiner tout l'écran. */
+function Clock({ mode, spent, qStart, paused, onTimeout }: { mode: RunMode; spent: { current: number }; qStart: { current: number }; paused: boolean; onTimeout: () => void }) {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      tick((t) => t + 1);
+      if (mode === 'sprint' && !paused && spent.current + performance.now() - qStart.current >= SPRINT_MS) onTimeout();
+    }, 200);
+    return () => clearInterval(id);
+  }, [paused, mode]);
+  const elapsed = spent.current + (paused ? 0 : performance.now() - qStart.current);
+  if (mode === 'serie') return <span class="clock">{fmt(elapsed)}</span>;
+  const remaining = Math.max(0, SPRINT_MS - elapsed);
+  return (
+    <span class="clock">
+      {Math.ceil(remaining / 1000)} s
+      <span class="timebar">
+        <span style={`width:${(remaining / SPRINT_MS) * 100}%`} />
+      </span>
+    </span>
+  );
+}
+
+function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void }) {
+  const { level, mode } = saved;
+  const stats = { types: saved.byType, templates: saved.byTemplate };
+  const [queue, setQueue] = useState<Question[]>(() => makeRound(level, Math.random, stats));
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [current, setCurrent] = useState<Answer | null>(null);
+  const qStart = useRef(performance.now());
+  const spent = useRef(0);
+  const done = useRef(false);
+  const timer = useRef<number | null>(null);
+  useEffect(() => () => {
+    if (timer.current !== null) clearTimeout(timer.current);
+  }, []);
+
+  const end = (list: Answer[], complete = true) => {
+    if (done.current) return;
+    done.current = true;
+    onFinish(list, complete);
+  };
+  const next = () => {
+    setCurrent(null);
+    setQueue((qq) => (qq.length > 1 ? qq.slice(1) : makeRound(level, Math.random, stats)));
+    qStart.current = performance.now();
+  };
+  const over = (n: number) => (mode === 'serie' && n >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
+
+  const q = queue[0];
   const choose = (choice: string) => {
     if (current || !q) return;
     const ms = Math.min(performance.now() - qStart.current, mode === 'sprint' ? SPRINT_MS - spent.current : Infinity);
     spent.current += ms;
-    const a: Answer = { q, choice, ok: choice === q.answer, ms };
+    const a: Answer = { q, choice, ok: isRight(q, choice), ms };
     const list = [...answers, a];
     setAnswers(list);
     setCurrent(a);
-    const over = (mode === 'serie' && list.length >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
-    // Bonne réponse : on enchaîne. Mauvaise : l'explication reste affichée jusqu'à « Continuer ».
-    if (a.ok) window.setTimeout(() => (over ? finish(list) : next()), 450);
+    // Juste : on enchaîne. Faux : l'explication reste jusqu'à « Continuer ».
+    if (a.ok) timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), choice === q.answer ? 450 : 1400);
   };
 
-  // ------------------------------------------------------------ Réglages
-  if (phase === 'setup') {
-    const rec = saved.records[`${level}-${mode}`];
-    const types = (Object.keys(QTYPE_LABEL) as QType[]).filter((t) => saved.byType[t]);
-    return (
-      <div class="screen">
-        <div class="topbar">
-          <button class="back" aria-label="Retour" onClick={() => go('/')}><BackIcon /></button>
-          <h1>Analyse express</h1>
-        </div>
-        <p class="muted small" style="margin:0">
-          Une suite d'accords, trois questions dessus, le plus vite possible : degré, schéma, tonalité, 9 ou ♭9, guide tones, gamme.
-        </p>
-        <div class="levels three">
-          {LEVELS.map((l, i) => (
-            <button key={i} class="lv" aria-pressed={level === i + 1} onClick={() => setSaved((s) => ({ ...s, level: i + 1 }))}>
-              <b>{l.label}</b>
-              <span>{l.desc}</span>
-            </button>
-          ))}
-        </div>
-        <div class="seg wide" role="group" aria-label="Mode">
-          <button aria-pressed={mode === 'sprint'} onClick={() => setSaved((s) => ({ ...s, mode: 'sprint' }))}>Sprint 60 s</button>
-          <button aria-pressed={mode === 'serie'} onClick={() => setSaved((s) => ({ ...s, mode: 'serie' }))}>Série de {SERIE_N}</button>
-        </div>
-        <p class="muted small" style="margin:0">
-          {mode === 'sprint'
-            ? 'Un maximum de bonnes réponses en 60 secondes de réflexion. Le chrono s’arrête pendant les explications.'
-            : `${SERIE_N} questions, chronométrées. Le chrono s’arrête pendant les explications.`}
-        </p>
-        <div class="record">
-          <span class="eyebrow">Record N{level} · {mode === 'sprint' ? 'sprint' : 'série'}</span>
-          <b>
-            {rec
-              ? mode === 'sprint'
-                ? `${rec.correct} bonnes réponses sur ${rec.total}`
-                : `${rec.correct}/${rec.total} en ${fmt(rec.ms)}`
-              : 'Aucun pour l’instant'}
-          </b>
-        </div>
-        <button class="next" onClick={start}>Démarrer</button>
-
-        {types.length ? (
-          <section class="stats">
-            <h2>Par type de question</h2>
-            <div class="bars">
-              {types.map((t) => {
-                const b = saved.byType[t]!;
-                const acc = b.c / b.t;
-                const col = acc >= 0.8 ? 'var(--ok)' : acc >= 0.5 ? 'var(--accent)' : 'var(--bad)';
-                return (
-                  <div class="statbar" key={t}>
-                    <span class="lb">{QTYPE_LABEL[t]}</span>
-                    <span class="tr"><span class="fl" style={`width:${Math.max(4, acc * 100)}%;background:${col}`} /></span>
-                    <span class="v">{Math.round(acc * 100)} % · {fmt(b.ms / b.t)}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        ) : null}
-      </div>
-    );
-  }
-
-  // ------------------------------------------------------------ Résultats
-  if (phase === 'done') {
-    const correct = answers.filter((a) => a.ok).length;
-    const ms = answers.reduce((s, a) => s + a.ms, 0);
-    const wrong = answers.filter((a) => !a.ok);
-    const per = (Object.keys(QTYPE_LABEL) as QType[])
-      .map((t) => {
-        const l = answers.filter((a) => a.q.type === t);
-        return { t, n: l.length, c: l.filter((a) => a.ok).length, ms: l.reduce((s, a) => s + a.ms, 0) };
-      })
-      .filter((x) => x.n);
-    return (
-      <div class="screen">
-        <div class="topbar">
-          <button class="back" aria-label="Retour" onClick={() => setPhase('setup')}><BackIcon /></button>
-          <h1>Résultat</h1>
-        </div>
-        <div class="result">
-          <div><b>{correct}<small>/{answers.length}</small></b><span>bonnes réponses</span></div>
-          <div><b>{answers.length ? fmt(ms / answers.length) : '—'}</b><span>par réponse</span></div>
-          <div><b>{fmt(ms)}</b><span>de réflexion</span></div>
-        </div>
-        {newRecord ? <div class="nudge"><span>Nouveau record en N{level}.</span></div> : null}
-        <div class="bars">
-          {per.map((x) => {
-            const acc = x.c / x.n;
-            const col = acc >= 0.8 ? 'var(--ok)' : acc >= 0.5 ? 'var(--accent)' : 'var(--bad)';
-            return (
-              <div class="statbar" key={x.t}>
-                <span class="lb">{QTYPE_LABEL[x.t]}</span>
-                <span class="tr"><span class="fl" style={`width:${Math.max(4, acc * 100)}%;background:${col}`} /></span>
-                <span class="v">{x.c}/{x.n} · {fmt(x.ms / x.n)}</span>
-              </div>
-            );
-          })}
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="next" style="flex:1" onClick={start}>Rejouer</button>
-          <button class="btn" onClick={() => setPhase('setup')}>Réglages</button>
-        </div>
-        {wrong.length ? (
-          <section class="stats">
-            <h2>À revoir</h2>
-            <div class="mistakes">
-              {wrong.map((a, i) => (
-                <div class="mistake" key={i}>
-                  <div class="mono small">{a.q.seq.chords.map((c) => chordSymbol(c.chord)).join('  ')}</div>
-                  <b>{a.q.prompt}</b>
-                  <div class="small">
-                    <span class="verdict bad">{a.choice}</span> → <span class="verdict ok">{a.q.answer}</span>
-                  </div>
-                  <p class="hint">{a.q.explain}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        ) : null}
-      </div>
-    );
-  }
-
-  // ------------------------------------------------------------ Jeu
   if (!q) return null;
-  const remaining = Math.max(0, SPRINT_MS - elapsedLive);
-  const focus = q.focus;
   const long = q.type === 'pattern' || q.type === 'key' || q.type === 'scale';
-  const correctSoFar = answers.filter((a) => a.ok).length;
+  const correct = answers.filter((a) => a.ok).length;
+  const alsoOk = current?.ok && current.choice !== q.answer;
   return (
     <div class="screen play-screen">
-      <div class="topbar">
-        <button class="back" aria-label="Arrêter" onClick={() => finish(answers, false)}><BackIcon /></button>
-        <h1>N{level}</h1>
-        <div class="score">
-          <div>
-            <span>{mode === 'sprint' ? Math.ceil(remaining / 1000) + ' s' : fmt(elapsedLive)}</span>
-            <small>{mode === 'sprint' ? 'restant' : 'chrono'}</small>
-          </div>
-          <div>
-            <span>{mode === 'sprint' ? correctSoFar : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}</span>
-            <small>{mode === 'sprint' ? 'justes' : 'question'}</small>
-          </div>
-        </div>
-      </div>
-      {mode === 'sprint' ? (
-        <div class="timebar"><span style={`width:${(remaining / SPRINT_MS) * 100}%`} /></div>
-      ) : null}
+      <header class="topbar">
+        <button class="btn ghost sm" onClick={() => end(answers, false)}>
+          Arrêter
+        </button>
+        <span class="play-meta">
+          N{level} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+        </span>
+        <Clock mode={mode} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
+      </header>
 
       <section class="seqcard">
         <div class="seqhead">
-          <span class="eyebrow">{q.seq.showKey && q.type !== 'key' ? `En ${keyLabel(q.seq.key)}` : 'Tonalité non indiquée'}</span>
-          <button class="chip" onClick={() => playSeq(q.seq)}>Écouter</button>
+          <span class="muted small">{q.seq.showKey && q.type !== 'key' ? `En ${keyLabel(q.seq.key)}` : 'Tonalité non indiquée'}</span>
+          <button class="icon-btn" aria-label="Écouter la suite d’accords" onClick={() => playSeq(q.seq)}>
+            <SpeakerIcon />
+          </button>
         </div>
         <div class="seqchords">
           {q.seq.chords.map((c, i) => (
-            <div key={i} class={'seqchord' + (focus === i ? ' focus' : '')}>
+            <div key={i} class={'seqchord' + (q.focus === i ? ' focus' : '')}>
               <span class="sym">{chordSymbol(c.chord)}</span>
-              <span class="rn">{current ? c.roman : ' '}</span>
+              <span class="rn">{current ? c.roman : ' '}</span>
             </div>
           ))}
         </div>
@@ -297,17 +233,16 @@ export function Express() {
 
       <h2 class="prompt">{q.prompt}</h2>
 
-      {/* Zone de réponse en bas d'écran : à portée du pouce, téléphone tenu d'une main. */}
       <div class="thumb-zone">
-        {current && !current.ok ? (
+        {current && (!current.ok || alsoOk) ? (
           <div class="fb">
-            <p class="verdict bad">Réponse : {q.answer}</p>
-            <p class="hint">{q.explain}</p>
+            <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>{current.ok ? `Juste aussi. L’appli conseille : ${q.answer}.` : `Non : ${q.answer}.`}</p>
+            <p class="muted">{q.explain}</p>
           </div>
         ) : null}
         <div class={'choices' + (long ? ' long' : '') + (q.choices.length === 2 ? ' two' : '')}>
           {q.choices.map((c) => {
-            const state = current ? (c === q.answer ? ' is-ok' : c === current.choice ? ' is-bad' : '') : '';
+            const state = current ? (isRight(q, c) && (c === q.answer || c === current.choice) ? ' is-ok' : c === current.choice ? ' is-bad' : '') : '';
             return (
               <button key={c} class={'choice' + state} disabled={!!current} onClick={() => choose(c)}>
                 {c}
@@ -316,18 +251,74 @@ export function Express() {
           })}
         </div>
         {current && !current.ok ? (
-          <button
-            class="next"
-            onClick={() => {
-              const over = (mode === 'serie' && answers.length >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
-              if (over) finish();
-              else next();
-            }}
-          >
+          <button class="btn primary block" onClick={() => (over(answers.length) ? end(answers) : next())}>
             Continuer
           </button>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- Résultat
+
+function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
+  const correct = answers.filter((a) => a.ok).length;
+  const ms = answers.reduce((s, a) => s + a.ms, 0);
+  const wrong = answers.filter((a) => !a.ok);
+  const per = (Object.keys(QTYPE_LABEL) as QType[])
+    .map((t) => {
+      const l = answers.filter((a) => a.q.type === t);
+      return { t, n: l.length, c: l.filter((a) => a.ok).length, ms: l.reduce((s, a) => s + a.ms, 0) };
+    })
+    .filter((x) => x.n);
+  return (
+    <div class="screen">
+      <TopBar title="Résultat" onBack={onSetup} />
+      <div class="result">
+        <div>
+          <b>
+            {correct}
+            <small>/{answers.length}</small>
+          </b>
+          <span>justes</span>
+        </div>
+        <div>
+          <b>{answers.length ? fmt(ms / answers.length) : '—'}</b>
+          <span>par réponse</span>
+        </div>
+        <div>
+          <b>{fmt(ms)}</b>
+          <span>de réflexion</span>
+        </div>
+      </div>
+      {newRecord ? <p class="banner ok">Nouveau record en N{saved.level}.</p> : null}
+      <StatBars rows={per.map((x) => ({ label: QTYPE_LABEL[x.t], c: x.c, t: x.n, value: `${x.c}/${x.n} · ${fmt(x.ms / x.n)}` }))} />
+      <div class="row-actions">
+        <button class="btn primary" onClick={onAgain}>
+          Rejouer
+        </button>
+        <button class="btn" onClick={onSetup}>
+          Réglages
+        </button>
+      </div>
+      {wrong.length ? (
+        <section>
+          <h2 class="label">À revoir</h2>
+          <div class="list">
+            {wrong.map((a, i) => (
+              <div class="mistake" key={i}>
+                <span class="mono small muted">{a.q.seq.chords.map((c) => chordSymbol(c.chord)).join('  ')}</span>
+                <b>{a.q.prompt}</b>
+                <span class="small">
+                  <span class="bad">{a.choice}</span> → <span class="good">{a.q.answer}</span>
+                </span>
+                <span class="muted small">{a.q.explain}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

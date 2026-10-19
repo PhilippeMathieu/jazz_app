@@ -2,8 +2,7 @@
 // - une note à la fois (YIN), pour la main droite en impro ;
 // - les classes de hauteur d'un accord (spectre + saillance des notes), pour vérifier un voicing.
 
-export const midiToFreq = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
-export const freqToMidi = (f: number) => 69 + 12 * Math.log2(f / 440);
+const freqToMidi = (f: number) => 69 + 12 * Math.log2(f / 440);
 
 export function rms(buf: Float32Array): number {
   let s = 0;
@@ -73,7 +72,7 @@ export function yin(buf: Float32Array, sr: number, minFreq = 150, maxFreq = 2200
 // ---------------------------------------------------------------- Spectre
 
 /** FFT radix 2 en place (re, im), taille puissance de 2. */
-export function fft(re: Float32Array, im: Float32Array) {
+function fft(re: Float32Array, im: Float32Array) {
   const n = re.length;
   for (let i = 1, j = 0; i < n; i++) {
     let bit = n >> 1;
@@ -122,7 +121,7 @@ function buffers(n: number) {
 }
 
 /** Spectre d'amplitude (fenêtre de Hann). buf.length doit être une puissance de 2. Le résultat est réutilisé au prochain appel. */
-export function magnitude(buf: Float32Array): Float32Array {
+function magnitude(buf: Float32Array): Float32Array {
   const n = buf.length;
   const { win, re, im, mag } = buffers(n);
   for (let i = 0; i < n; i++) {
@@ -136,8 +135,8 @@ export function magnitude(buf: Float32Array): Float32Array {
 
 // ---------------------------------------------------------------- Accords
 
-export const NOTE_LO = 33; // A1
-export const NOTE_HI = 100; // E7
+const NOTE_LO = 33; // A1
+const NOTE_HI = 100; // E7
 
 /**
  * Énergie par note (MIDI NOTE_LO..NOTE_HI) à partir des pics du spectre,
@@ -145,9 +144,9 @@ export const NOTE_HI = 100; // E7
  * (quinte = 3e harmonique, tierce majeure = 5e, quinte = 6e) attribuables à une note plus grave.
  */
 /** Réglages calibrés sur les échantillons de piano (voir detect.test.ts). */
-export const TUNE = { octave: 0, fifth: 0.55, third: 0.35, fifth2: 0.3, chromaMax: false };
+const TUNE = { fifth: 0.55, third: 0.35, fifth2: 0.3 };
 
-export function noteEnergies(mag: Float32Array, sr: number): Float32Array {
+function noteEnergies(mag: Float32Array, sr: number): Float32Array {
   const n = mag.length * 2;
   const df = sr / n;
   const E = new Float32Array(NOTE_HI + 1);
@@ -172,10 +171,9 @@ export function noteEnergies(mag: Float32Array, sr: number): Float32Array {
     E[r] += v;
   }
   // Harmoniques d'une note grave qui tombent sur une autre classe de hauteur.
+  // Les octaves (2e et 4e harmoniques) ne changent pas la classe de hauteur : on les laisse.
   const HARM: [number, number][] = [
-    [12, TUNE.octave], // 2e harmonique : octave
     [19, TUNE.fifth], // 3e harmonique : quinte + octave
-    [24, TUNE.octave * 0.6], // 4e harmonique : 2 octaves
     [28, TUNE.third], // 5e harmonique : tierce majeure + 2 octaves
     [31, TUNE.fifth2] // 6e harmonique : quinte + 2 octaves
   ];
@@ -192,9 +190,9 @@ export function noteEnergies(mag: Float32Array, sr: number): Float32Array {
 }
 
 /** Chroma normalisé (max = 1). */
-export function chromaOf(E: Float32Array): Float32Array {
+function chromaOf(E: Float32Array): Float32Array {
   const ch = new Float32Array(12);
-  for (let m = NOTE_LO; m <= NOTE_HI; m++) ch[m % 12] = TUNE.chromaMax ? Math.max(ch[m % 12], E[m]) : ch[m % 12] + E[m];
+  for (let m = NOTE_LO; m <= NOTE_HI; m++) ch[m % 12] += E[m];
   let max = 0;
   for (const v of ch) max = Math.max(max, v);
   if (max > 0) for (let i = 0; i < 12; i++) ch[i] /= max;
@@ -202,7 +200,7 @@ export function chromaOf(E: Float32Array): Float32Array {
 }
 
 /** Note la plus grave nettement présente (MIDI), ou null. */
-export function lowestNote(E: Float32Array): number | null {
+function lowestNote(E: Float32Array): number | null {
   let max = 0;
   for (const v of E) max = Math.max(max, v);
   if (max <= 0) return null;

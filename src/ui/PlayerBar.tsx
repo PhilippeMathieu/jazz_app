@@ -1,92 +1,59 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
-import { Chart } from '../core/chart/model';
-import { ChartPlayer, Position } from '../core/player/player';
-import { onLoadState, LoadState } from '../core/audio/engine';
-import { load, save } from '../core/storage';
-import { PlayIcon, StopIcon } from './icons';
-import { useWakeLock } from './wakeLock';
+// Barre de lecture du play-along : lecture, tempo, instruments.
+import { useState } from 'preact/hooks';
+import { Drawer } from './Drawer';
+import { PlayIcon, SlidersIcon, StopIcon } from './icons';
+import { PlayerApi, PlayerToggle } from './usePlayer';
 
-interface Prefs {
-  tempo: Record<string, number>;
-  bass: boolean;
-  comp: boolean;
-  drums: boolean;
-  countIn: boolean;
-}
-const DEFAULT_PREFS: Prefs = { tempo: {}, bass: true, comp: true, drums: true, countIn: true };
-type Toggle = 'bass' | 'comp' | 'drums' | 'countIn';
-
-/** Lecteur de grille partagé par la vue Grille et la vue Improviser. */
-export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
-  const [prefs, setPrefs] = useState<Prefs>(() => load('grille-prefs', DEFAULT_PREFS));
-  const [pos, setPos] = useState<Position | null>(null);
-  const [loadState, setLoadState] = useState<LoadState>('idle');
-  const player = useRef<ChartPlayer | null>(null);
-  const tempo = prefs.tempo[tempoId] ?? defaultTempo;
-
-  useEffect(() => onLoadState(setLoadState), []);
-  useEffect(() => save('grille-prefs', prefs), [prefs]);
-  // L'écran reste allumé pendant la lecture.
-  useWakeLock(!!pos);
-
-  // Recréé quand la grille ou l'instrumentation change ; reprend là où il en était.
-  useEffect(() => {
-    const wasPlaying = player.current?.playing;
-    const bar = pos?.bar ?? 0;
-    player.current?.stop();
-    player.current = new ChartPlayer(chart, { tempo, bass: prefs.bass, comp: prefs.comp, drums: prefs.drums, countIn: prefs.countIn }, setPos);
-    if (wasPlaying) player.current.start(bar);
-    return () => player.current?.stop();
-  }, [chart, prefs.bass, prefs.comp, prefs.drums, prefs.countIn]);
-
-  return {
-    pos,
-    tempo,
-    prefs,
-    loadState,
-    playing: () => !!player.current?.playing,
-    start: (bar = 0) => player.current?.start(bar),
-    stop: () => player.current?.stop(),
-    toggle: (bar = 0) => {
-      const p = player.current!;
-      if (p.playing) p.stop();
-      else p.start(bar);
-    },
-    setTempo: (bpm: number) => {
-      player.current?.setTempo(bpm);
-      setPrefs((p) => ({ ...p, tempo: { ...p.tempo, [tempoId]: bpm } }));
-    },
-    flip: (k: Toggle) => setPrefs((p) => ({ ...p, [k]: !p[k] }))
-  };
-}
-export type PlayerApi = ReturnType<typeof usePlayer>;
+const TOGGLES: [PlayerToggle, string][] = [
+  ['bass', 'Basse'],
+  ['comp', 'Piano'],
+  ['drums', 'Batterie'],
+  ['countIn', 'Décompte']
+];
 
 export function PlayerBar({ p, fromBar = 0 }: { p: PlayerApi; fromBar?: number }) {
-  const on = !!p.pos || p.playing();
+  const [open, setOpen] = useState(false);
+  const off = TOGGLES.filter(([k]) => !p.prefs[k] && k !== 'countIn').map(([, l]) => l.toLowerCase());
   return (
-    <div class="player">
-      <div class="player-inner">
-        <div class="player-main">
-          <button class="play" aria-label={on ? 'Arrêter' : 'Lire la grille'} onClick={() => p.toggle(fromBar)}>
-            {on ? <StopIcon /> : <PlayIcon />}
+    <>
+      <div class="player">
+        <div class="player-inner">
+          <button class="play" aria-label={p.playing ? 'Arrêter' : 'Lire la grille'} onClick={() => p.toggle(fromBar)}>
+            {p.playing ? <StopIcon /> : <PlayIcon />}
           </button>
-          <div class="tempo">
-            <label for="tempo">
-              <span>Tempo</span>
-              <b>{p.tempo} BPM</b>
-            </label>
-            <input id="tempo" type="range" min={40} max={280} step={2} value={p.tempo} onInput={(e) => p.setTempo(Number((e.target as HTMLInputElement).value))} />
+          <div class="tempo" role="group" aria-label="Tempo">
+            <button class="icon-btn" aria-label="Plus lent" onClick={() => p.setTempo(Math.max(40, p.tempo - 4))}>−</button>
+            <span>
+              <b>{p.tempo}</b> BPM
+            </span>
+            <button class="icon-btn" aria-label="Plus rapide" onClick={() => p.setTempo(Math.min(300, p.tempo + 4))}>+</button>
           </div>
+          <button class="icon-btn" aria-label="Instruments" onClick={() => setOpen(true)}>
+            <SlidersIcon />
+          </button>
         </div>
-        <div class="toggles">
-          <button class="chip" aria-pressed={p.prefs.bass} onClick={() => p.flip('bass')}>Basse</button>
-          <button class="chip" aria-pressed={p.prefs.comp} onClick={() => p.flip('comp')}>Piano</button>
-          <button class="chip" aria-pressed={p.prefs.drums} onClick={() => p.flip('drums')}>Batterie</button>
-          <button class="chip" aria-pressed={p.prefs.countIn} onClick={() => p.flip('countIn')}>Décompte</button>
-          {p.loadState === 'loading' ? <span class="loading">Chargement du piano…</span> : null}
-          {p.loadState === 'error' ? <span class="loading">Piano de secours (échantillons indisponibles)</span> : null}
-        </div>
+        {off.length || p.loadState === 'loading' || p.loadState === 'error' ? (
+          <p class="player-note">
+            {p.loadState === 'loading' ? 'Chargement du piano… ' : p.loadState === 'error' ? 'Piano de secours (échantillons indisponibles). ' : ''}
+            {off.length ? `Coupé : ${off.join(', ')}.` : ''}
+          </p>
+        ) : null}
       </div>
-    </div>
+      <Drawer open={open} onClose={() => setOpen(false)} label="Instruments">
+        <h2 class="drawer-title">Instruments</h2>
+        <div class="toggles">
+          {TOGGLES.map(([k, l]) => (
+            <label key={k} class="toggle">
+              <input type="checkbox" checked={p.prefs[k]} onChange={() => p.flip(k)} />
+              <span>{l}</span>
+            </label>
+          ))}
+        </div>
+        <label class="field">
+          <span>Tempo : {p.tempo} BPM</span>
+          <input id="tempo" type="range" min={40} max={300} step={2} value={p.tempo} onInput={(e) => p.setTempo(Number((e.target as HTMLInputElement).value))} />
+        </label>
+      </Drawer>
+    </>
   );
 }

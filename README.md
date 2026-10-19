@@ -4,44 +4,42 @@ Appli web installable (PWA) pour progresser en harmonie jazz au piano, pensée p
 
 Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au piano** (téléphone sur le pupitre, écran toujours allumé).
 
-## Modules
+## Écrans
 
-1. **Lire et analyser** : grilles d'accords analysées (degrés, ii–V, centres tonaux, substitutions), play-along, transposition, import de grilles par copier-coller.
-2. **Analyse express** : questions chronométrées sur des suites d'accords (degré, schéma, tonalité, 9 ou ♭9, 3ce/7e, gamme), sprint 60 s ou série de 20, records.
-3. **Entendre** : reconnaissance d'accords et de progressions à l'oreille, construction au clavier.
-4. **Improviser** : gamme de chaque accord déduite de l'analyse, lignes de guide tones, clavier qui suit le play-along, ii–V–I dans les 12 tonalités.
-5. **Flash voicings** : un accord s'affiche, on le joue au piano, l'appli révèle et fait entendre le voicing (shell, sans fondamentale A/B). Mains libres.
-6. **Écoute au micro** : Flash voicings valide l'accord joué (et passe au suivant), Improviser classe les notes de la main droite (note de l'accord, de la gamme, hors gamme ; guide tones). Écran « Micro » pour tester et régler la sensibilité.
-7. **Mode pupitre** : plein écran lisible à distance (accord en cours, suivant, temps, gamme ou guide tones), depuis une grille ou Improviser.
-
-Plus tard : rythme (comping, swing, rythme harmonique).
+- **Accueil** : reprendre le dernier exercice, trois suggestions « À travailler » tirées de tes erreurs.
+- **Analyse express** (métro) : questions chronométrées sur des suites d'accords (degré, schéma, tonalité, 9 ou ♭9, 3ce/7e, gamme), sprint 60 s ou série de 20. Les types de questions et les enchaînements ratés reviennent plus souvent.
+- **Oreille** (métro, écouteurs) : reconnaître accords et progressions, construire un accord au clavier, 4 niveaux.
+- **Grilles** (piano) : 10 standards + ii–V–I dans les 12 tonalités, import Ultimate Guitar / ChordPro. Trois vues sur la même grille :
+  - *Degrés* : analyse (ii–V, centres tonaux, dominantes secondaires, SubV, backdoor), quiz à degrés masqués ; avec le micro, vérifie que ton comping contient la 3ce et la 7e.
+  - *Gammes* : gamme de chaque accord ; avec le micro, classe chaque note jouée (accord, gamme, approche, hors) et compte les notes de l'accord jouées sur le 1er temps.
+  - *Guide tones* : deux lignes 3ce/7e conduites par demi-ton ; le micro vérifie le guide tone au 1er temps.
+  - Play-along (piano, contrebasse, batterie), transposition, mode pupitre plein écran (portrait ou paysage).
+- **Flash voicings** (piano) : un accord s'affiche, tu le joues (shell, sans fondamentale A/B), le micro valide et passe au suivant ; les accords ratés reviennent plus souvent.
+- **Micro** : niveau, seuil de silence, note et accord entendus.
 
 ## Architecture
 
 ```
 src/
   core/
-    theory/     notes, intervalles, accords, gammes, orthographe
-    chart/      modèle de grille (tonalité, mesures, accords, durées en temps)
-    analysis/   moteur d'analyse (ii–V–I, subs, tonalités, degrés)
-    player/     lecteur de grille (basse + comping, tempo)
-  modules/
-    analyse/
-    impro/
-    oreille/
-  library/      grilles (accords uniquement) + import
+    theory/     notes, accords, gammes, progressions types
+    chart/      modèle de grille, import (UG, ChordPro), mise en page
+    analysis/   analyse harmonique, gammes et guide tones, choix de quiz
+    audio/      moteur WebAudio (piano échantillonné), voicings
+    player/     arrangement (basse, comping, batterie) et lecteur
+    listen/     micro, détection de notes et d'accords, vérification du comping
+    progress.ts suggestions « À travailler »
+    random.ts   tirages (pondérés, reproductibles en test)
+    storage.ts  sauvegarde locale
+  modules/      express, oreille, grilles, flash, micro
+  ui/           composants partagés (barre, clavier, lecteur, pupitre…)
+  styles/       tokens, base, composants, écrans
+  library/      grilles (accords uniquement)
 ```
 
-Stack : TypeScript, Vite, Tone.js (piano échantillonné), service worker pour le hors ligne, déploiement GitHub Pages.
+Stack : TypeScript, Preact, Vite, WebAudio, service worker (hors ligne), GitHub Pages. Tests : Vitest (théorie, analyse, import, arrangement, détection calibrée sur les vrais échantillons de piano).
 
-## Lots
-
-1. ✅ Socle : PWA, son piano, modèle de grille, moteur d'analyse, lecteur, oreille.
-2. ✅ Analyse express, import de grilles.
-3. ✅ Improviser : gammes, guide tones, 12 tonalités.
-4. ✅ Usages métro / piano, mode pupitre, Flash voicings, import Ultimate Guitar.
-5. ✅ Écoute au micro (détection calibrée sur les échantillons de piano, voir `src/core/listen/detect.test.ts`).
-6. À venir : rythme, enrichissement de l'oreille.
+À venir : rythme (comping, placement), dictée de basse, voicings à deux mains.
 
 ## Installer sur iPhone
 
@@ -55,7 +53,7 @@ L'appli fonctionne ensuite hors ligne.
 ```bash
 npm install
 npm run dev      # serveur local
-npm test         # tests de la théorie et du moteur d'analyse
+npm test         # tests (théorie, analyse, import, détection)
 npm run build    # build de production (dist/)
 ```
 

@@ -24,6 +24,40 @@ describe('analyse harmonique', () => {
     expect(find(t, 'E♭maj7', 3)).toMatchObject({ key: 'E♭', roman: 'IΔ7' });
   });
 
+  it('All the Things You Are, mesures 24–25 : V7/VI → VIm7 en A♭, pas une modulation', () => {
+    const t = table('all-the-things');
+    expect(find(t, 'C7♯5')).toMatchObject({ key: 'A♭', roman: 'V7♯5/VI' });
+    expect(find(t, 'Fm7', 2)).toMatchObject({ key: 'A♭', roman: 'VIm7' });
+  });
+
+  it('Rhythm changes : A♭7 est un backdoor vers B♭', () => {
+    const ch = chartById('rhythm-changes')!;
+    const a = analyze(ch);
+    const i = flatten(ch).findIndex((f) => chordSymbol(f.chord) === 'A♭7');
+    expect(a.chords[i].backdoor).toBe(true);
+  });
+
+  it('Solar : ii–V qui descendent d’un ton', () => {
+    const t = table('solar');
+    expect(find(t, 'Gm7')).toMatchObject({ key: 'F', roman: 'IIm7' });
+    expect(find(t, 'Fm7')).toMatchObject({ key: 'E♭', roman: 'IIm7' });
+    expect(find(t, 'E♭m7')).toMatchObject({ key: 'D♭', roman: 'IIm7' });
+    expect(find(t, 'Dø7')).toMatchObject({ key: 'Cm', roman: 'IIø7' });
+    expect(find(t, 'Cm(maj7)')).toMatchObject({ key: 'Cm', roman: 'ImΔ7' });
+  });
+
+  it('Blues mineur : ♭VI7 – V7 – i', () => {
+    const t = table('blues-mineur');
+    expect(find(t, 'Fm7')).toMatchObject({ key: 'Cm', roman: 'IVm7' });
+    expect(find(t, 'G7♭9')).toMatchObject({ key: 'Cm', roman: 'V7♭9' });
+  });
+
+  it('So What : dorien de ré puis de mi♭', () => {
+    const t = table('so-what');
+    expect(find(t, 'Dm7')).toMatchObject({ key: 'Dm', roman: 'Im7' });
+    expect(find(t, 'E♭m7')).toMatchObject({ key: 'E♭m', roman: 'Im7' });
+  });
+
   it('Blue Bossa : modulation en D♭', () => {
     const t = table('blue-bossa');
     expect(find(t, 'E♭m7')).toMatchObject({ key: 'D♭', roman: 'IIm7' });

@@ -44,6 +44,7 @@ export const QUALITIES: Record<string, Quality> = Object.fromEntries(
     q('7#9', '7♯9', 'dominante ♯9', [0, 4, 7, 10, 15], [0, 2, 4, 6, 1], 'dom'),
     q('7#11', '7♯11', 'dominante ♯11', [0, 4, 7, 10, 18], [0, 2, 4, 6, 3], 'dom'),
     q('7b13', '7♭13', 'dominante ♭13', [0, 4, 7, 10, 20], [0, 2, 4, 6, 5], 'dom'),
+    q('7b9b13', '7♭9♭13', 'dominante ♭9 ♭13', [0, 4, 10, 13, 20], [0, 2, 6, 1, 5], 'dom'),
     q('7alt', '7alt', 'dominante altérée', [0, 4, 10, 13, 15, 20], [0, 2, 6, 1, 1, 5], 'dom'),
     q('7#5', '7♯5', 'dominante ♯5', [0, 4, 8, 10], [0, 2, 4, 6], 'dom'),
     q('7b5', '7♭5', 'dominante ♭5', [0, 4, 6, 10], [0, 2, 4, 6], 'dom'),
@@ -67,7 +68,7 @@ const ALIASES: Record<string, string> = {
   'mmaj7': 'mM7', 'm(maj7)': 'mM7', mM7: 'mM7', 'mΔ7': 'mM7', 'mΔ': 'mM7', 'm^7': 'mM7',
   '7': '7', '9': '9', '13': '13', '7b9': '7b9', '7#9': '7#9', '7#11': '7#11', '7b13': '7b13',
   '7alt': '7alt', alt: '7alt', '7#5': '7#5', '+7': '7#5', '7+': '7#5', aug7: '7#5', '7b5': '7b5',
-  '13b9': '7b9', '7b9b13': '7alt', '7#9b13': '7alt', '7#9#5': '7alt', '9#11': '7#11', '13#11': '7#11',
+  '13b9': '7b9', '7b9b13': '7b9b13', '7#9b13': '7alt', '7#9#5': '7alt', '9#11': '7#11', '13#11': '7#11',
   '7sus4': '7sus4', '7sus': '7sus4', sus7: '7sus4', '9sus4': '9sus4', '9sus': '9sus4', '13sus': '9sus4', '13sus4': '9sus4',
   sus4: 'sus4', sus: 'sus4',
   'ø': 'm7b5', 'ø7': 'm7b5', m7b5: 'm7b5', 'm7(b5)': 'm7b5',
@@ -136,9 +137,7 @@ export function parseChord(input: string, lenient = false): Chord | null {
   return { root: r.note, quality: id, bass };
 }
 
-export const qualityOf = (c: Chord) => QUALITIES[c.quality];
 export const rootPc = (c: Chord) => pcOf(c.root);
-export const familyOf = (c: Chord) => QUALITIES[c.quality].family;
 
 export function chordSymbol(c: Chord): string {
   return noteName(c.root) + QUALITIES[c.quality].sym + (c.bass ? '/' + noteName(c.bass) : '');

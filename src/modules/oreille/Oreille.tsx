@@ -1,124 +1,43 @@
+// Oreille : reconnaître une qualité d'accord, une progression, construire un accord.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Chord, QUALITIES, chordNotes, chordOnPc, chordPcs, chordSymbol, spellInChord } from '../../core/theory/chords';
-import { lettersFor, mod, noteName, pcOf, plainName, spellCost, spellWith } from '../../core/theory/notes';
-import { audio, chord as playChord, now, piano, silence } from '../../core/audio/engine';
-import { voiceLead } from '../../core/audio/voicing';
-import { Keyboard, Mark } from '../../ui/Keyboard';
-import { BackIcon, PlayIcon } from '../../ui/icons';
-import { go } from '../../ui/router';
+import { QUALITIES, chordNotes, chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
+import { mod, noteName, plainName } from '../../core/theory/notes';
+import { PROGRESSIONS, romanLine } from '../../core/theory/progressions';
+import { audio, now, piano, playChord, silence } from '../../core/audio/engine';
 import { load, save } from '../../core/storage';
-import { HINTS, LEVEL_LABELS, PROGS, PROG_LEVELS, QUALITY_LEVELS, progRoman } from './data';
+import { Keyboard, Mark } from '../../ui/Keyboard';
+import { TopBar } from '../../ui/Screen';
+import { Segmented } from '../../ui/Segmented';
+import { StatBars } from '../../ui/StatBars';
+import { ConfirmButton } from '../../ui/ConfirmButton';
+import { PlayIcon } from '../../ui/icons';
+import { notesMarks } from '../../ui/keyboardMarks';
+import { HINTS, LEVEL_LABELS, PROG_LEVELS, QUALITY_LEVELS } from './data';
+import { EarMode, EarQuestion, Tally, checkBuild, makeEarQuestion } from './questions';
 
-type Mode = 'ear' | 'prog' | 'build';
 interface Stats {
-  mode: Mode;
-  lv: Record<Mode, number>;
-  items: Record<string, { c: number; t: number }>;
+  mode: EarMode;
+  lv: Record<EarMode, number>;
+  items: Tally;
   recent: Record<string, number[]>;
 }
-const DEFAULT_STATS: Stats = { mode: 'ear', lv: { ear: 1, prog: 1, build: 1 }, items: {}, recent: {} };
-
-interface PlayedChord {
-  chord: Chord;
-  roman?: string;
-  notes: number[];
-}
-type Question =
-  | { mode: 'ear'; q: string; c: PlayedChord }
-  | { mode: 'build'; q: string; c: PlayedChord }
-  | { mode: 'prog'; id: string; chords: PlayedChord[] };
-
-const rnd = (n: number) => Math.floor(Math.random() * n);
-const bassOf = (pc: number) => 40 + mod(pc - 4, 12);
-
-function closeAbove(pcs: number[], start: number) {
-  const out: number[] = [];
-  let cur = start - 1;
-  for (const pc of pcs) {
-    let m = cur + 1;
-    while (mod(m, 12) !== pc) m++;
-    out.push(m);
-    cur = m;
-  }
-  return out;
-}
-function earVoicing(c: Chord): number[] {
-  const iv = QUALITIES[c.quality].iv;
-  const pc = pcOf(c.root);
-  const use = iv.length >= 5 ? iv.slice(1) : iv;
-  const b = bassOf(pc);
-  return [b, ...closeAbove(use.map((i) => mod(pc + i, 12)), b + 12)];
-}
-
-function pick(keys: string[], prefix: string, stats: Stats, last?: string) {
-  const w = keys.map((k) => {
-    const it = stats.items[prefix + k] ?? { c: 0, t: 0 };
-    let x = 1 + 2 * (1 - (it.c + 1) / (it.t + 2));
-    if (k === last) x *= 0.3;
-    return x;
-  });
-  let r = Math.random() * w.reduce((a, b) => a + b, 0);
-  for (let i = 0; i < keys.length; i++) {
-    r -= w[i];
-    if (r <= 0) return keys[i];
-  }
-  return keys[keys.length - 1];
-}
-
-function makeQuestion(mode: Mode, level: number, stats: Stats, last?: string): Question {
-  if (mode === 'prog') {
-    const id = pick(PROG_LEVELS[level - 1], 'prog:', stats, last);
-    const keyPc = rnd(12);
-    let best: { cost: number; chords: Chord[] } | null = null;
-    for (const kl of lettersFor(keyPc)) {
-      const chords = PROGS[id].chords.map(([off, semis, q]) => ({ root: spellWith(kl + off, keyPc + semis), quality: q }));
-      const cost = chords.reduce((s, c) => s + spellCost(chordNotes(c)), 0) + spellCost([spellWith(kl, keyPc)]) * 2;
-      if (!best || cost < best.cost) best = { cost, chords };
-    }
-    let prev: number[] | null = null;
-    const chords = best!.chords.map((c, i) => {
-      const v = voiceLead(c, prev, 52, 76);
-      prev = v;
-      return { chord: c, roman: PROGS[id].chords[i][3], notes: [bassOf(pcOf(c.root)), ...v] };
-    });
-    return { mode, id, chords };
-  }
-  const q = pick(QUALITY_LEVELS[level - 1], mode + ':', stats, last);
-  const c = chordOnPc(rnd(12), q);
-  return { mode, q, c: { chord: c, notes: earVoicing(c) } };
-}
-
-function labelsFor(pc: PlayedChord) {
-  const marks: Record<number, Mark> = {};
-  const labels: Record<number, string> = {};
-  pc.notes.forEach((m) => {
-    marks[m] = 'hit';
-    labels[m] = spellInChord(pc.chord, m);
-  });
-  return { marks, labels };
-}
-
-const TEXT: Record<Mode, [string, string]> = {
-  ear: ['Quel type d’accord ?', 'Fondamentale à la basse, fondamentale au hasard.'],
-  prog: ['Quelle progression ?', 'Tonalité au hasard. Écoute la basse et la couleur de chaque accord.'],
-  build: ['Joue cet accord', 'Touche les notes puis Valider. Ordre et octave libres.']
-};
+const DEFAULT: Stats = { mode: 'ear', lv: { ear: 1, prog: 1, build: 1 }, items: {}, recent: {} };
+const PROMPT: Record<EarMode, string> = { ear: 'Quel accord ?', prog: 'Quelle progression ?', build: 'Construis cet accord' };
+const clampLv = (n: number) => (n >= 1 && n <= 4 ? n : 1);
 
 export function Oreille() {
-  const [stats, setStats] = useState<Stats>(() => load('oreille', DEFAULT_STATS));
+  const [stats, setStats] = useState<Stats>(() => load('oreille', DEFAULT));
   const mode = stats.mode;
-  const level = stats.lv[mode];
-  const [question, setQuestion] = useState<Question>(() => makeQuestion(mode, level, stats));
+  const level = clampLv(stats.lv[mode]);
+  const last = useRef<string | undefined>(undefined);
+  const [q, setQ] = useState<EarQuestion>(() => makeEarQuestion(mode, level, stats.items));
   const [answer, setAnswer] = useState<string | null>(null);
   const [ok, setOk] = useState<boolean | null>(null);
   const [sel, setSel] = useState<number[]>([]);
   const [lit, setLit] = useState(-1);
   const [shown, setShown] = useState(0);
   const [session, setSession] = useState({ c: 0, t: 0, streak: 0 });
-  const [armed, setArmed] = useState(false);
   const timers = useRef<number[]>([]);
-  const last = useRef<string | undefined>(undefined);
-
   useEffect(() => save('oreille', stats), [stats]);
   useEffect(() => () => stop(), []);
 
@@ -128,90 +47,76 @@ export function Oreille() {
     silence();
     setLit(-1);
   };
-
-  const fresh = (m: Mode, l: number, autoplay: boolean) => {
+  const play = (qq: EarQuestion = q, arp = false) => {
+    audio();
     stop();
-    const q = makeQuestion(m, l, stats, last.current);
-    last.current = q.mode === 'prog' ? q.id : q.q;
-    setQuestion(q);
+    const t0 = now() + 0.06;
+    if (qq.mode === 'ear') {
+      if (arp) qq.c.notes.forEach((m, i) => piano(m, t0 + i * 0.16, 2.2, 0.55));
+      else playChord(qq.c.notes, t0, 2.2, 0.6);
+    } else if (qq.mode === 'prog') {
+      const step = 1.6;
+      qq.chords.forEach((c, i) => {
+        playChord(c.notes, t0 + i * step, step - 0.1, 0.6);
+        timers.current.push(window.setTimeout(() => setLit(i), i * step * 1000 + 60));
+      });
+      timers.current.push(window.setTimeout(() => setLit(-1), qq.chords.length * step * 1000));
+    }
+  };
+  const fresh = (m: EarMode, l: number, autoplay: boolean) => {
+    stop();
+    const nq = makeEarQuestion(m, l, stats.items, last.current);
+    last.current = nq.mode === 'prog' ? nq.id : nq.q;
+    setQ(nq);
     setAnswer(null);
     setOk(null);
     setSel([]);
     setShown(0);
-    if (autoplay) play(q, false);
+    if (autoplay) play(nq);
   };
-
-  const play = (q: Question = question, arp = false) => {
-    audio();
-    stop();
-    const t0 = now() + 0.06;
-    if (q.mode === 'ear') {
-      if (arp) q.c.notes.forEach((m, i) => piano(m, t0 + i * 0.16, 2.2, i === 0 ? 0.6 : 0.5));
-      else playChord(q.c.notes, t0, 2.2, 0.6);
-    } else if (q.mode === 'prog') {
-      const step = 1.6;
-      q.chords.forEach((c, i) => {
-        playChord(c.notes, t0 + i * step, step - 0.1, 0.6);
-        timers.current.push(window.setTimeout(() => setLit(i), i * step * 1000 + 60));
-      });
-      timers.current.push(window.setTimeout(() => setLit(-1), q.chords.length * step * 1000));
-    }
-  };
-
   const record = (item: string, good: boolean) => {
     setStats((s) => {
       const it = s.items[item] ?? { c: 0, t: 0 };
-      const rk = s.mode + s.lv[s.mode];
-      const r = [...(s.recent[rk] ?? []), good ? 1 : 0].slice(-10);
-      return { ...s, items: { ...s.items, [item]: { c: it.c + (good ? 1 : 0), t: it.t + 1 } }, recent: { ...s.recent, [rk]: r } };
+      const rk = s.mode + clampLv(s.lv[s.mode]);
+      return {
+        ...s,
+        items: { ...s.items, [item]: { c: it.c + (good ? 1 : 0), t: it.t + 1 } },
+        recent: { ...s.recent, [rk]: [...(s.recent[rk] ?? []), good ? 1 : 0].slice(-10) }
+      };
     });
     setSession((x) => ({ c: x.c + (good ? 1 : 0), t: x.t + 1, streak: good ? x.streak + 1 : 0 }));
   };
-
   const choose = (a: string) => {
-    if (answer !== null) return;
+    if (answer !== null || q.mode === 'build') return;
+    const good = q.mode === 'ear' ? a === q.q : a === q.id;
     setAnswer(a);
-    if (question.mode === 'ear') {
-      const good = a === question.q;
-      setOk(good);
-      record('ear:' + question.q, good);
-      play(question);
-    } else if (question.mode === 'prog') {
-      const good = a === question.id;
-      setOk(good);
-      record('prog:' + question.id, good);
-      play(question);
-    }
-  };
-
-  const validate = () => {
-    if (question.mode !== 'build') return;
-    const req = new Set(chordPcs(question.c.chord));
-    const optional = new Set((QUALITIES[question.q].optional ?? []).map((i) => mod(pcOf(question.c.chord.root) + i, 12)));
-    const got = new Set(sel.map((m) => mod(m, 12)));
-    const good = [...req].every((p) => got.has(p)) && [...got].every((p) => req.has(p) || optional.has(p));
-    setAnswer('build');
     setOk(good);
-    record('build:' + question.q, good);
+    record(q.mode === 'ear' ? 'ear:' + q.q : 'prog:' + q.id, good);
+    play(q);
+  };
+  const validate = () => {
+    if (q.mode !== 'build') return;
+    const r = checkBuild(q.c.chord, sel);
+    setAnswer('build');
+    setOk(r.ok);
+    record('build:' + q.q, r.ok);
     audio();
     stop();
-    playChord(targetVoicing(), now() + 0.05, 2.2, 0.6);
+    playChord(target(), now() + 0.05, 2.2, 0.6);
   };
-
-  const targetVoicing = () => {
-    if (question.mode !== 'build') return [];
-    const r = 60 + pcOf(question.c.chord.root);
-    return QUALITIES[question.q].iv.map((i) => {
+  const target = () => {
+    if (q.mode !== 'build') return [];
+    const r = 60 + rootPc(q.c.chord);
+    return QUALITIES[q.q].iv.map((i) => {
       let x = r + i;
-      while (x > 84) x -= 12;
+      while (x > 76) x -= 12;
       return x;
     });
   };
-
-  const setMode = (m: Mode) => {
+  const setMode = (m: EarMode) => {
     if (m === mode) return;
     setStats((s) => ({ ...s, mode: m }));
-    fresh(m, stats.lv[m], false);
+    fresh(m, clampLv(stats.lv[m]), false);
   };
   const setLevel = (l: number) => {
     setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }));
@@ -220,171 +125,117 @@ export function Oreille() {
 
   const answered = answer !== null;
   const recent = stats.recent[mode + level] ?? [];
-  const recentScore = recent.reduce((a, b) => a + b, 0);
+  const recentScore = recent.reduce((x, y) => x + y, 0);
   const pool = mode === 'prog' ? PROG_LEVELS[level - 1] : QUALITY_LEVELS[level - 1];
-  const rows = pool
-    .map((k) => {
-      const it = stats.items[mode + ':' + k] ?? { c: 0, t: 0 };
-      return { k, label: mode === 'prog' ? PROGS[k].name : QUALITIES[k].sym, it, acc: it.t ? it.c / it.t : -1 };
-    })
-    .sort((a, b) => a.acc - b.acc);
 
   // Clavier
   let kb = null;
-  if (question.mode === 'build') {
-    const marks: Record<number, Mark> = {};
-    const labels: Record<number, string> = {};
-    if (!answered) {
+  if (q.mode === 'build') {
+    let marks: Record<number, Mark> = {};
+    let labels: Record<number, string> = {};
+    if (!answered) sel.forEach((m) => ((marks[m] = 'sel'), (labels[m] = plainName(m))));
+    else {
+      const r = checkBuild(q.c.chord, sel);
       sel.forEach((m) => {
-        marks[m] = 'sel';
-        labels[m] = plainName(m);
+        marks[m] = r.extra.includes(mod(m, 12)) ? 'bad' : 'ok';
+        labels[m] = spellInChord(q.c.chord, m);
       });
-    } else {
-      const names = new Map<number, string>();
-      chordNotes(question.c.chord).forEach((n) => names.set(pcOf(n), noteName(n)));
-      const req = chordPcs(question.c.chord);
-      const opt = (QUALITIES[question.q].optional ?? []).map((i) => mod(pcOf(question.c.chord.root) + i, 12));
-      const tv = targetVoicing();
-      sel.forEach((m) => {
-        const p = mod(m, 12);
-        marks[m] = req.includes(p) || opt.includes(p) ? 'ok' : 'bad';
-        labels[m] = names.get(p) ?? plainName(m);
-      });
-      req.forEach((p, i) => {
-        if (!sel.some((m) => mod(m, 12) === p)) {
-          marks[tv[i]] = 'miss';
-          labels[tv[i]] = names.get(p) ?? '';
-        }
-      });
+      for (const p of r.missing) {
+        const m = 60 + p;
+        marks[m] = 'miss';
+        labels[m] = spellInChord(q.c.chord, m);
+      }
     }
     kb = (
-      <>
-        <Keyboard
-          lo={60}
-          hi={84}
-          marks={marks}
-          labels={labels}
-          onKey={
-            answered
-              ? undefined
-              : (m) => {
-                  audio();
-                  if (sel.includes(m)) setSel(sel.filter((x) => x !== m));
-                  else {
-                    setSel([...sel, m]);
-                    piano(m, now() + 0.01, 1.2, 0.5);
-                  }
+      <Keyboard
+        lo={60}
+        hi={71}
+        marks={marks}
+        labels={labels}
+        big
+        onKey={
+          answered
+            ? undefined
+            : (m) => {
+                audio();
+                if (sel.includes(m)) setSel(sel.filter((x) => x !== m));
+                else {
+                  setSel([...sel, m]);
+                  piano(m, now() + 0.01, 1.2, 0.5);
                 }
-          }
-        />
-        {answered ? <p class="hint small">Vert : juste · rouge : en trop · pointillés : manquant</p> : null}
-      </>
+              }
+        }
+      />
     );
-  } else if (!answered) {
-    kb = <div class="placeholder">Le voicing s’affiche sur le clavier après ta réponse.</div>;
-  } else {
-    const pc = question.mode === 'ear' ? question.c : question.chords[Math.max(0, lit >= 0 ? lit : shown)];
-    const { marks, labels } = labelsFor(pc);
-    kb = <Keyboard lo={36} hi={84} marks={marks} labels={labels} center={pc.notes} />;
+  } else if (answered) {
+    const pc = q.mode === 'ear' ? q.c : q.chords[Math.max(0, lit >= 0 ? lit : shown)];
+    const km = notesMarks(pc.chord, pc.notes);
+    kb = <Keyboard lo={36} hi={84} marks={km.marks} labels={km.labels} center={pc.notes} />;
   }
 
   return (
-    <div class="screen">
-      <div class="topbar">
-        <button class="back" aria-label="Retour" onClick={() => go('/')}><BackIcon /></button>
-        <h1>Entendre</h1>
-        <div class="score">
-          <div><span>{session.c}/{session.t}</span><small>session</small></div>
-          <div><span>{session.streak}</span><small>série</small></div>
-        </div>
-      </div>
-
-      <div class="tabs" role="tablist">
-        {(['ear', 'prog', 'build'] as Mode[]).map((m) => (
-          <button key={m} role="tab" aria-selected={mode === m} onClick={() => setMode(m)}>
-            {m === 'ear' ? 'Accords' : m === 'prog' ? 'Progressions' : 'Construire'}
-          </button>
-        ))}
-      </div>
-      <div class="levels">
-        {LEVEL_LABELS[mode].map((t, i) => (
-          <button key={i} class="lv" aria-pressed={level === i + 1} onClick={() => setLevel(i + 1)}>
-            <b>N{i + 1}</b>
-            <span>{t}</span>
-          </button>
-        ))}
-      </div>
+    <div class="screen play-screen">
+      <TopBar
+        title="Oreille"
+        actions={
+          <span class="play-meta">
+            {session.c}/{session.t}
+            {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
+          </span>
+        }
+      />
+      <Segmented
+        label="Exercice"
+        value={mode}
+        onChange={setMode}
+        options={[
+          { value: 'ear', label: 'Accords' },
+          { value: 'prog', label: 'Progressions' },
+          { value: 'build', label: 'Construire' }
+        ]}
+      />
+      <Segmented label="Niveau" value={level} onChange={setLevel} options={LEVEL_LABELS[mode].map((t, i) => ({ value: i + 1, label: `N${i + 1}`, sub: t }))} />
       {recent.length === 10 && recentScore >= 8 && level < 4 ? (
-        <div class="nudge">
-          <span>{recentScore}/10 sur tes dernières réponses. Prêt pour le N{level + 1}.</span>
-          <button onClick={() => setLevel(level + 1)}>Passer au N{level + 1}</button>
-        </div>
+        <button class="banner ok" onClick={() => setLevel(level + 1)}>
+          {recentScore}/10 sur tes dernières réponses : passe au N{level + 1}
+        </button>
       ) : null}
 
-      <section class="stage" aria-live="polite">
-        <div>
-          <h2>{TEXT[mode][0]}</h2>
-          <p class="sub">{TEXT[mode][1]}</p>
-        </div>
-
-        {question.mode === 'build' ? (
-          <div class="playrow">
-            <div class="target-sym">{chordSymbol(question.c.chord)}</div>
-            <button class="btn" onClick={() => { audio(); stop(); playChord([...sel].sort((a, b) => a - b), now() + 0.05, 2, 0.55); }}>Écouter ma sélection</button>
-            <button class="btn quiet" onClick={() => setSel([])} disabled={answered}>Effacer</button>
+      <section class="ear-stage">
+        {q.mode === 'build' ? (
+          <div class="build-head">
+            <span class="target-sym">{chordSymbol(q.c.chord)}</span>
+            <span class="muted small">Touche les notes, octave libre.</span>
           </div>
         ) : (
           <div class="playrow">
-            <button class={'big'} aria-label="Écouter" onClick={() => play(question, false)}><PlayIcon /></button>
-            {question.mode === 'ear' ? <button class="btn" onClick={() => play(question, true)}>Arpège</button> : null}
-            <span class="sub" style="margin:0">{question.mode === 'ear' ? 'Rejoue autant que nécessaire.' : `${question.chords.length} accords`}</span>
-          </div>
-        )}
-
-        {question.mode === 'prog' ? (
-          <div class="dots">{question.chords.map((_, i) => <i key={i} class={lit === i ? 'on' : ''} />)}</div>
-        ) : null}
-
-        {question.mode === 'build' ? (
-          answered ? null : (
-            <button class="validate" disabled={!sel.length} onClick={validate}>
-              Valider ({sel.length} note{sel.length > 1 ? 's' : ''})
+            <button class="play big-play" aria-label="Écouter" onClick={() => play(q)}>
+              <PlayIcon />
             </button>
-          )
-        ) : (
-          <div class={'opts' + (mode === 'prog' ? ' wide' : '')}>
-            {pool.map((k) => {
-              const right = question.mode === 'prog' ? k === question.id : k === question.q;
-              const cls = answered ? (right ? ' is-ok' : k === answer ? ' is-bad' : '') : '';
-              return (
-                <button key={k} class={'opt' + cls} disabled={answered} onClick={() => choose(k)}>
-                  <b>{mode === 'prog' ? progRoman(k) : QUALITIES[k].sym}</b>
-                  <span>{mode === 'prog' ? PROGS[k].name : QUALITIES[k].name}</span>
-                </button>
-              );
-            })}
+            {q.mode === 'ear' ? (
+              <button class="btn" onClick={() => play(q, true)}>
+                Arpège
+              </button>
+            ) : (
+              <div class="dots" aria-hidden="true">
+                {q.chords.map((_, i) => <i key={i} class={lit === i ? 'on' : ''} />)}
+              </div>
+            )}
           </div>
         )}
-
+        <h2 class="prompt">{PROMPT[mode]}</h2>
         {answered ? (
           <div class="fb">
-            {question.mode === 'ear' ? (
+            {q.mode === 'ear' ? (
               <>
-                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>
-                  {ok ? 'Juste.' : 'Raté.'} C’était {chordSymbol(question.c.chord)}
-                  {ok ? '' : `, pas ${QUALITIES[answer!].sym}`}.
-                </p>
-                <p class="mono">{chordNotes(question.c.chord).map(noteName).join(' · ')}</p>
-                <p class="hint">{HINTS[question.q]}</p>
+                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>{ok ? `Juste : ${chordSymbol(q.c.chord)}.` : `Non, c’était ${chordSymbol(q.c.chord)}.`}</p>
+                <p class="muted">{HINTS[q.q]}</p>
               </>
-            ) : question.mode === 'prog' ? (
+            ) : q.mode === 'prog' ? (
               <>
-                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>
-                  {ok ? 'Juste.' : 'Raté.'} {PROGS[question.id].name}
-                  {ok ? '' : ` (tu as choisi : ${PROGS[answer!].name})`}.
-                </p>
+                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>{ok ? `Juste : ${PROGRESSIONS[q.id].name}.` : `Non, c’était : ${PROGRESSIONS[q.id].name}.`}</p>
                 <div class="pchips">
-                  {question.chords.map((c, i) => (
+                  {q.chords.map((c, i) => (
                     <button
                       key={i}
                       class={'pchip' + ((lit >= 0 ? lit : shown) === i ? ' on' : '')}
@@ -400,60 +251,70 @@ export function Oreille() {
                     </button>
                   ))}
                 </div>
-                <p class="hint">{PROGS[question.id].hint} Touche un accord pour l’entendre seul.</p>
+                <p class="muted">{PROGRESSIONS[q.id].hint}</p>
               </>
             ) : (
               <>
-                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>{ok ? 'Juste.' : 'Pas tout à fait.'} {chordSymbol(question.c.chord)}</p>
-                <p class="mono">
-                  {chordNotes(question.c.chord).map(noteName).join(' · ')}
-                  {QUALITIES[question.q].optional ? ' (quinte facultative)' : ''}
+                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>{ok ? 'Juste.' : 'Pas tout à fait.'}</p>
+                <p class="muted">
+                  <span class="mono">{chordNotes(q.c.chord).map(noteName).join(' ')}</span>
+                  {QUALITIES[q.q].iv.length >= 5 || q.q === '13' ? ' (quinte facultative)' : ''}. {HINTS[q.q]}
                 </p>
-                <p class="hint">{HINTS[question.q]}</p>
               </>
             )}
           </div>
         ) : null}
-
         {kb}
-
-        {answered ? <button class="next" onClick={() => fresh(mode, level, question.mode !== 'build')}>Suivant</button> : null}
       </section>
 
-      <section class="stats">
-        <h2>Ta progression</h2>
-        <div class="recent">
-          <span>N{level}, 10 dernières :</span>
-          {Array.from({ length: 10 }, (_, i) => <i key={i} class={i < recent.length ? (recent[i] ? 'y' : 'n') : ''} />)}
-          <span>{recentScore}/{recent.length}</span>
-        </div>
-        <div class="bars">
-          {rows.map((r) => {
-            const p = Math.round(r.acc * 100);
-            const col = r.acc < 0 ? 'var(--line)' : r.acc >= 0.8 ? 'var(--ok)' : r.acc >= 0.5 ? 'var(--accent)' : 'var(--bad)';
-            return (
-              <div class="statbar" key={r.k}>
-                <span class="lb">{r.label}</span>
-                <span class="tr"><span class="fl" style={`width:${r.acc < 0 ? 0 : Math.max(4, p)}%;background:${col}`} /></span>
-                <span class="v">{r.acc < 0 ? '—' : `${p} % · ${r.it.c}/${r.it.t}`}</span>
-              </div>
-            );
-          })}
-        </div>
-        <button
-          class={'linkbtn' + (armed ? ' armed' : '')}
-          onClick={() => {
-            if (armed) {
-              setStats((s) => ({ ...s, items: {}, recent: {} }));
-              setArmed(false);
-            } else {
-              setArmed(true);
-              setTimeout(() => setArmed(false), 3000);
-            }
-          }}
-        >
-          {armed ? 'Toucher encore pour confirmer' : 'Remettre les stats à zéro'}
-        </button>
+      <div class="thumb-zone">
+        {q.mode !== 'build' && !answered ? (
+          <div class={'choices' + (mode === 'prog' ? ' long' : '')}>
+            {pool.map((k) => (
+              <button key={k} class="choice" onClick={() => choose(k)}>
+                {mode === 'prog' ? (
+                  <>
+                    <span>{romanLine(k)}</span>
+                    <small>{PROGRESSIONS[k].name}</small>
+                  </>
+                ) : (
+                  <>
+                    <span>{QUALITIES[k].sym}</span>
+                    <small>{QUALITIES[k].name}</small>
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {q.mode === 'build' && !answered ? (
+          <div class="row-actions">
+            <button class="btn" disabled={!sel.length} onClick={() => setSel([])}>
+              Effacer
+            </button>
+            <button class="btn primary" disabled={!sel.length} onClick={validate}>
+              Valider
+            </button>
+          </div>
+        ) : null}
+        {answered ? (
+          <button class="btn primary block" onClick={() => fresh(mode, level, q.mode !== 'build')}>
+            Suivant
+          </button>
+        ) : null}
+      </div>
+
+      <section>
+        <h2 class="label">Réussite, niveau {level}</h2>
+        <StatBars
+          rows={pool
+            .map((k) => {
+              const it = stats.items[mode + ':' + k] ?? { c: 0, t: 0 };
+              return { label: mode === 'prog' ? PROGRESSIONS[k].name : QUALITIES[k].sym, c: it.c, t: it.t };
+            })
+            .sort((a, b) => (a.t ? a.c / a.t : 2) - (b.t ? b.c / b.t : 2))}
+        />
+        <ConfirmButton label="Remettre les statistiques à zéro" confirm="Toucher encore pour confirmer" onConfirm={() => setStats((s) => ({ ...s, items: {}, recent: {} }))} />
       </section>
     </div>
   );

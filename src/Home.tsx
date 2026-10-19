@@ -1,74 +1,95 @@
 import { ChevronIcon } from './ui/icons';
+import { load } from './core/storage';
+import { advice } from './core/progress';
+import { chartById } from './library/charts';
 
 interface Tile {
   href: string;
-  glyph: string;
   title: string;
   text: string;
   tag?: string;
 }
-
 const METRO: Tile[] = [
-  { href: '#/express', glyph: '60s', title: 'Analyse express', text: 'Degrés, schémas, 9 ou ♭9, guide tones : le plus vite possible.', tag: 'Sans son' },
-  { href: '#/grilles', glyph: 'ii–V', title: 'Lire et analyser', text: 'Masque l’analyse, retrouve les degrés, vérifie. Import depuis Ultimate Guitar.' },
-  { href: '#/oreille', glyph: '♪', title: 'Entendre', text: 'Reconnaître accords et progressions, construire les accords au doigt.', tag: 'Écouteurs' }
+  { href: '#/express', title: 'Analyse express', text: 'Degrés, enchaînements, 9 ou ♭9, guide tones, chronométrés.' },
+  { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' }
 ];
 const PIANO: Tile[] = [
-  { href: '#/flash', glyph: 'A/B', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli écoute et valide. Mains libres.', tag: 'Micro' },
-  { href: '#/impro', glyph: '↝', title: 'Improviser', text: 'Gamme et guide tones sur le play-along ; l’appli écoute ta main droite.', tag: 'Micro' },
-  { href: '#/grilles', glyph: '\u25B6\uFE0E', title: 'Play-along', text: 'Basse, piano, batterie sur les grilles. Mode pupitre pour lire de loin.' }
+  { href: '#/grilles', title: 'Grilles', text: 'Analyse, quiz, gammes et guide tones sur le play-along. Mode pupitre.' },
+  { href: '#/flash', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli écoute et valide.' }
 ];
 
-function Tiles({ list }: { list: Tile[] }) {
+function resumeLabel(path: string): string | null {
+  const [page, id] = path.split('/').filter(Boolean);
+  if (page === 'grille') return chartById(id)?.title ?? null;
+  return { express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
+}
+
+function Rows({ list }: { list: Tile[] }) {
   return (
-    <nav class="pillars">
+    <div class="list">
       {list.map((t) => (
-        <a key={t.title} class="pillar" href={t.href}>
-          <span class="glyph">{t.glyph}</span>
-          <div>
-            <h2>{t.title}</h2>
-            <p>{t.text}</p>
-          </div>
-          {t.tag ? <span class="tag">{t.tag}</span> : <span class="go"><ChevronIcon /></span>}
+        <a key={t.title} class="row" href={t.href}>
+          <span class="row-main">
+            <span class="row-title">{t.title}</span>
+            <span class="row-sub">{t.text}</span>
+          </span>
+          {t.tag ? <span class="tag">{t.tag}</span> : <ChevronIcon />}
         </a>
       ))}
-    </nav>
+    </div>
   );
 }
 
 export function Home() {
+  const last = load('last', { path: '' }).path;
+  const label = last ? resumeLabel(last) : null;
+  const todo = advice();
   return (
-    <div class="screen">
-      <div class="hero">
-        <p class="eyebrow">Piano jazz · harmonie</p>
-        <h1>
-          Harmonie
-          <br />
-          <em>jazz</em>
-        </h1>
-      </div>
+    <div class="screen home">
+      <h1 class="wordmark">
+        Harmonie <em>jazz</em>
+      </h1>
 
-      <section class="ctx">
-        <div class="ctx-head">
-          <h2>Dans le métro</h2>
-          <span>Sans piano, d’une main, hors ligne</span>
-        </div>
-        <Tiles list={METRO} />
-      </section>
-
-      <section class="ctx">
-        <div class="ctx-head">
-          <h2>Au piano</h2>
-          <span>
-            Téléphone sur le pupitre · <a href="#/micro" class="ulink">régler le micro</a>
+      {label ? (
+        <a class="resume" href={'#' + last}>
+          <span class="row-main">
+            <span class="label">Reprendre</span>
+            <span class="row-title">{label}</span>
           </span>
-        </div>
-        <Tiles list={PIANO} />
+          <ChevronIcon />
+        </a>
+      ) : null}
+
+      {todo.length ? (
+        <section>
+          <h2 class="label">À travailler</h2>
+          <Rows list={todo.map((t) => ({ href: t.href, title: t.text, text: t.detail }))} />
+        </section>
+      ) : null}
+
+      <section>
+        <h2 class="label">Dans le métro</h2>
+        <Rows list={METRO} />
       </section>
+      <section>
+        <h2 class="label">Au piano</h2>
+        <Rows list={PIANO} />
+      </section>
+
+      <a class="row plain" href="#/micro">
+        <span class="row-main">
+          <span class="row-title">Micro</span>
+          <span class="row-sub">Tester et régler l’écoute du piano</span>
+        </span>
+        <ChevronIcon />
+      </a>
 
       <p class="credits">
-        Piano : Salamander Grand Piano par Alexander Holm, licence{' '}
-        <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">CC BY 3.0</a>. Grilles d'accords uniquement.
+        Piano : Salamander Grand Piano, Alexander Holm,{' '}
+        <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">
+          CC BY 3.0
+        </a>
+        . Grilles d'accords uniquement.
       </p>
     </div>
   );

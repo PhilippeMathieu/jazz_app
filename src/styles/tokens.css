@@ -1,0 +1,53 @@
+/* Harmonie jazz : un seul thème, sombre, pensé pour jouer le soir.
+   L'ambre est réservé à l'action principale et à « ce qui se joue maintenant ». */
+:root {
+  /* Couleurs */
+  --bg: #0d121d;
+  --surface: #151c2b;
+  --surface-2: #1c2536;
+  --line: #263045;
+  --line-strong: #364259;
+  --fg: #e8ecf4;
+  --muted: #8b95aa;
+  --faint: #5f6a82;
+  --accent: #e8ad35;
+  --on-accent: #1a1205;
+  --accent-soft: rgba(232, 173, 53, 0.14);
+  --info: #7fc3e6;
+  --ok: #4fc49b;
+  --ok-soft: rgba(79, 196, 155, 0.14);
+  --bad: #ea6f6f;
+  --bad-soft: rgba(234, 111, 111, 0.14);
+  --key-w: #e6e9ef;
+  --key-b: #05070c;
+  --key-line: #59647a;
+  --key-lab: #121826;
+  --key-soft-w: #f1dfb6;
+  --key-soft-b: #6b5216;
+
+  /* Typographie : affichage pour les accords seulement, texte en Plex Sans, notes et chiffres en Plex Mono */
+  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+  --t-cap: 12px;
+  --t-sec: 14px;
+  --t-body: 16px;
+  --t-title: 20px;
+  --t-h1: 28px;
+
+  /* Espacements, rayons, cibles tactiles */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --tap: 44px;
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  --player-h: 76px;
+  color-scheme: dark;
+}

@@ -1,0 +1,34 @@
+import { describe, expect, it } from 'vitest';
+import { checkBuild, earVoicing, makeEarQuestion } from './questions';
+import { chordPcs, parseChord } from '../../core/theory/chords';
+import { mod } from '../../core/theory/notes';
+import { seeded } from '../../core/random';
+
+describe('oreille', () => {
+  it('le voicing contient les bonnes notes à chaque niveau', () => {
+    const rng = seeded(2);
+    for (const s of ['Cmaj7', 'F♯m7', 'B♭7', 'Eø7', 'A♭13'])
+      for (const level of [1, 2, 3]) {
+        const c = parseChord(s)!;
+        const pcs = new Set(earVoicing(c, level, rng).map((m) => mod(m, 12)));
+        for (const p of pcs) expect(chordPcs(c)).toContain(p);
+      }
+  });
+  it('le 13 se joue sans quinte', () => {
+    const c = parseChord('G13')!;
+    expect(earVoicing(c, 1).map((m) => mod(m, 12))).not.toContain(2);
+  });
+  it('construire : quinte facultative sur les accords enrichis', () => {
+    const g9 = parseChord('G9')!;
+    expect(checkBuild(g9, [59, 65, 69, 67]).ok).toBe(true); // B F A G, sans D
+    expect(checkBuild(parseChord('G7')!, [67, 71, 77]).ok).toBe(false); // il manque la quinte
+    expect(checkBuild(parseChord('Cmaj7')!, [60, 64, 67, 70]).extra).toEqual([10]);
+  });
+  it('les progressions se jouent dans toutes les tonalités sans erreur', () => {
+    const rng = seeded(4);
+    for (let i = 0; i < 200; i++) {
+      const q = makeEarQuestion('prog', 1 + (i % 4), {}, undefined, rng);
+      expect(q.mode === 'prog' && q.chords.length >= 3).toBe(true);
+    }
+  });
+});

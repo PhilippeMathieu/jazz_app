@@ -13,6 +13,8 @@ interface Props {
   center?: number[];
   /** Occupe toute la largeur disponible. */
   fit?: boolean;
+  /** Étiquettes plus grandes (lecture à distance, touches larges). */
+  big?: boolean;
 }
 
 const W = 22;
@@ -20,7 +22,7 @@ const H = 100;
 const BW = 14;
 const BH = 62;
 
-export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit }: Props) {
+export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit, big }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const whites: number[] = [];
   for (let m = lo; m <= hi; m++) if (!isBlackKey(m)) whites.push(m);
@@ -48,7 +50,7 @@ export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit }
   return (
     <div class="kbwrap" ref={wrap}>
       <svg
-        class={'kbsvg' + (onKey || fit ? ' fit' : '') + (onKey ? ' inter' : '')}
+        class={'kbsvg' + (onKey || fit ? ' fit' : '') + (onKey ? ' inter' : '') + (big ? ' big' : '')}
         viewBox={`0 0 ${width} ${H + 1}`}
         width={onKey || fit ? undefined : width}
         role="img"

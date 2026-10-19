@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { guideLine, improvPlan } from './improv';
+import { classifyNote, guideLine, improvPlan, isGuideTone } from './improv';
 import { chartById } from '../../library/charts';
 import { parseChart } from '../chart/model';
-import { chordSymbol, parseChord } from '../theory/chords';
+import { chordSymbol, parseChord, rootPc } from '../theory/chords';
 import { scaleNames } from '../theory/scales';
 import { parseNote } from '../theory/notes';
 
@@ -19,7 +19,7 @@ describe('gammes', () => {
     expect(first(r, 'F7')).toBe('mixolydien');
     expect(first(r, 'B♭maj7')).toBe('ionien');
     expect(first(r, 'E♭maj7')).toBe('lydien');
-    expect(first(r, 'Aø7')).toBe('locrien9');
+    expect(first(r, 'Aø7')).toBe('locrien');
     expect(first(r, 'D7♭9')).toBe('mixob9b13');
     expect(first(r, 'Gm6')).toBe('melodique');
   });
@@ -28,6 +28,22 @@ describe('gammes', () => {
     expect(first(scalesOf('rhythm-changes'), 'D7')).toBe('mixolydien');
     const p = improvPlan(parseChart('key: C\n| Dm7 | D♭7 | Cmaj7 | Cmaj7 |'));
     expect(p.scales[1].scale).toBe('lydienb7');
+  });
+  it('une dominante sur plusieurs mesures garde la même gamme', () => {
+    const p = improvPlan(parseChart('key: Cm\n| Dø7 | G7 | G7 | Cm7 |'));
+    expect(p.scales[1].scale).toBe('mixob9b13');
+    expect(p.scales[2].scale).toBe('mixob9b13');
+    const s = improvPlan(parseChart('key: C\n| Dm7 | D♭7 | D♭7 | Cmaj7 |'));
+    expect([s.scales[1].scale, s.scales[2].scale]).toEqual(['lydienb7', 'lydienb7']);
+  });
+  it('respecte les tensions écrites, même sans résolution', () => {
+    const p = improvPlan(parseChart('key: G\n| Eø7 | A7♭9 | Cm7 | Cm7 |'));
+    expect(p.scales[1].scale).toBe('mixob9b13');
+  });
+  it('blues : I7 en mixolydien (couleur blues)', () => {
+    const p = improvPlan(chartById('blues-f')!);
+    expect(p.scales[0].scale).toBe('mixolydien');
+    expect(p.scales[0].alt).toBe('blues');
   });
   it('orthographie les gammes', () => {
     const d = parseNote('D')!.note;
@@ -39,6 +55,24 @@ describe('gammes', () => {
     const ch = ['Cm7', 'F7', 'B♭maj7'].map((s) => parseChord(s)!);
     expect(guideLine(ch, 'third').map((g) => g.name).join(' ')).toBe('E♭ E♭ D');
     expect(guideLine(ch, 'seventh').map((g) => g.name).join(' ')).toBe('B♭ A A');
+  });
+  it('guide tones : deux voix distinctes, conduites par demi-ton dans les quartes', () => {
+    for (const id of ['autumn-leaves', 'all-the-things', 'rhythm-changes', 'cycle-maj']) {
+      const plan = improvPlan(chartById(id)!);
+      let fourths = 0;
+      let smooth = 0;
+      plan.flat.forEach((f, i) => {
+        expect(plan.guideA[i].midi % 12).not.toBe(plan.guideB[i].midi % 12);
+        expect(plan.guideB[i].midi).toBeLessThan(plan.guideA[i].midi);
+        const nx = plan.flat[i + 1];
+        if (!nx || (rootPc(nx.chord) - rootPc(f.chord) + 12) % 12 !== 5) return;
+        fourths++;
+        const moves = [plan.guideA, plan.guideB].map((l) => Math.abs(l[i + 1].midi - l[i].midi));
+        if (Math.max(...moves) <= 2) smooth++;
+      });
+      // Une remontée d'octave de temps en temps, sinon demi-ton ou note commune.
+      expect(smooth / fourths).toBeGreaterThanOrEqual(0.9);
+    }
   });
 });
 
@@ -54,7 +88,6 @@ describe('lecture tolérante', () => {
   });
 });
 
-import { classifyNote, isGuideTone } from './improv';
 
 describe('notes jouées en impro', () => {
   it('classe une note par rapport à l’accord et à la gamme', () => {
