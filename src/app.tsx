@@ -7,6 +7,7 @@ import { Oreille } from './modules/oreille/Oreille';
 import { Express } from './modules/express/Express';
 import { Tonalite } from './modules/tonalite/Tonalite';
 import { Lecture } from './modules/lecture/Lecture';
+import { CoursList, LessonView } from './modules/cours/Cours';
 import { Flash } from './modules/flash/Flash';
 import { Micro } from './modules/micro/Micro';
 import { chartById } from './library/charts';
@@ -25,6 +26,7 @@ export function App() {
     return c ? <ChartView key={c.id} chart={c} /> : <ChartList />;
   }
   if (page === 'express') return <Express />;
+  if (page === 'cours') return a ? <LessonView key={a} id={a} /> : <CoursList />;
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
   if (page === 'oreille') return <Oreille />;

@@ -2,6 +2,8 @@ import { ChevronIcon } from './ui/icons';
 import { load } from './core/storage';
 import { advice } from './core/progress';
 import { chartById } from './library/charts';
+import { LESSONS, lessonById } from './modules/cours/lessons';
+import { coursProgress, nextLesson } from './modules/cours/Cours';
 
 interface Tile {
   href: string;
@@ -23,6 +25,7 @@ const PIANO: Tile[] = [
 function resumeLabel(path: string): string | null {
   const [page, id] = path.split('/').filter(Boolean);
   if (page === 'grille') return chartById(id)?.title ?? null;
+  if (page === 'cours') return id ? `Cours · ${lessonById(id)?.title ?? ''}` : 'Cours';
   return { lecture: 'Lecture de notes', tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
 }
 
@@ -46,6 +49,8 @@ export function Home() {
   const last = load('last', { path: '' }).path;
   const label = last ? resumeLabel(last) : null;
   const todo = advice();
+  const cours = coursProgress();
+  const nextL = nextLesson(cours);
   return (
     <div class="screen home">
       <h1 class="wordmark">
@@ -68,6 +73,21 @@ export function Home() {
           <Rows list={todo.map((t) => ({ href: t.href, title: t.text, text: t.detail }))} />
         </section>
       ) : null}
+
+      <section>
+        <h2 class="label">Comprendre</h2>
+        <Rows
+          list={[
+            {
+              href: nextL && cours.read.length ? `#/cours/${nextL.id}` : '#/cours',
+              title: 'Cours',
+              text: nextL
+                ? `${cours.read.length}/${LESSONS.length} leçons lues · ${cours.read.length ? 'suivante' : 'pour commencer'} : ${nextL.title}`
+                : `Les ${LESSONS.length} leçons sont lues : à revoir quand tu veux.`
+            }
+          ]}
+        />
+      </section>
 
       <section>
         <h2 class="label">Dans le métro</h2>

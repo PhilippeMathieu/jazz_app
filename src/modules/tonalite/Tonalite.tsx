@@ -1,10 +1,9 @@
 // Accords de la tonalité : réglages, partie chronométrée, résultat.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { Key, keyLabel, keyName } from '../../core/chart/model';
+import { keyLabel, keyName } from '../../core/chart/model';
 import { QUALITIES } from '../../core/theory/chords';
 import { noteName } from '../../core/theory/notes';
-import { audio, bass, now, playChord } from '../../core/audio/engine';
-import { bassRoot, voiceLead } from '../../core/audio/voicing';
+import { playOne } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
@@ -152,14 +151,6 @@ const valueOf = (v: { c: number; t: number; ms: number }) => `${Math.round((v.c 
 
 // ---------------------------------------------------------------- Partie
 
-function playDegree(k: Key, q: Question) {
-  audio();
-  const c = chordOf(k, q.degree);
-  const t = now() + 0.03;
-  bass(bassRoot(c, 36), t, 1.4, 0.8);
-  playChord(voiceLead(c, null), t, 1.4, 0.55);
-}
-
 function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void }) {
   const { level, mode } = saved;
   const tally = useRef<Tally>({ ...saved.items });
@@ -218,7 +209,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
         <div class="tq-head">
           <span class="tq-key">En {keyLabel(q.key)}</span>
           {current ? (
-            <button class="icon-btn" aria-label="Écouter l’accord" onClick={() => playDegree(q.key, q)}>
+            <button class="icon-btn" aria-label="Écouter l’accord" onClick={() => playOne(chordOf(q.key, q.degree))}>
               <SpeakerIcon />
             </button>
           ) : null}

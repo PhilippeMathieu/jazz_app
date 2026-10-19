@@ -2,8 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { chordSymbol } from '../../core/theory/chords';
 import { keyLabel } from '../../core/chart/model';
-import { audio, bass, now, playChord } from '../../core/audio/engine';
-import { bassRoot, voiceLead } from '../../core/audio/voicing';
+import { playSequence } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
@@ -41,17 +40,7 @@ const fmt = fmtSec;
 const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
   !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 
-function playSeq(seq: Seq) {
-  audio();
-  let prev: number[] | null = null;
-  const t0 = now() + 0.05;
-  seq.chords.forEach((c, i) => {
-    const v = voiceLead(c.chord, prev);
-    prev = v;
-    bass(bassRoot(c.chord, 36), t0 + i * 1.1, 1.0, 0.8);
-    playChord(v, t0 + i * 1.1, 1.0, 0.5);
-  });
-}
+const playSeq = (seq: Seq) => playSequence(seq.chords.map((c) => c.chord));
 
 export function Express() {
   const [saved, setSaved] = useState<Saved>(() => load('express', DEFAULT));

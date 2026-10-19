@@ -6,6 +6,7 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 
 ## Écrans
 
+- **Cours** : 13 leçons courtes (construire un accord, caractère des accords, accords de la tonalité, ii–V–I majeur et mineur, turnarounds, dominantes secondaires, SubV, backdoor, blues, voicings, tensions, gammes), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice.
 - **Accueil** : reprendre le dernier exercice, trois suggestions « À travailler » tirées de tes erreurs.
 - **Lecture de notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux jusqu'aux lignes supplémentaires et aux altérations.
 - **Accords de la tonalité** (métro) : une tonalité et une fondamentale (en D majeur, F♯), trouver le type d'accord (maj7, m7, 7, ø7, °7). 4 niveaux jusqu'au mineur et aux 12 tonalités ; les couples tonalité-degré ratés reviennent plus souvent ; réussite et temps par degré.
@@ -33,7 +34,7 @@ src/
     progress.ts suggestions « À travailler »
     random.ts   tirages (pondérés, reproductibles en test)
     storage.ts  sauvegarde locale
-  modules/      lecture, tonalite, express, oreille, grilles, flash, micro
+  modules/      cours, lecture, tonalite, express, oreille, grilles, flash, micro
   ui/           composants partagés (barre, clavier, lecteur, pupitre…)
   styles/       tokens, base, composants, écrans
   library/      grilles (accords uniquement)
