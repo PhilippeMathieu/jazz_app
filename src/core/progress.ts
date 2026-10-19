@@ -26,6 +26,7 @@ export function advice(): Advice[] {
   const oreille = load('oreille', { items: {} as Tally });
   const flash = load('flash-stats', { chords: {} as Tally });
   const quiz = load('quiz', { c: 0, t: 0 });
+  const tonalite = load('tonalite', { byDeg: {} as Tally });
 
   for (const [k, v] of Object.entries(express.byType))
     if (v.t >= 5 && v.c / v.t < 0.8) weak.push({ text: `Analyse express · ${TYPE_LABEL[k] ?? k}`, detail: `${pct(v)} % de réussite`, href: '#/express', score: v.c / v.t });
@@ -46,12 +47,26 @@ export function advice(): Advice[] {
     const avg = (v.ms ?? 0) / Math.max(1, v.c);
     if (acc < 0.7 || avg > 5000) weak.push({ text: `Flash voicings · ${k}`, detail: acc < 0.7 ? `${pct(v)} % justes` : `${(avg / 1000).toFixed(1).replace('.', ',')} s en moyenne`, href: '#/flash', score: acc * 0.9 });
   }
+  for (const [k, v] of Object.entries(tonalite.byDeg)) {
+    if (v.t < 5) continue;
+    const acc = v.c / v.t;
+    const avg = (v.ms ?? 0) / v.t;
+    const [mode, roman] = k.split(':');
+    if (acc < 0.8 || avg > 3000)
+      weak.push({
+        text: `Accords de la tonalité · ${roman}${mode === 'm' ? ' en mineur' : ''}`,
+        detail: acc < 0.8 ? `${pct(v)} % de réussite` : `${(avg / 1000).toFixed(1).replace('.', ',')} s en moyenne`,
+        href: '#/tonalite',
+        score: acc * 0.95
+      });
+  }
   if (quiz.t >= 8 && quiz.c / quiz.t < 0.8) weak.push({ text: 'Quiz d’analyse sur les grilles', detail: `${pct(quiz)} % de réussite`, href: '#/grilles', score: quiz.c / quiz.t });
   weak.sort((a, b) => a.score - b.score);
 
   const out: Advice[] = weak.slice(0, 3);
   // Pas encore abordé
   const todo: Advice[] = [];
+  if (!Object.keys(tonalite.byDeg).length) todo.push({ text: 'Accords de la tonalité, niveau 1', detail: 'Retrouver maj7, m7, 7, ø7 en sprint de 60 s', href: '#/tonalite' });
   if (!Object.keys(express.byType).length) todo.push({ text: 'Analyse express, niveau 1', detail: 'Degrés et ii–V–I, en sprint de 60 s', href: '#/express' });
   if (!quiz.t) todo.push({ text: 'Quiz d’analyse sur Autumn Leaves', detail: 'Masque les degrés et retrouve-les', href: '#/grille/autumn-leaves' });
   if (!Object.keys(flash.chords).length) todo.push({ text: 'Flash voicings au piano', detail: 'Shells en ii–V–I, avec le micro', href: '#/flash' });

@@ -9,6 +9,7 @@ import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
 import { StatBars } from '../../ui/StatBars';
 import { SpeakerIcon } from '../../ui/icons';
+import { Clock, fmtSec } from '../../ui/Clock';
 import { LEVELS, QTYPE_LABEL, QType, Question, Seq, Tally, isRight, makeRound } from './drill';
 
 type RunMode = 'sprint' | 'serie';
@@ -36,7 +37,7 @@ interface Answer {
   ms: number;
 }
 
-const fmt = (ms: number) => (ms / 1000).toFixed(1).replace('.', ',') + ' s';
+const fmt = fmtSec;
 const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
   !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 
@@ -136,29 +137,6 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
 
 // ---------------------------------------------------------------- Partie
 
-/** Chrono isolé : il se met à jour sans redessiner tout l'écran. */
-function Clock({ mode, spent, qStart, paused, onTimeout }: { mode: RunMode; spent: { current: number }; qStart: { current: number }; paused: boolean; onTimeout: () => void }) {
-  const [, tick] = useState(0);
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      tick((t) => t + 1);
-      if (mode === 'sprint' && !paused && spent.current + performance.now() - qStart.current >= SPRINT_MS) onTimeout();
-    }, 200);
-    return () => clearInterval(id);
-  }, [paused, mode]);
-  const elapsed = spent.current + (paused ? 0 : performance.now() - qStart.current);
-  if (mode === 'serie') return <span class="clock">{fmt(elapsed)}</span>;
-  const remaining = Math.max(0, SPRINT_MS - elapsed);
-  return (
-    <span class="clock">
-      {Math.ceil(remaining / 1000)} s
-      <span class="timebar">
-        <span style={`width:${(remaining / SPRINT_MS) * 100}%`} />
-      </span>
-    </span>
-  );
-}
-
 function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void }) {
   const { level, mode } = saved;
   const stats = { types: saved.byType, templates: saved.byTemplate };
@@ -211,7 +189,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
         <span class="play-meta">
           N{level} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
         </span>
-        <Clock mode={mode} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
+        <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
 
       <section class="seqcard">

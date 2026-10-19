@@ -230,6 +230,24 @@
 .result span { font-size: var(--t-cap); color: var(--muted); }
 .mistake { padding: var(--s3) var(--s4); display: flex; flex-direction: column; gap: 4px; font-size: var(--t-sec); }
 
+/* ---------------------------------------------------------------- Accords de la tonalité */
+.tq-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--s3) var(--s4) var(--s4); display: flex; flex-direction: column; gap: var(--s1); }
+.tq-head { display: flex; justify-content: space-between; align-items: center; min-height: var(--tap); }
+.tq-key { font-size: var(--t-title); font-weight: 600; }
+.tq-chord { display: flex; align-items: baseline; font-family: var(--display); font-weight: 800; line-height: 0.95; }
+.tq-root { font-size: 96px; }
+.tq-qual { font-size: 72px; color: var(--accent); }
+.tq-qual.bad { color: var(--bad); }
+.tq-roman { font-family: var(--mono); font-size: var(--t-body); font-weight: 600; color: var(--muted); min-height: 1.5em; }
+.harmo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: var(--s2); }
+.hchip { border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); padding: 6px 6px 4px; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.hchip .sym { font-size: 18px; line-height: 1.05; white-space: nowrap; overflow: hidden; text-overflow: clip; }
+.hchip .rn { font-family: var(--mono); font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.hchip.focus { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.hchip.focus .sym { color: var(--accent); }
+.choices.qual .choice { font-size: 22px; min-height: 64px; }
+.choices.qual .choice:last-child:nth-child(odd) { grid-column: span 2; }
+
 /* ---------------------------------------------------------------- Oreille */
 .ear-stage { display: flex; flex-direction: column; gap: var(--s3); }
 .playrow { display: flex; align-items: center; gap: var(--s3); }

@@ -10,6 +10,7 @@ interface Tile {
   tag?: string;
 }
 const METRO: Tile[] = [
+  { href: '#/tonalite', title: 'Accords de la tonalité', text: 'En D majeur, F♯ : maj7, m7, 7 ou ø7 ? Chronométré, 12 tonalités.' },
   { href: '#/express', title: 'Analyse express', text: 'Degrés, enchaînements, 9 ou ♭9, guide tones, chronométrés.' },
   { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' }
 ];
@@ -21,7 +22,7 @@ const PIANO: Tile[] = [
 function resumeLabel(path: string): string | null {
   const [page, id] = path.split('/').filter(Boolean);
   if (page === 'grille') return chartById(id)?.title ?? null;
-  return { express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
+  return { tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
 }
 
 function Rows({ list }: { list: Tile[] }) {
