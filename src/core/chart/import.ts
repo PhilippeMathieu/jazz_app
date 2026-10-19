@@ -1,6 +1,6 @@
 // Import tolérant de grilles copiées depuis une autre appli ou un site (Ultimate Guitar, ChordPro…) :
 // lignes d'accords au-dessus des paroles, barres de mesure facultatives, sections, capo.
-import { Bar, Chart, Key, Style, keyOnPc, parseKey, transposeChart } from './model';
+import { Bar, Chart, Key, Style, barsFrom, keyOnPc, parseKey, transposeChart } from './model';
 import { Chord, parseChord } from '../theory/chords';
 import { mod, pcOf } from '../theory/notes';
 import { guessKey } from '../analysis/analyze';
@@ -25,12 +25,21 @@ export interface ImportOptions {
   applyCapo?: boolean;
 }
 
-const SECTION =
-  /^\s*[\[(]?\s*(intro|verse|couplet|refrain|chorus|pre-?chorus|bridge|pont|outro|coda|solo|interlude|instrumental|ending|fin|[A-D]\d?)\s*\d*\s*[\])]?\s*:?\s*$/i;
+const SECTION_WORD =
+  /^\s*[\[(]?\s*(intro|verse|couplet|refrain|chorus|pre-?chorus|bridge|pont|outro|coda|solo|interlude|instrumental|ending|fin)\s*\d*\s*[\])]?\s*:?\s*$/i;
+// Une lettre seule (A, B…) n'est une section qu'entre crochets ou suivie de « : » — sinon c'est un accord.
+const SECTION_LETTER = /^\s*(?:\[\s*([A-D]\d?)\s*\]|\(\s*([A-D]\d?)\s*\)|([A-D]\d?)\s*:)\s*$/;
+function sectionOf(line: string): string | null {
+  const w = SECTION_WORD.exec(line);
+  if (w) return capitalize(w[1]);
+  const l = SECTION_LETTER.exec(line);
+  if (l) return (l[1] ?? l[2] ?? l[3]).toUpperCase();
+  return null;
+}
 const NOISE = /^(n\.?c\.?|[\[(]?x\s?\d{1,2}[\])]?|[\[(]?\d{1,2}\s?x[\])]?|%|\/|-+|\.+|\(|\)|\*+|→|:?\|\|?:?|\d+\.)$/i;
 const META = /^(tuning|accordage|author|artist|auteur|difficulty|difficulté|strumming|chords?|accords?)\s*:/i;
 const CAPO = /^capo\s*[:\-]?\s*(?:on\s*)?(\d+)/i;
-const KEYLINE = /^(?:key|tonalité)\s*:\s*([A-G][#b♯♭]?m?)\b/i;
+const KEYLINE = /^(?:key|tonalité)\s*:\s*([A-G][#b♯♭]?m?)(?=\s|$)/i;
 const TEMPO = /^(?:tempo|bpm)\s*:?\s*(\d+)/i;
 const DIRECTIVE = /^\{\s*([a-z_]+)\s*(?::\s*(.*?))?\s*\}$/i;
 const INLINE = /\[([^\]]+)\]/g;
@@ -59,9 +68,7 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
 
   const push = (chords: Chord[]) => {
     if (!chords.length) return;
-    const n = chords.length;
-    const beats = n === 1 ? [4] : n === 2 ? [2, 2] : n === 3 ? [2, 1, 1] : chords.map(() => 4 / n);
-    bars.push({ chords: chords.map((c, i) => ({ chord: c, beats: beats[i] ?? 1 })), section });
+    bars.push(...barsFrom(chords, 4, section));
     section = undefined;
   };
 
@@ -82,7 +89,7 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
       else if (name === 'capo') capo = Number(val) || 0;
       else if (name === 'tempo') tempo = Number(val) || undefined;
       else if (CHORDPRO_SECTIONS[name]) section = CHORDPRO_SECTIONS[name];
-      else if ((name === 'c' || name === 'comment' || name === 'ci') && SECTION.test(val)) section = capitalize(SECTION.exec(val)![1]);
+      else if ((name === 'c' || name === 'comment' || name === 'ci') && sectionOf(val)) section = sectionOf(val)!;
       continue;
     }
     const cap = CAPO.exec(line);
@@ -101,9 +108,9 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
       continue;
     }
     if (META.test(line)) continue;
-    const sec = SECTION.exec(line);
-    if (sec && !line.includes('|')) {
-      section = capitalize(sec[1]);
+    const sec = line.includes('|') ? null : sectionOf(line);
+    if (sec) {
+      section = sec;
       continue;
     }
 

@@ -33,21 +33,43 @@ export interface MicSettings {
 export const micSettings = (): MicSettings => load('micro', { gate: 0.006 });
 export const saveMicSettings = (s: MicSettings) => save('micro', s);
 
+let pending: Promise<boolean> | null = null;
+/** Incrémenté à chaque arrêt : une ouverture en cours devenue obsolète se referme d'elle-même. */
+let generation = 0;
+
 /** À appeler depuis un geste (tap). Renvoie true si le micro est actif. */
-export async function startMic(): Promise<boolean> {
-  if (stream && state === 'on') return true;
+export function startMic(): Promise<boolean> {
+  if (stream && state === 'on') return Promise.resolve(true);
+  if (pending) return pending;
+  pending = open().finally(() => {
+    pending = null;
+  });
+  return pending;
+}
+
+async function open(): Promise<boolean> {
   if (!navigator.mediaDevices?.getUserMedia) {
     setState('unsupported');
     return false;
   }
   setState('asking');
+  const gen = generation;
   try {
     const ctx = audio();
     setSession('play-and-record');
-    stream = await navigator.mediaDevices.getUserMedia({
+    const s = await navigator.mediaDevices.getUserMedia({
       audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
     });
-    const src = ctx.createMediaStreamSource(stream);
+    if (gen !== generation) {
+      // L'écran a été quitté pendant la demande d'autorisation.
+      s.getTracks().forEach((t) => t.stop());
+      setSession('playback');
+      return false;
+    }
+    stream = s;
+    // Appel, Siri, autre appli : le micro est coupé par le système.
+    s.getAudioTracks().forEach((t) => (t.onended = () => stopMic()));
+    const src = ctx.createMediaStreamSource(s);
     // Accords : signal brut, grande fenêtre (≈ 0,35 s) pour séparer les notes graves.
     chordAn = ctx.createAnalyser();
     chordAn.fftSize = 16384;
@@ -83,6 +105,7 @@ export async function startMic(): Promise<boolean> {
 }
 
 export function stopMic() {
+  generation++;
   stream?.getTracks().forEach((t) => t.stop());
   nodes.forEach((n) => n.disconnect());
   nodes = [];
@@ -95,22 +118,22 @@ export function stopMic() {
 const monoBuf = new Float32Array(2048);
 let chordBuf = new Float32Array(16384);
 
-/** Dernière fenêtre courte : niveau et note détectée. */
-export function readMono(): { level: number; pitch: PitchResult | null } | null {
+/** Dernière fenêtre courte : niveau et note détectée (rien sous le seuil). */
+export function readMono(gate = 0): { level: number; pitch: PitchResult | null } | null {
   if (!monoAn) return null;
   monoAn.getFloatTimeDomainData(monoBuf);
   const level = rms(monoBuf);
-  const sr = monoAn.context.sampleRate;
-  return { level, pitch: level > 0 ? yin(monoBuf, sr, 150, 2200) : null };
+  return { level, pitch: level > Math.max(gate, 1e-5) ? yin(monoBuf, monoAn.context.sampleRate, 150, 2200) : null };
 }
 
-/** Dernière grande fenêtre : niveau, chroma et note grave. */
-export function readChord() {
+/** Dernière grande fenêtre : niveau, chroma et note grave (null sous le seuil). */
+export function readChord(gate = 0) {
   if (!chordAn) return null;
   if (chordBuf.length !== chordAn.fftSize) chordBuf = new Float32Array(chordAn.fftSize);
   chordAn.getFloatTimeDomainData(chordBuf);
   const level = rms(chordBuf);
-  return { level, ...analyzeChordBuffer(chordBuf, chordAn.context.sampleRate) };
+  if (level <= Math.max(gate, 1e-5)) return { level, analysis: null };
+  return { level, analysis: analyzeChordBuffer(chordBuf, chordAn.context.sampleRate) };
 }
 
 export function useMicState(): MicState {

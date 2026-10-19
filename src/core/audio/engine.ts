@@ -58,27 +58,32 @@ export function audio(): AudioContext {
     drumBus = ctx.createGain();
     drumBus.gain.value = 0.5;
     drumBus.connect(master);
-    loadPiano();
   }
+  if (loadState === 'idle' || loadState === 'error') void loadPiano();
   if (ctx.state !== 'running') void ctx.resume();
   return ctx;
 }
 export const now = () => (ctx ? ctx.currentTime : 0);
 
+/** Charge les échantillons manquants ; en cas d'échec, on réessaiera au prochain son. */
 function loadPiano(): Promise<void> {
   if (loading) return loading;
   setLoad('loading');
   const base = import.meta.env.BASE_URL + 'samples/piano/';
   loading = Promise.all(
-    SAMPLES.map(async ([name, midi]) => {
+    SAMPLES.filter(([, midi]) => !buffers.has(midi)).map(async ([name, midi]) => {
       const res = await fetch(base + name + '.mp3');
+      if (!res.ok) throw new Error(`${name} : ${res.status}`);
       const arr = await res.arrayBuffer();
       const buf = await new Promise<AudioBuffer>((ok, ko) => ctx!.decodeAudioData(arr, ok, ko));
       buffers.set(midi, buf);
     })
   )
     .then(() => setLoad('ready'))
-    .catch(() => setLoad('error'));
+    .catch(() => setLoad('error'))
+    .finally(() => {
+      loading = null;
+    });
   return loading;
 }
 
@@ -107,7 +112,7 @@ export function silence() {
 export function piano(midi: number, when: number, dur: number, vel = 0.6) {
   const a = audio();
   const t = Math.max(when, a.currentTime);
-  if (buffers.size === 0) return synthPiano(midi, t, dur, vel);
+  if (buffers.size < SAMPLES.length) return synthPiano(midi, t, dur, vel);
   let best = SAMPLES[0][1];
   for (const [, m] of SAMPLES) if (Math.abs(m - midi) < Math.abs(best - midi)) best = m;
   const buf = buffers.get(best);

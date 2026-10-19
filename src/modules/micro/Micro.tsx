@@ -53,8 +53,8 @@ export function Micro() {
       setMono({ level: m.level, midi: p ? Math.round(p.midi) : null, cents: p ? Math.round((p.midi - Math.round(p.midi)) * 100) : 0, clarity: p?.clarity ?? 0 });
       if (calib.current) calib.current.push(m.level);
     }
-    const c = readChord();
-    if (c) setCh({ level: c.level, chroma: c.chroma, lowest: c.lowest });
+    const c = readChord(settings.gate);
+    if (c) setCh(c.analysis ? { level: c.level, chroma: c.analysis.chroma.slice(), lowest: c.analysis.lowest } : { level: c.level, chroma: new Float32Array(12), lowest: null });
   }, 100);
 
   const measureSilence = () => {

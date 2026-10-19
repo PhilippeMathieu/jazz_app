@@ -108,14 +108,28 @@ export function fft(re: Float32Array, im: Float32Array) {
   }
 }
 
-/** Spectre d'amplitude (fenêtre de Hann). buf.length doit être une puissance de 2. */
+// Tampons réutilisés d'un appel à l'autre (l'analyse tourne plusieurs fois par seconde).
+const work = new Map<number, { win: Float32Array; re: Float32Array; im: Float32Array; mag: Float32Array }>();
+function buffers(n: number) {
+  let w = work.get(n);
+  if (!w) {
+    const win = new Float32Array(n);
+    for (let i = 0; i < n; i++) win[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1));
+    w = { win, re: new Float32Array(n), im: new Float32Array(n), mag: new Float32Array(n / 2) };
+    work.set(n, w);
+  }
+  return w;
+}
+
+/** Spectre d'amplitude (fenêtre de Hann). buf.length doit être une puissance de 2. Le résultat est réutilisé au prochain appel. */
 export function magnitude(buf: Float32Array): Float32Array {
   const n = buf.length;
-  const re = new Float32Array(n);
-  const im = new Float32Array(n);
-  for (let i = 0; i < n; i++) re[i] = buf[i] * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1)));
+  const { win, re, im, mag } = buffers(n);
+  for (let i = 0; i < n; i++) {
+    re[i] = buf[i] * win[i];
+    im[i] = 0;
+  }
   fft(re, im);
-  const mag = new Float32Array(n / 2);
   for (let k = 0; k < n / 2; k++) mag[k] = Math.hypot(re[k], im[k]);
   return mag;
 }

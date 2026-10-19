@@ -111,3 +111,42 @@ Am7   x02010
     expect(keyName(r.key)).toBe('Cm');
   });
 });
+
+describe('import : cas limites', () => {
+  it('garde les lignes d’un seul accord (D, A, B7…)', () => {
+    const r = importText('D\nSome lyrics here\nA\nMore lyrics\nG\nB7\n[B]\nC');
+    expect(syms(r)).toEqual(['D', 'A', 'G', 'B7', 'C']);
+    expect(r.bars[4].section).toBe('B');
+  });
+  it('lit les tonalités altérées', () => {
+    expect(keyName(importText('Key: F#\nF#  B  C#7').key)).toBe('F♯');
+    expect(keyName(importText('Key: Bb\nBb  Eb  F7').key)).toBe('B♭');
+  });
+  it('répartit plus de 4 accords par mesure sur des temps entiers', () => {
+    const r = importText('| C Dm Em F G |');
+    expect(r.bars.length).toBe(2);
+    for (const b of r.bars) expect(b.chords.every((c) => Number.isInteger(c.beats) && c.beats > 0)).toBe(true);
+  });
+});
+
+import { LIBRARY } from '../../library/charts';
+import { analyze } from '../analysis/analyze';
+import { transposeChart, flatten } from './model';
+
+describe('grilles de la bibliothèque', () => {
+  it('se relisent à l’identique après enregistrement', () => {
+    for (const c of LIBRARY) {
+      const back = parseChart(chartToText(c), c.id);
+      expect(flatten(back).map((f) => chordSymbol(f.chord))).toEqual(flatten(c).map((f) => chordSymbol(f.chord)));
+    }
+  });
+  it('gardent la même analyse dans les 12 tonalités', () => {
+    for (const c of LIBRARY) {
+      const ref = analyze(c).chords.map((a) => a.roman);
+      for (let s = 1; s < 12; s++) expect(analyze(transposeChart(c, s)).chords.map((a) => a.roman), `${c.id} +${s}`).toEqual(ref);
+    }
+  });
+  it('n’échoue pas sur une grille vide', () => {
+    expect(analyze(parseChart('key: C')).chords).toEqual([]);
+  });
+});

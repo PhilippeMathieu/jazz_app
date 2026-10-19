@@ -92,6 +92,7 @@ export class ChartPlayer {
   start(fromBar = 0) {
     const a = audio();
     this.stop();
+    if (this.chorusBeats <= 0) return;
     this.playing = true;
     this.chorus = 0;
     this.prevVoicing = null;
@@ -154,6 +155,16 @@ export class ChartPlayer {
       const ev = this.events[this.evIdx];
       const time = this.chorusStart() + ev.beat * this.spb;
       if (time > horizon) break;
+      const late = a.currentTime - time;
+      if (late > 0.5) {
+        // Minuterie suspendue (appli en arrière-plan) : on reprend là où on en était au lieu de tout jouer d'un coup.
+        this.anchorTime += late + 0.05;
+        continue;
+      }
+      if (late > 0.05) {
+        this.evIdx++;
+        continue;
+      }
       ev.run(time, this.spb);
       this.evIdx++;
     }

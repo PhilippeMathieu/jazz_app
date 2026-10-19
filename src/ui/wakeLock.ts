@@ -3,20 +3,35 @@ import { useEffect } from 'preact/hooks';
 
 type Sentinel = { release: () => Promise<void>; addEventListener: (t: 'release', f: () => void) => void };
 let sentinel: Sentinel | null = null;
+let pending: Promise<void> | null = null;
 let holders = 0;
 
-async function acquire() {
+function acquire(): Promise<void> {
   const nav = navigator as Navigator & { wakeLock?: { request: (t: 'screen') => Promise<Sentinel> } };
-  if (sentinel || !nav.wakeLock || document.visibilityState !== 'visible') return;
-  try {
-    sentinel = await nav.wakeLock.request('screen');
-    sentinel.addEventListener('release', () => {
-      sentinel = null;
+  if (sentinel || pending || !nav.wakeLock || document.visibilityState !== 'visible') return pending ?? Promise.resolve();
+  pending = nav.wakeLock
+    .request('screen')
+    .then((s) => {
+      if (holders === 0) {
+        void s.release();
+        return;
+      }
+      sentinel = s;
+      s.addEventListener('release', () => {
+        sentinel = null;
+      });
+    })
+    .catch(() => {
+      // Refusé ou non pris en charge : l'écran suivra le réglage « Verrouillage auto » du téléphone.
+    })
+    .finally(() => {
+      pending = null;
     });
-  } catch {
-    // Refusé ou non pris en charge : l'écran suivra le réglage du téléphone.
-  }
+  return pending;
 }
+
+/** Le maintien de l'écran allumé est-il disponible dans ce navigateur ? */
+export const wakeLockSupported = () => typeof navigator !== 'undefined' && 'wakeLock' in navigator;
 
 if (typeof document !== 'undefined') {
   // Le verrou tombe quand l'appli passe en arrière-plan : on le reprend au retour.

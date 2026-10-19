@@ -10,7 +10,8 @@ const KEY = 'hj:mes-grilles';
 
 function read(): Stored[] {
   try {
-    return JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    const v: unknown = JSON.parse(localStorage.getItem(KEY) ?? '[]');
+    return Array.isArray(v) ? v.filter((x): x is Stored => typeof x?.id === 'string' && typeof x?.text === 'string') : [];
   } catch {
     return [];
   }

@@ -84,7 +84,7 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
   }, [player.pos?.chord, player.pos?.chorus]);
 
   useMicLoop(listening && playing, () => {
-    const m = readMono();
+    const m = readMono(tracker.current.gate);
     if (!m) return;
     const ev = tracker.current.push(m.pitch, m.level, performance.now());
     if (!ev) return;

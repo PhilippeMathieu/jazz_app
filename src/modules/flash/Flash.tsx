@@ -110,14 +110,16 @@ export function Flash() {
   useMicLoop(running && listening && !revealed && !paused, () => {
     const c = cur.current;
     if (!c || performance.now() - shownAt.current < 400) return;
-    const r = readChord();
-    if (!r || r.level < gate.current) {
-      setLive([]);
+    const read = readChord(gate.current);
+    const r = read?.analysis;
+    if (!r) {
+      setLive((l) => (l.length ? [] : l));
       return;
     }
     const target = [...new Set(c.v.map((m) => mod(m, 12)))];
     const ck = checkChord(r.chroma, target);
-    setLive([...Array(12).keys()].filter((p) => r.chroma[p] >= LIMITS.present));
+    const heardNow = [...Array(12).keys()].filter((p) => r.chroma[p] >= LIMITS.present);
+    setLive((l) => (l.join() === heardNow.join() ? l : heardNow));
     history.current = [...history.current, ck.ok].slice(-3);
     if (!best.current || ck.score > best.current.score) best.current = { ...ck, lowest: r.lowest !== null ? mod(r.lowest, 12) : null };
     if (history.current.filter(Boolean).length >= 2) {

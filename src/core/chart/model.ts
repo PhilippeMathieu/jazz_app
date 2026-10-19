@@ -1,5 +1,5 @@
 import { Chord, chordSymbol, parseChord } from '../theory/chords';
-import { Note, noteName, parseNote, pcOf, spellWith, mod, NATURAL_PC } from '../theory/notes';
+import { Note, noteName, parseNote, pcOf, spellWith, mod } from '../theory/notes';
 
 export type Mode = 'major' | 'minor';
 export interface Key {
@@ -61,17 +61,30 @@ export function parseKey(s: string): Key | null {
   return { tonic: r.note, mode };
 }
 
-/** Répartition des temps quand plusieurs accords partagent une mesure. */
-function splitBeats(n: number, beatsPerBar: number): number[] {
-  if (n === 1) return [beatsPerBar];
-  if (beatsPerBar === 4) {
-    if (n === 2) return [2, 2];
-    if (n === 3) return [2, 1, 1];
-    if (n === 4) return [1, 1, 1, 1];
-  }
+/** Répartition des temps (entiers) quand n accords partagent une mesure (n ≤ temps par mesure). */
+export function splitBeats(n: number, beatsPerBar: number): number[] {
+  if (n <= 1) return [beatsPerBar];
+  if (beatsPerBar === 4 && n === 3) return [2, 1, 1];
   const base = Math.floor(beatsPerBar / n);
   return Array.from({ length: n }, (_, i) => (i === 0 ? beatsPerBar - base * (n - 1) : base));
 }
+
+/** Range des accords en mesures : au plus un accord par temps, le surplus passe à la mesure suivante. */
+export function barsFrom(chords: Chord[], beatsPerBar: number, section?: string): Bar[] {
+  const out: Bar[] = [];
+  for (let i = 0; i < chords.length; i += beatsPerBar) {
+    const group = chords.slice(i, i + beatsPerBar);
+    const beats = splitBeats(group.length, beatsPerBar);
+    out.push({ chords: group.map((c, k) => ({ chord: c, beats: beats[k] })), section: i === 0 ? section : undefined });
+  }
+  return out;
+}
+
+const STYLES: Style[] = ['swing', 'bossa', 'ballade', 'blues'];
+const clampInt = (v: string | undefined, lo: number, hi: number, dflt: number) => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt;
+};
 
 /**
  * Format texte des grilles :
@@ -102,8 +115,8 @@ export function parseChart(text: string, id = 'grille'): Chart {
     }
     if (!rest) continue;
     const cells = rest.split('|').map((c) => c.trim()).filter((c) => c.length);
+    const bpb = clampInt(meta.beats, 2, 7, 4);
     for (const cell of cells) {
-      const bpb = Number(meta.beats ?? 4);
       if (cell === '%') {
         const prev = bars[bars.length - 1];
         if (!prev) throw new Error('« % » sans mesure précédente');
@@ -115,8 +128,7 @@ export function parseChart(text: string, id = 'grille'): Chart {
           if (!c) throw new Error(`Accord illisible : « ${t} »`);
           return c;
         });
-        const beats = splitBeats(chords.length, bpb);
-        bars.push({ chords: chords.map((c, i) => ({ chord: c, beats: beats[i] })), section: pendingSection });
+        bars.push(...barsFrom(chords, bpb, pendingSection));
       }
       pendingSection = undefined;
     }
@@ -128,10 +140,10 @@ export function parseChart(text: string, id = 'grille'): Chart {
     title: meta.title ?? 'Sans titre',
     subtitle: meta.subtitle,
     key,
-    tempo: Number(meta.tempo ?? 120),
-    style: (meta.style as Style) ?? 'swing',
-    beatsPerBar: Number(meta.beats ?? 4),
-    level: Number(meta.level ?? 1) as 1 | 2 | 3,
+    tempo: clampInt(meta.tempo, 40, 320, 120),
+    style: STYLES.includes(meta.style as Style) ? (meta.style as Style) : 'swing',
+    beatsPerBar: clampInt(meta.beats, 2, 7, 4),
+    level: clampInt(meta.level, 1, 3, 1) as 1 | 2 | 3,
     notes: meta.notes,
     bars
   };
@@ -193,4 +205,3 @@ export function transposeChart(chart: Chart, semis: number): Chart {
   };
 }
 
-export const majorScalePc = (k: Key, degree: number) => mod(pcOf(k.tonic) + NATURAL_PC[mod(degree, 7)], 12);

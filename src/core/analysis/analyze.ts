@@ -121,6 +121,7 @@ interface Unit {
 
 export function analyze(chart: Chart): Analysis {
   const flat = flatten(chart);
+  if (!flat.length) return { chords: [], brackets: [], regions: [] };
   // 1. Regroupement
   const units: Unit[] = [];
   flat.forEach((f) => {
@@ -223,7 +224,7 @@ export function analyze(chart: Chart): Analysis {
       keyIdx[j] = from;
       j++;
     }
-    i = j;
+    i = Math.max(i, j - 1); // la boucle repart sur j, où la tonalité change vraiment
   }
   // Un ii–V qui résout appartient à la tonalité de sa cible.
   for (const b of unitBrackets) {
