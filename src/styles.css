@@ -375,3 +375,75 @@ input[type='range'] { width: 100%; accent-color: var(--accent); }
 .chart-head .btn { padding: 6px 12px; font-size: 13px; }
 .field-row .field.k { flex: 2 1 45%; }
 .field-row .field.t { flex: 1 1 18%; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; margin-top: 1px; }
+
+/* Mode pupitre */
+.stand {
+  position: fixed; inset: 0; z-index: 50; background: var(--bg);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  padding-left: var(--gutter-l); padding-right: var(--gutter-r);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.stand-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.stand-main { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.stand-chords { display: flex; flex-direction: column; gap: 12px; }
+.stand-now, .stand-next { container-type: inline-size; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.stand-now { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; }
+.stand-bar { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.stand-sym { font-family: var(--display); font-weight: 800; line-height: 0.9; white-space: nowrap; color: var(--accent); }
+.stand-info { font-family: var(--mono); font-size: 18px; }
+.beats { display: flex; gap: 8px; }
+.beats i { width: 22px; height: 22px; border-radius: 5px; border: 2px solid var(--line); }
+.beats i.on { background: var(--accent); border-color: var(--accent); }
+.stand-next { padding: 0 6px; }
+.stand-sym2 { font-family: var(--display); font-weight: 700; line-height: 0.95; white-space: nowrap; }
+.stand-info2 { font-family: var(--mono); font-size: 15px; color: var(--muted); }
+.stand-kb { min-width: 0; }
+.stand-controls { display: flex; align-items: center; justify-content: center; gap: 18px; }
+.stand-step { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 26px; color: var(--fg); }
+.big-play { width: 76px; height: 76px; }
+.big-play svg { width: 28px; height: 28px; }
+.stand-tempo { font-family: var(--mono); font-size: 15px; color: var(--muted); min-width: 5em; }
+@media (orientation: landscape) {
+  .stand-main { flex-direction: row; align-items: center; }
+  .stand-chords { flex: 1.1; flex-direction: row; align-items: flex-end; }
+  .stand-now { flex: 2; }
+  .stand-next { flex: 1; }
+  .stand-kb { flex: 1; }
+  .stand-top .seg button { padding: 5px 10px; }
+}
+
+/* Flash voicings */
+.optlist { display: grid; grid-template-columns: 1fr; gap: 6px; }
+.optlist.two { grid-template-columns: 1fr 1fr; }
+.optlist .lv { padding: 10px 12px; }
+.optlist .lv b { font-family: var(--body); font-size: 14px; }
+.optlist .lv span { font-size: 12px; }
+.countdown { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.countdown span { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; animation-name: countdown; animation-timing-function: linear; animation-fill-mode: forwards; }
+@keyframes countdown { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.flash .stand-main { justify-content: flex-start; }
+.flash .stand-controls .next { flex: 1; max-width: 260px; }
+.flash .stand-kb .placeholder { min-height: 92px; display: grid; place-items: center; }
+@media (orientation: landscape) {
+  .flash .stand-main { flex-direction: row; align-items: center; }
+  .flash .stand-now { flex: 1.2; }
+  .flash .stand-kb { flex: 1; }
+  .flash .stand-next { display: none; }
+}
+
+/* Une main dans le métro : réponses en bas d'écran */
+.play-screen { min-height: 100dvh; }
+.thumb-zone { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
+.thumb-zone .fb { border-top: 0; padding-top: 0; }
+
+/* Accueil par contexte */
+.ctx { display: flex; flex-direction: column; gap: 10px; }
+.ctx-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.ctx-head h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 26px; text-transform: uppercase; letter-spacing: 0.02em; color: var(--accent); }
+.ctx-head span { font-size: 12.5px; color: var(--muted); }
+.pillar .glyph { font-size: 20px; }
+.pillar { padding: 12px; }
+.pillar h2 { font-size: 22px; }

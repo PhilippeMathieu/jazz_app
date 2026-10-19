@@ -58,3 +58,56 @@ The autumn leaves of red and gold
     }
   });
 });
+
+describe('import Ultimate Guitar et ChordPro', () => {
+  const UG = `Autumn Leaves chords
+Capo: 2nd fret
+Tuning: E A D G B E
+Key: Am
+
+[Intro]
+Dm7  G7  Cmaj7  Fmaj7
+
+[Verse 1]
+Dm7               G7
+The falling leaves drift by the window
+Bm7b5    E7       Am  (x2)
+The autumn leaves of red and gold
+
+Am7   x02010
+`;
+
+  it('transpose selon le capo et ignore accordage et diagrammes', () => {
+    const r = importText(UG);
+    expect(r.capo).toBe(2);
+    expect(r.capoApplied).toBe(true);
+    expect(syms(r)).toEqual(['Em7', 'A7', 'Dmaj7', 'Gmaj7', 'Em7', 'A7', 'C♯ø7', 'F♯7', 'Bm']);
+    expect(keyName(r.key)).toBe('Bm');
+    expect(r.bars[0].section).toBe('Intro');
+  });
+
+  it('peut garder les formes de guitare', () => {
+    const r = importText(UG, { applyCapo: false });
+    expect(syms(r).slice(0, 2)).toEqual(['Dm7', 'G7']);
+    expect(keyName(r.key)).toBe('Am');
+  });
+
+  it('lit le format brut [ch]…[/ch]', () => {
+    const r = importText('[ch]Dm7[/ch]   [ch]G7[/ch]\nSome words\n[ch]Cmaj7[/ch]');
+    expect(syms(r)).toEqual(['Dm7', 'G7', 'Cmaj7']);
+  });
+
+  it('lit le ChordPro', () => {
+    const r = importText(`{title: Blue Bossa}
+{key: Cm}
+{tempo: 140}
+{soc}
+[Cm7]Words here [Fm7]and there
+[Dm7b5]More [G7b9]words [Cm7]end`);
+    expect(r.title).toBe('Blue Bossa');
+    expect(r.tempo).toBe(140);
+    expect(syms(r)).toEqual(['Cm7', 'Fm7', 'Dø7', 'G7♭9', 'Cm7']);
+    expect(r.bars[0].section).toBe('Refrain');
+    expect(keyName(r.key)).toBe('Cm');
+  });
+});

@@ -10,11 +10,13 @@ import { BackIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 import { load, save } from '../../core/storage';
 import { PlayerBar, usePlayer } from '../../ui/PlayerBar';
+import { Stand } from '../../ui/Stand';
 
 export function ChartView({ chart: original }: { chart: Chart }) {
   const [view, setView] = useState(() => load('grille-view', { analysis: true }));
   const [shift, setShift] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
+  const [stand, setStand] = useState(false);
   useEffect(() => save('grille-view', view), [view]);
 
   const chart = useMemo(() => transposeChart(original, shift), [original, shift]);
@@ -93,6 +95,7 @@ export function ChartView({ chart: original }: { chart: Chart }) {
             <button aria-pressed={show} onClick={() => !show && flip()}>Analyse</button>
             <button aria-pressed={!show} onClick={() => show && flip()}>Masquée</button>
           </div>
+          <button class="btn" onClick={() => setStand(true)}>Pupitre</button>
         </div>
         {chart.notes ? <p class="chart-notes">{chart.notes}</p> : null}
 
@@ -177,6 +180,7 @@ export function ChartView({ chart: original }: { chart: Chart }) {
       </div>
 
       <PlayerBar p={player} fromBar={selected !== null ? flat[selected].bar : 0} />
+      {stand ? <Stand chart={chart} player={player} initial="accords" startIndex={selected ?? 0} onClose={() => setStand(false)} /> : null}
     </>
   );
 }

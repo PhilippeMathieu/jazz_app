@@ -261,7 +261,7 @@ export function Express() {
   const long = q.type === 'pattern' || q.type === 'key' || q.type === 'scale';
   const correctSoFar = answers.filter((a) => a.ok).length;
   return (
-    <div class="screen">
+    <div class="screen play-screen">
       <div class="topbar">
         <button class="back" aria-label="Arrêter" onClick={() => finish(answers, false)}><BackIcon /></button>
         <h1>N{level}</h1>
@@ -296,28 +296,38 @@ export function Express() {
       </section>
 
       <h2 class="prompt">{q.prompt}</h2>
-      <div class={'choices' + (long ? ' long' : '') + (q.choices.length === 2 ? ' two' : '')}>
-        {q.choices.map((c) => {
-          const state = current ? (c === q.answer ? ' is-ok' : c === current.choice ? ' is-bad' : '') : '';
-          return (
-            <button key={c} class={'choice' + state} disabled={!!current} onClick={() => choose(c)}>
-              {c}
-            </button>
-          );
-        })}
-      </div>
 
-      {current && !current.ok ? (
-        <div class="fb">
-          <p class="verdict bad">Réponse : {q.answer}</p>
-          <p class="hint">{q.explain}</p>
-          <button class="next" onClick={() => {
-            const over = (mode === 'serie' && answers.length >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
-            if (over) finish();
-            else next();
-          }}>Continuer</button>
+      {/* Zone de réponse en bas d'écran : à portée du pouce, téléphone tenu d'une main. */}
+      <div class="thumb-zone">
+        {current && !current.ok ? (
+          <div class="fb">
+            <p class="verdict bad">Réponse : {q.answer}</p>
+            <p class="hint">{q.explain}</p>
+          </div>
+        ) : null}
+        <div class={'choices' + (long ? ' long' : '') + (q.choices.length === 2 ? ' two' : '')}>
+          {q.choices.map((c) => {
+            const state = current ? (c === q.answer ? ' is-ok' : c === current.choice ? ' is-bad' : '') : '';
+            return (
+              <button key={c} class={'choice' + state} disabled={!!current} onClick={() => choose(c)}>
+                {c}
+              </button>
+            );
+          })}
         </div>
-      ) : null}
+        {current && !current.ok ? (
+          <button
+            class="next"
+            onClick={() => {
+              const over = (mode === 'serie' && answers.length >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
+              if (over) finish();
+              else next();
+            }}
+          >
+            Continuer
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }

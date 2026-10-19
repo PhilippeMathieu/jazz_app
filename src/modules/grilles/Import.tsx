@@ -7,12 +7,17 @@ import { newChartId, saveUserChart } from '../../library/userCharts';
 import { BackIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 
-const EXAMPLE = `[Intro]
-Am7  D7  Gmaj7  Cmaj7
+const EXAMPLE = `Capo: 2nd fret
+Key: Am
 
-[Couplet]
-F#m7b5   B7(b9)   Em
-| Am7 D7 | G7M | % |`;
+[Intro]
+Dm7  G7  Cmaj7  Fmaj7
+
+[Verse 1]
+Dm7               G7
+The falling leaves drift by the window
+Bm7b5    E7(b9)   Am
+The autumn leaves of red and gold`;
 
 const KEYS: { value: string; label: string }[] = [];
 for (const mode of ['major', 'minor'] as const) for (let pc = 0; pc < 12; pc++) KEYS.push({ value: `${pc}-${mode}`, label: keyLabel(keyOnPc(pc, mode)) });
@@ -24,8 +29,9 @@ export function Import() {
   const [style, setStyle] = useState<Style>('swing');
   const [tempo, setTempo] = useState(120);
   const [error, setError] = useState('');
+  const [applyCapo, setApplyCapo] = useState(true);
 
-  const result = useMemo(() => (text.trim() ? importText(text) : null), [text]);
+  const result = useMemo(() => (text.trim() ? importText(text, { applyCapo }) : null), [text, applyCapo]);
   const guessed = result ? `${pcOf(result.key.tonic)}-${result.key.mode}` : '';
   const keyValue = keyOverride ?? guessed;
   const key: Key | undefined = result
@@ -37,7 +43,7 @@ export function Import() {
   const saveIt = () => {
     if (!result || !result.bars.length) return;
     const id = newChartId();
-    const chart = chartFromImport(result, { id, title: title.trim() || 'Grille importée', key, tempo, style });
+    const chart = chartFromImport(result, { id, title: title.trim() || result.title || 'Grille importée', key, tempo: result.tempo ?? tempo, style });
     if (!saveUserChart(chart)) {
       setError('Enregistrement impossible : le stockage de ce navigateur est plein ou bloqué.');
       return;
@@ -52,13 +58,14 @@ export function Import() {
         <h1>Importer</h1>
       </div>
       <p class="muted small" style="margin:0">
-        Colle les accords d'un morceau, avec ou sans paroles. Depuis Tabs &amp; Chords : copie le texte du morceau. Si la copie est bloquée, fais
+        Colle les accords d'un morceau, avec ou sans paroles. Depuis Ultimate Guitar : ouvre le morceau sur ultimate-guitar.com dans Safari,
+        sélectionne tout le texte des accords et copie-le. Les fichiers ChordPro sont aussi acceptés. Si la copie est bloquée dans l'appli, fais
         une capture d'écran, ouvre-la dans Photos, appuie longuement sur le texte (Texte en direct) puis Copier.
       </p>
 
       <div class="field">
         <label for="imp-title">Titre</label>
-        <input id="imp-title" type="text" value={title} placeholder="Ex. Autumn Leaves" onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
+ <input id="imp-title" type="text" value={title} placeholder={result?.title ?? 'Ex. Autumn Leaves'} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
       </div>
       <div class="field">
         <label for="imp-text">Accords</label>
@@ -81,6 +88,15 @@ export function Import() {
                   .join('  |  ')}
                 {result.bars.length > 32 ? '  …' : ''}
               </div>
+              {result.capo ? (
+                <label class="check">
+                  <input id="imp-capo" type="checkbox" checked={applyCapo} onChange={(e) => setApplyCapo((e.target as HTMLInputElement).checked)} />
+                  <span>
+                    Capo {result.capo} détecté. Transposer les accords à la hauteur réelle pour le piano (+{result.capo} demi-ton
+                    {result.capo > 1 ? 's' : ''}).
+                  </span>
+                </label>
+              ) : null}
               {!result.measured ? <p class="muted small">Pas de barres de mesure : chaque accord occupe une mesure. Ajoute des « | » pour préciser.</p> : null}
             </>
           ) : (

@@ -7,6 +7,7 @@ import { Oreille } from './modules/oreille/Oreille';
 import { Impro } from './modules/impro/Impro';
 import { ImproView } from './modules/impro/ImproView';
 import { Express } from './modules/express/Express';
+import { Flash } from './modules/flash/Flash';
 import { chartById } from './library/charts';
 
 export function App() {
@@ -18,6 +19,7 @@ export function App() {
     return c ? <ChartView key={c.id} chart={c} /> : <ChartList />;
   }
   if (page === 'express') return <Express />;
+  if (page === 'flash') return <Flash />;
   if (page === 'oreille') return <Oreille />;
   if (page === 'impro') {
     const c = b ? chartById(b) : undefined;

@@ -4,6 +4,7 @@ import { ChartPlayer, Position } from '../core/player/player';
 import { onLoadState, LoadState } from '../core/audio/engine';
 import { load, save } from '../core/storage';
 import { PlayIcon, StopIcon } from './icons';
+import { useWakeLock } from './wakeLock';
 
 interface Prefs {
   tempo: Record<string, number>;
@@ -25,6 +26,8 @@ export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
 
   useEffect(() => onLoadState(setLoadState), []);
   useEffect(() => save('grille-prefs', prefs), [prefs]);
+  // L'écran reste allumé pendant la lecture.
+  useWakeLock(!!pos);
 
   // Recréé quand la grille ou l'instrumentation change ; reprend là où il en était.
   useEffect(() => {

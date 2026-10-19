@@ -61,3 +61,44 @@ export function displayVoicing(c: Chord): number[] {
   const up = voiceLead(c, null, 52, 76);
   return [b, ...up];
 }
+
+// --- Voicings de main gauche à apprendre -----------------------------------
+
+export type VoicingType = 'shell' | 'A' | 'B';
+export const VOICING_LABEL: Record<VoicingType, string> = {
+  shell: 'Shell : fondamentale + 3 + 7',
+  A: 'Sans fondamentale A (3 en bas)',
+  B: 'Sans fondamentale B (7 en bas)'
+};
+
+/** Voicing « A » sans fondamentale, en intervalles depuis la fondamentale (3ce en bas). */
+const ROOTLESS_A: Record<string, number[]> = {
+  maj7: [4, 7, 11, 14], maj9: [4, 7, 11, 14], '6': [4, 7, 9, 14], '69': [4, 7, 9, 14], 'maj7#11': [4, 6, 11, 14], maj: [4, 7, 11, 14],
+  m7: [3, 7, 10, 14], m9: [3, 7, 10, 14], m11: [3, 5, 10, 14], min: [3, 7, 10, 14], m6: [3, 7, 9, 14], mM7: [3, 7, 11, 14],
+  '7': [4, 9, 10, 14], '9': [4, 9, 10, 14], '13': [4, 9, 10, 14], '7b9': [4, 9, 10, 13], '7#9': [4, 8, 10, 15], '7alt': [4, 8, 10, 15],
+  '7#11': [4, 6, 10, 14], '7b13': [4, 8, 10, 14], '7#5': [4, 8, 10, 14], '7b5': [4, 6, 10, 14],
+  '7sus4': [5, 7, 10, 14], '9sus4': [5, 7, 10, 14], sus4: [5, 7, 10, 14],
+  m7b5: [3, 6, 10, 12], dim7: [3, 6, 9, 12], dim: [3, 6, 9, 12], aug: [4, 8, 10, 14]
+};
+
+/** Notes MIDI du voicing (main gauche), sans la basse. lo : note la plus grave autorisée. */
+export function lhVoicing(c: Chord, type: VoicingType, prev: number[] | null = null): number[] {
+  const r = rootPc(c);
+  const iv = QUALITIES[c.quality].iv;
+  if (type === 'shell') {
+    const third = iv.includes(4) ? 4 : iv.includes(3) ? 3 : 5;
+    const seventh = iv.includes(10) ? 10 : iv.includes(11) ? 11 : iv.includes(9) ? 9 : 7;
+    const root = 40 + mod(r - 40, 12); // E2 à D♯3
+    const close = [root, root + third, root + seventh];
+    const open = [root, root + seventh, root + third + 12];
+    if (!prev) return close;
+    const d = (v: number[]) => v.reduce((s, x, i) => s + Math.abs(x - (prev[i] ?? x)), 0);
+    return d(open) < d(close) ? open : close;
+  }
+  const a = ROOTLESS_A[c.quality] ?? [4, 7, 10, 14];
+  const shape = type === 'A' ? a : [a[2] - 12, a[3] - 12, a[0], a[1]];
+  // Note la plus grave entre C3 et B3 : registre habituel de la main gauche.
+  const base = r + shape[0];
+  const low = 48 + mod(base - 48, 12);
+  return shape.map((x) => low + (x - shape[0]));
+}

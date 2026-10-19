@@ -10,6 +10,7 @@ import { Keyboard, Mark } from '../../ui/Keyboard';
 import { BackIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 import { PlayerBar, usePlayer } from '../../ui/PlayerBar';
+import { Stand } from '../../ui/Stand';
 
 export type ImproMode = 'gammes' | 'guide';
 
@@ -33,6 +34,7 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
   const [mode, setMode] = useState<ImproMode>(initialMode);
   const [shift, setShift] = useState(0);
   const [selected, setSelected] = useState(0);
+  const [stand, setStand] = useState(false);
   const chart = useMemo(() => transposeChart(original, shift), [original, shift]);
   const plan = useMemo(() => improvPlan(chart), [chart]);
   const player = usePlayer(chart, original.id, original.tempo);
@@ -128,6 +130,7 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
             <button aria-pressed={mode === 'gammes'} onClick={() => setMode('gammes')}>Gammes</button>
             <button aria-pressed={mode === 'guide'} onClick={() => setMode('guide')}>Guide tones</button>
           </div>
+          <button class="btn" onClick={() => setStand(true)}>Pupitre</button>
         </div>
 
         <div class="live" ref={live}>
@@ -200,6 +203,7 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
         </section>
       </div>
       <PlayerBar p={player} fromBar={player.pos ? 0 : plan.flat[Math.min(selected, n - 1)].bar} />
+      {stand ? <Stand chart={chart} player={player} initial={mode} startIndex={cur} onClose={() => setStand(false)} /> : null}
     </>
   );
 }
