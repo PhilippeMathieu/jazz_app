@@ -11,7 +11,8 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 3. **Entendre** : reconnaissance d'accords et de progressions à l'oreille, construction au clavier.
 4. **Improviser** : gamme de chaque accord déduite de l'analyse, lignes de guide tones, clavier qui suit le play-along, ii–V–I dans les 12 tonalités.
 5. **Flash voicings** : un accord s'affiche, on le joue au piano, l'appli révèle et fait entendre le voicing (shell, sans fondamentale A/B). Mains libres.
-6. **Mode pupitre** : plein écran lisible à distance (accord en cours, suivant, temps, gamme ou guide tones), depuis une grille ou Improviser.
+6. **Écoute au micro** : Flash voicings valide l'accord joué (et passe au suivant), Improviser classe les notes de la main droite (note de l'accord, de la gamme, hors gamme ; guide tones). Écran « Micro » pour tester et régler la sensibilité.
+7. **Mode pupitre** : plein écran lisible à distance (accord en cours, suivant, temps, gamme ou guide tones), depuis une grille ou Improviser.
 
 Plus tard : rythme (comping, swing, rythme harmonique).
 
@@ -38,7 +39,9 @@ Stack : TypeScript, Vite, Tone.js (piano échantillonné), service worker pour l
 1. ✅ Socle : PWA, son piano, modèle de grille, moteur d'analyse, lecteur, oreille.
 2. ✅ Analyse express, import de grilles.
 3. ✅ Improviser : gammes, guide tones, 12 tonalités.
-4. À venir : écoute du jeu au micro, rythme, enrichissement de l'oreille.
+4. ✅ Usages métro / piano, mode pupitre, Flash voicings, import Ultimate Guitar.
+5. ✅ Écoute au micro (détection calibrée sur les échantillons de piano, voir `src/core/listen/detect.test.ts`).
+6. À venir : rythme, enrichissement de l'oreille.
 
 ## Installer sur iPhone
 

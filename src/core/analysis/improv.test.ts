@@ -53,3 +53,16 @@ describe('lecture tolérante', () => {
     expect(parseChord('Be', true)).toBeNull();
   });
 });
+
+import { classifyNote, isGuideTone } from './improv';
+
+describe('notes jouées en impro', () => {
+  it('classe une note par rapport à l’accord et à la gamme', () => {
+    const d7 = parseChord('D7')!;
+    expect(classifyNote(6, d7, 'mixob9b13')).toBe('chord'); // F♯ = 3
+    expect(classifyNote(3, d7, 'mixob9b13')).toBe('scale'); // E♭ = ♭9
+    expect(classifyNote(4, d7, 'mixob9b13')).toBe('out'); // E = 9 naturelle, hors ♭9 ♭13
+    expect(isGuideTone(0, d7)).toBe(true); // C = 7
+    expect(isGuideTone(9, d7)).toBe(false); // A = 5
+  });
+});

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Chart, keyLabel, keyName, transposeChart } from '../../core/chart/model';
-import { guideTones, improvPlan } from '../../core/analysis/improv';
-import { QUALITIES, chordPcs, chordSymbol, spellInChord } from '../../core/theory/chords';
+import { NoteClass, classifyNote, guideTones, improvPlan, isGuideTone } from '../../core/analysis/improv';
+import { QUALITIES, chordPcs, chordSymbol, degreeLabel, spellInChord } from '../../core/theory/chords';
 import { mod, noteName, pcOf, signedPc } from '../../core/theory/notes';
 import { SCALES, scaleNotes } from '../../core/theory/scales';
 import { audio, chord as playChord, now } from '../../core/audio/engine';
@@ -11,6 +11,16 @@ import { BackIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 import { PlayerBar, usePlayer } from '../../ui/PlayerBar';
 import { Stand } from '../../ui/Stand';
+import { micSettings, readMono, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
+import { NoteTracker } from '../../core/listen/tracker';
+import { MicToggle } from '../micro/Micro';
+
+interface Hit {
+  pc: number;
+  cls: NoteClass;
+  guide: boolean;
+}
+const CLS_LABEL: Record<NoteClass, string> = { chord: 'note de l’accord', scale: 'note de la gamme', out: 'hors gamme' };
 
 export type ImproMode = 'gammes' | 'guide';
 
@@ -42,6 +52,61 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
   const n = plan.flat.length;
   const cur = player.pos ? player.pos.chord : Math.min(selected, n - 1);
   const nx = (cur + 1) % n;
+
+  // ---------------------------------------------------------------- Écoute
+  const mic = useMicState();
+  useMicRelease();
+  const listening = mic === 'on';
+  const tracker = useRef(new NoteTracker(micSettings().gate));
+  const posHist = useRef<{ t: number; chord: number; chorus: number }[]>([]);
+  const [log, setLog] = useState<Record<string, Hit[]>>({});
+  const [visited, setVisited] = useState<string[]>([]);
+  const [lastNote, setLastNote] = useState<{ name: string; deg: string; cls: NoteClass; guide: boolean } | null>(null);
+  const [lastChorus, setLastChorus] = useState(0);
+  const playing = !!player.pos;
+
+  // Nouvelle lecture : on repart de zéro.
+  useEffect(() => {
+    if (!playing) return;
+    setLog({});
+    setVisited([]);
+    setLastNote(null);
+    posHist.current = [];
+    tracker.current = new NoteTracker(micSettings().gate);
+  }, [playing]);
+
+  useEffect(() => {
+    const p = player.pos;
+    if (!p) return;
+    posHist.current = [...posHist.current.slice(-12), { t: performance.now(), chord: p.chord, chorus: p.chorus }];
+    setLastChorus(p.chorus);
+    if (listening) setVisited((v) => [...v, `${p.chorus}:${p.chord}`]);
+  }, [player.pos?.chord, player.pos?.chorus]);
+
+  useMicLoop(listening && playing, () => {
+    const m = readMono();
+    if (!m) return;
+    const ev = tracker.current.push(m.pitch, m.level, performance.now());
+    if (!ev) return;
+    // La note est confirmée ~0,1 s après l'attaque : on l'attribue à l'accord joué à ce moment-là.
+    const t = ev.t - 120;
+    const hist = posHist.current;
+    const h = [...hist].reverse().find((x) => x.t <= t) ?? hist[hist.length - 1];
+    if (!h) return;
+    const ch = plan.flat[h.chord].chord;
+    const pc = ev.midi % 12;
+    const hit: Hit = { pc, cls: classifyNote(pc, ch, plan.scales[h.chord].scale), guide: isGuideTone(pc, ch) };
+    const key = `${h.chorus}:${h.chord}`;
+    setLog((l) => ({ ...l, [key]: [...(l[key] ?? []), hit] }));
+    setLastNote({ name: spellInChord(ch, pc), deg: degreeLabel(ch, pc), cls: hit.cls, guide: hit.guide });
+  }, 50);
+
+  const allHits = Object.values(log).flat();
+  const pct = (k: NoteClass) => (allHits.length ? Math.round((allHits.filter((h) => h.cls === k).length / allHits.length) * 100) : 0);
+  const visitedKeys = [...new Set(visited)];
+  const doneKeys = visitedKeys.slice(0, playing ? -1 : undefined);
+  const guideHits = doneKeys.filter((k) => (log[k] ?? []).some((h) => h.guide)).length;
+  const shownChorus = player.pos?.chorus ?? lastChorus;
 
   // Garde la mesure jouée visible entre le panneau fixe et le lecteur.
   useEffect(() => {
@@ -132,6 +197,29 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
           </div>
           <button class="btn" onClick={() => setStand(true)}>Pupitre</button>
         </div>
+        <div class="listen-bar">
+          <MicToggle />
+          {listening ? (
+            <p class="small muted" style="margin:0">
+              Joue la main droite seule. Avec des écouteurs, garde tout l'accompagnement ; sans écouteurs, le micro entend aussi le haut-parleur :{' '}
+              {player.prefs.comp || player.prefs.bass ? (
+                <button
+                  class="linkbtn"
+                  onClick={() => {
+                    if (player.prefs.comp) player.flip('comp');
+                    if (player.prefs.bass) player.flip('bass');
+                  }}
+                >
+                  couper piano et basse
+                </button>
+              ) : (
+                'piano et basse coupés.'
+              )}
+            </p>
+          ) : (
+            <p class="small muted" style="margin:0">L'appli peut écouter ta main droite et vérifier tes notes pendant le play-along.</p>
+          )}
+        </div>
 
         <div class="live" ref={live}>
           <div class="live-head">
@@ -164,8 +252,38 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
             </>
           )}
           <Keyboard lo={LO} hi={HI} marks={marks} labels={labels} fit />
+          {listening ? (
+            <div class={'heard-line ' + (lastNote ? (mode === 'guide' ? (lastNote.guide ? 'chord' : 'out') : lastNote.cls) : '')}>
+              <i class="rec" />
+              {lastNote ? (
+                <span>
+                  <b>{lastNote.name}</b> ({lastNote.deg}) · {mode === 'guide' ? (lastNote.guide ? 'guide tone' : 'pas une guide tone') : CLS_LABEL[lastNote.cls]}
+                </span>
+              ) : (
+                <span class="muted">{playing ? 'J’écoute ta main droite…' : 'Lance le play-along pour que l’écoute démarre.'}</span>
+              )}
+            </div>
+          ) : null}
           <div class="next-line">Ensuite : {nextLabel}</div>
         </div>
+
+        {listening && allHits.length ? (
+          <div class="summary">
+            {mode === 'gammes' ? (
+              <>
+                <span><b>{allHits.length}</b> notes</span>
+                <span class="s-chord"><b>{pct('chord')} %</b> accord</span>
+                <span class="s-scale"><b>{pct('scale')} %</b> gamme</span>
+                <span class="s-out"><b>{pct('out')} %</b> hors gamme</span>
+              </>
+            ) : (
+              <>
+                <span><b>{guideHits}/{doneKeys.length}</b> accords avec une guide tone</span>
+                <span class="s-chord"><b>{allHits.length ? Math.round((allHits.filter((h) => h.guide).length / allHits.length) * 100) : 0} %</b> des notes</span>
+              </>
+            )}
+          </div>
+        ) : null}
 
         <div class="sheet">
           {rows.map((row, ri) => (
@@ -178,14 +296,27 @@ export function ImproView({ chart: original, mode: initialMode }: { chart: Chart
                     <div key={bi} class={'bar compact' + (player.pos?.bar === bi ? ' now' : '')}>
                       <span class="barnum">{bi + 1}</span>
                       <div class={'chords' + (idxs.length > 1 ? ' two' : '')}>
-                        {idxs.map((ci) => (
-                          <button key={ci} data-ci={ci} class={'ch' + (cur === ci ? ' now' : '') + (!player.pos && selected === ci ? ' sel' : '')} onClick={() => preview(ci)}>
-                            <span class="sym">{chordSymbol(plan.flat[ci].chord)}</span>
-                            <span class="rn">
-                              {mode === 'gammes' ? SCALES[plan.scales[ci].scale].short : `${plan.guideA[ci].name} · ${plan.guideB[ci].name}`}
-                            </span>
-                          </button>
-                        ))}
+                        {idxs.map((ci) => {
+                          const key = `${shownChorus}:${ci}`;
+                          const hits = listening ? log[key] ?? [] : [];
+                          const done = listening && doneKeys.includes(key);
+                          const gState = mode === 'guide' && done ? (hits.some((h) => h.guide) ? ' g-hit' : ' g-miss') : '';
+                          return (
+                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci ? ' now' : '') + (!player.pos && selected === ci ? ' sel' : '') + gState} onClick={() => preview(ci)}>
+                              <span class="sym">{chordSymbol(plan.flat[ci].chord)}</span>
+                              <span class="rn">
+                                {mode === 'gammes' ? SCALES[plan.scales[ci].scale].short : `${plan.guideA[ci].name} · ${plan.guideB[ci].name}`}
+                              </span>
+                              {hits.length ? (
+                                <span class="hits">
+                                  {hits.slice(-8).map((h, i) => (
+                                    <i key={i} class={mode === 'guide' ? (h.guide ? 'chord' : 'out') : h.cls} />
+                                  ))}
+                                </span>
+                              ) : null}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   );

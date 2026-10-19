@@ -2,6 +2,7 @@
 import { Chart, FlatChord, flatten } from '../chart/model';
 import { Chord, QUALITIES, chordSymbol, rootPc, spellInChord } from '../theory/chords';
 import { mod, pcOf } from '../theory/notes';
+import { scalePcs } from '../theory/scales';
 import { Analysis, analyze } from './analyze';
 
 export interface ScaleChoice {
@@ -144,4 +145,21 @@ export function improvPlan(chart: Chart): ImprovPlan {
     guideA: guideLine(chords, 'third'),
     guideB: guideLine(chords, 'seventh')
   };
+}
+
+export type NoteClass = 'chord' | 'scale' | 'out';
+
+/** Note jouée sur un accord : note de l'accord, autre note de la gamme conseillée, ou hors gamme. */
+export function classifyNote(pc: number, c: Chord, scale: string): NoteClass {
+  const r = rootPc(c);
+  const p = mod(pc, 12);
+  if (QUALITIES[c.quality].iv.some((i) => i < 12 && mod(r + i, 12) === p)) return 'chord';
+  if (scalePcs(r, scale).includes(p)) return 'scale';
+  return 'out';
+}
+
+export function isGuideTone(pc: number, c: Chord): boolean {
+  const g = guideTones(c);
+  const p = mod(pc, 12);
+  return p === g.third || p === g.seventh;
 }

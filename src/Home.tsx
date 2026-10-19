@@ -14,8 +14,8 @@ const METRO: Tile[] = [
   { href: '#/oreille', glyph: '♪', title: 'Entendre', text: 'Reconnaître accords et progressions, construire les accords au doigt.', tag: 'Écouteurs' }
 ];
 const PIANO: Tile[] = [
-  { href: '#/flash', glyph: 'A/B', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli révèle le voicing. Mains libres.' },
-  { href: '#/impro', glyph: '↝', title: 'Improviser', text: 'Gamme et guide tones de chaque accord, sur le play-along, en mode pupitre.' },
+  { href: '#/flash', glyph: 'A/B', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli écoute et valide. Mains libres.', tag: 'Micro' },
+  { href: '#/impro', glyph: '↝', title: 'Improviser', text: 'Gamme et guide tones sur le play-along ; l’appli écoute ta main droite.', tag: 'Micro' },
   { href: '#/grilles', glyph: '\u25B6\uFE0E', title: 'Play-along', text: 'Basse, piano, batterie sur les grilles. Mode pupitre pour lire de loin.' }
 ];
 
@@ -59,7 +59,9 @@ export function Home() {
       <section class="ctx">
         <div class="ctx-head">
           <h2>Au piano</h2>
-          <span>Téléphone sur le pupitre, écran toujours allumé</span>
+          <span>
+            Téléphone sur le pupitre · <a href="#/micro" class="ulink">régler le micro</a>
+          </span>
         </div>
         <Tiles list={PIANO} />
       </section>

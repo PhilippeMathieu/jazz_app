@@ -176,3 +176,18 @@ export function spellInChord(c: Chord, pc: number): string {
   const OFF: Record<number, number> = { 0: 0, 1: 1, 2: 1, 3: hasMinor3 ? 2 : 1, 4: 2, 5: 3, 6: 3, 7: 4, 8: 5, 9: 5, 10: 6, 11: 6 };
   return noteName(spellWith(c.root.letter + OFF[d], pc));
 }
+
+/** Nom du degré d'une note par rapport à l'accord : 1, ♭9, 9, ♭3, 3, 11, ♯11, 5, ♭13, 13, ♭7, 7… */
+export function degreeLabel(c: Chord, pc: number): string {
+  const iv = QUALITIES[c.quality].iv;
+  const d = mod(pc - rootPc(c), 12);
+  const minor3 = iv.includes(3);
+  const sus = iv.includes(5) && !iv.includes(4) && !minor3;
+  const dimFamily = QUALITIES[c.quality].family === 'dim';
+  const names: Record<number, string> = {
+    0: '1', 1: '♭9', 2: '9', 3: minor3 ? '♭3' : '♯9', 4: '3', 5: sus ? '4' : '11',
+    6: iv.includes(6) ? '♭5' : '♯11', 7: '5', 8: iv.includes(8) ? '♯5' : '♭13',
+    9: iv.includes(9) && !iv.includes(10) ? (dimFamily ? '°7' : '6') : '13', 10: '♭7', 11: '7'
+  };
+  return names[d];
+}

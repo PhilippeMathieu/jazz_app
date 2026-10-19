@@ -8,6 +8,7 @@ import { Impro } from './modules/impro/Impro';
 import { ImproView } from './modules/impro/ImproView';
 import { Express } from './modules/express/Express';
 import { Flash } from './modules/flash/Flash';
+import { Micro } from './modules/micro/Micro';
 import { chartById } from './library/charts';
 
 export function App() {
@@ -20,6 +21,7 @@ export function App() {
   }
   if (page === 'express') return <Express />;
   if (page === 'flash') return <Flash />;
+  if (page === 'micro') return <Micro />;
   if (page === 'oreille') return <Oreille />;
   if (page === 'impro') {
     const c = b ? chartById(b) : undefined;
