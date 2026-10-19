@@ -248,6 +248,22 @@
 .choices.qual .choice { font-size: 22px; min-height: 64px; }
 .choices.qual .choice:last-child:nth-child(odd) { grid-column: span 2; }
 
+/* ---------------------------------------------------------------- Lecture de notes */
+.read-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--s2) var(--s4) var(--s3); display: flex; flex-direction: column; gap: var(--s2); }
+.read-head { display: flex; justify-content: space-between; align-items: center; min-height: var(--tap); }
+.staff { display: block; width: 100%; height: auto; max-height: 34vh; background: var(--paper); border-radius: var(--r-md); }
+.staff-line { stroke: var(--ink); stroke-width: 0.13; }
+.staff-ledger { stroke: var(--ink); stroke-width: 0.16; }
+.staff-ink { fill: var(--ink); }
+.staff-ink.ok { fill: #1f9d6b; }
+.staff-ink.bad { fill: #d0453c; }
+.read-name { font-family: var(--mono); font-size: 20px; font-weight: 600; text-align: center; min-height: 1.4em; }
+.read-name.ok { color: var(--ok); }
+.read-name.bad { color: var(--bad); }
+.letters { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.letters .choice { min-height: 64px; padding: var(--s2) 0; font-size: 20px; }
+.acc-seg button { font-size: 15px; }
+
 /* ---------------------------------------------------------------- Oreille */
 .ear-stage { display: flex; flex-direction: column; gap: var(--s3); }
 .playrow { display: flex; align-items: center; gap: var(--s3); }
@@ -274,3 +290,4 @@
 .cbar.on span { background: var(--accent); }
 .cbar small { font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
 .cbar.on small { color: var(--fg); }
+.read-card + .thumb-zone .listen-line { font-family: var(--body); font-size: var(--t-body); font-weight: 600; }

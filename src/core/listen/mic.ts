@@ -126,6 +126,20 @@ export function readMono(gate = 0): { level: number; pitch: PitchResult | null }
   return { level, pitch: level > Math.max(gate, 1e-5) ? yin(monoBuf, monoAn.context.sampleRate, 150, 2200) : null };
 }
 
+const noteBuf = new Float32Array(3072);
+/**
+ * Note seule sur toute la tessiture (jusqu'à C2) : fin de la grande fenêtre, signal non filtré.
+ * Plus lent que readMono mais juste dans les graves (lecture en clé de fa).
+ */
+export function readNote(gate = 0): { level: number; pitch: PitchResult | null } | null {
+  if (!chordAn) return null;
+  if (chordBuf.length !== chordAn.fftSize) chordBuf = new Float32Array(chordAn.fftSize);
+  chordAn.getFloatTimeDomainData(chordBuf);
+  noteBuf.set(chordBuf.subarray(chordBuf.length - noteBuf.length));
+  const level = rms(noteBuf);
+  return { level, pitch: level > Math.max(gate, 1e-5) ? yin(noteBuf, chordAn.context.sampleRate, 60, 2200) : null };
+}
+
 /** Dernière grande fenêtre : niveau, chroma et note grave (null sous le seuil). */
 export function readChord(gate = 0) {
   if (!chordAn) return null;

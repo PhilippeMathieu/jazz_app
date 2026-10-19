@@ -27,6 +27,7 @@ export function advice(): Advice[] {
   const flash = load('flash-stats', { chords: {} as Tally });
   const quiz = load('quiz', { c: 0, t: 0 });
   const tonalite = load('tonalite', { byDeg: {} as Tally });
+  const lecture = load('lecture', { byItem: {} as Tally });
 
   for (const [k, v] of Object.entries(express.byType))
     if (v.t >= 5 && v.c / v.t < 0.8) weak.push({ text: `Analyse express · ${TYPE_LABEL[k] ?? k}`, detail: `${pct(v)} % de réussite`, href: '#/express', score: v.c / v.t });
@@ -57,6 +58,21 @@ export function advice(): Advice[] {
         text: `Accords de la tonalité · ${roman}${mode === 'm' ? ' en mineur' : ''}`,
         detail: acc < 0.8 ? `${pct(v)} % de réussite` : `${(avg / 1000).toFixed(1).replace('.', ',')} s en moyenne`,
         href: '#/tonalite',
+        score: acc * 0.95
+      });
+  }
+  for (const clef of ['G', 'F']) {
+    const v = Object.entries(lecture.byItem)
+      .filter(([k]) => k.startsWith(clef + ':'))
+      .reduce((s, [, x]) => ({ c: s.c + x.c, t: s.t + x.t, ms: s.ms + (x.ms ?? 0) }), { c: 0, t: 0, ms: 0 });
+    if (v.t < 10) continue;
+    const acc = v.c / v.t;
+    const avg = v.ms / v.t;
+    if (acc < 0.85 || avg > 2500)
+      weak.push({
+        text: `Lecture de notes · ${clef === 'G' ? 'clé de sol' : 'clé de fa'}`,
+        detail: acc < 0.85 ? `${pct(v)} % de réussite` : `${(avg / 1000).toFixed(1).replace('.', ',')} s par note`,
+        href: '#/lecture',
         score: acc * 0.95
       });
   }

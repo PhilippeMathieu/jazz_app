@@ -10,6 +10,7 @@ interface Tile {
   tag?: string;
 }
 const METRO: Tile[] = [
+  { href: '#/lecture', title: 'Lecture de notes', text: 'Clé de sol, clé de fa : touche, nomme ou joue la note au piano.' },
   { href: '#/tonalite', title: 'Accords de la tonalité', text: 'En D majeur, F♯ : maj7, m7, 7 ou ø7 ? Chronométré, 12 tonalités.' },
   { href: '#/express', title: 'Analyse express', text: 'Degrés, enchaînements, 9 ou ♭9, guide tones, chronométrés.' },
   { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' }
@@ -22,7 +23,7 @@ const PIANO: Tile[] = [
 function resumeLabel(path: string): string | null {
   const [page, id] = path.split('/').filter(Boolean);
   if (page === 'grille') return chartById(id)?.title ?? null;
-  return { tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
+  return { lecture: 'Lecture de notes', tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
 }
 
 function Rows({ list }: { list: Tile[] }) {
@@ -90,7 +91,7 @@ export function Home() {
         <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">
           CC BY 3.0
         </a>
-        . Grilles d'accords uniquement.
+        . Notation : police Bravura (Steinberg), SIL OFL 1.1. Grilles d'accords uniquement.
       </p>
     </div>
   );

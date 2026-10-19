@@ -57,6 +57,18 @@ describe('détection', () => {
     }
     expect(ok).toBeGreaterThanOrEqual(40); // sur 42
   });
+
+  it('détecte une note seule dans les graves (lecture en clé de fa), micro de téléphone', () => {
+    const rng = seeded(11);
+    let ok = 0;
+    let n = 0;
+    for (let m = 36; m <= 86; m++) {
+      const p = yin(chord([m], 3072, rng, { noise: 0.003, highpass: 120 }), SR, 60, 2200);
+      n++;
+      if (p && Math.round(p.midi) === m) ok++;
+    }
+    expect(ok).toBe(n); // C2 à D6
+  });
 });
 
 import { NoteTracker } from './tracker';

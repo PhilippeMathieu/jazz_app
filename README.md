@@ -7,6 +7,7 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 ## Écrans
 
 - **Accueil** : reprendre le dernier exercice, trois suggestions « À travailler » tirées de tes erreurs.
+- **Lecture de notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux jusqu'aux lignes supplémentaires et aux altérations.
 - **Accords de la tonalité** (métro) : une tonalité et une fondamentale (en D majeur, F♯), trouver le type d'accord (maj7, m7, 7, ø7, °7). 4 niveaux jusqu'au mineur et aux 12 tonalités ; les couples tonalité-degré ratés reviennent plus souvent ; réussite et temps par degré.
 - **Analyse express** (métro) : questions chronométrées sur des suites d'accords (degré, schéma, tonalité, 9 ou ♭9, 3ce/7e, gamme), sprint 60 s ou série de 20. Les types de questions et les enchaînements ratés reviennent plus souvent.
 - **Oreille** (métro, écouteurs) : reconnaître accords et progressions, construire un accord au clavier, 4 niveaux.
@@ -32,7 +33,7 @@ src/
     progress.ts suggestions « À travailler »
     random.ts   tirages (pondérés, reproductibles en test)
     storage.ts  sauvegarde locale
-  modules/      tonalite, express, oreille, grilles, flash, micro
+  modules/      lecture, tonalite, express, oreille, grilles, flash, micro
   ui/           composants partagés (barre, clavier, lecteur, pupitre…)
   styles/       tokens, base, composants, écrans
   library/      grilles (accords uniquement)
@@ -80,4 +81,5 @@ L'écran « Importer » accepte aussi du texte libre copié d'Ultimate Guitar ou
 ## Crédits
 
 - Piano : Salamander Grand Piano V3 par Alexander Holm, licence CC BY 3.0.
+- Clés et altérations : glyphes de la police Bravura (Steinberg), SIL Open Font License 1.1.
 - Polices : Big Shoulders Display, IBM Plex Sans et IBM Plex Mono (SIL Open Font License).
