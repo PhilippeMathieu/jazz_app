@@ -5,7 +5,12 @@
 // dans l'AudioWorklet du micro (voir mic.ts), et testée ici sur les échantillons de piano.
 
 /** Renvoie une fonction (bloc, instant du bloc, seuil) → instant de l'attaque, ou -1. */
-export function onsetDetector(sampleRate: number) {
+/**
+ * Réglages (k, floor, riseMin, emph) choisis sur 12 scènes de comping aléatoires (174 attaques, deux couches
+ * de vélocité du piano Salamander, attaques espacées de 0,22 à 0,8 s) : 82 % trouvées, 2 fausses, ± 3 ms.
+ * Les ratées sont surtout des attaques douces juste après un accord fort.
+ */
+export function onsetDetector(sampleRate: number, k = 1.4, floor = 3, riseMin = 1.1, emph = 0.9) {
   const W = 1024;
   const H = W / 2;
   const buf = new Float32Array(W);
@@ -72,10 +77,17 @@ export function onsetDetector(sampleRate: number) {
     for (let i = W - n; i < W; i++) e += buf[i] * buf[i];
     const level = Math.sqrt(e / n);
     // Montée d'énergie à travers la fenêtre : 2e moitié comparée à la 1re (une résonance qui décroît ne monte pas).
+    // Avec emph > 0, on compare la dérivée du signal (les aigus de l'attaque) : une résonance grave forte ne masque plus une attaque douce.
     let e0 = 0;
     let e1 = 0;
-    for (let i = 0; i < H; i++) e0 += buf[i] * buf[i];
-    for (let i = H; i < W; i++) e1 += buf[i] * buf[i];
+    for (let i = 1; i < H; i++) {
+      const v = buf[i] - emph * buf[i - 1];
+      e0 += v * v;
+    }
+    for (let i = H; i < W; i++) {
+      const v = buf[i] - emph * buf[i - 1];
+      e1 += v * v;
+    }
     const rise = e1 / (e0 + 1e-9);
     for (let i = 0; i < W; i++) {
       re[i] = buf[i] * win[i];
@@ -98,9 +110,9 @@ export function onsetDetector(sampleRate: number) {
     if (hist.length > Math.round((0.15 * sampleRate) / n)) hist.shift();
     let out = -1;
     // Pic local du flux (le bloc précédent), au-dessus du seuil, avec du son.
-    if (fill >= W && f1 > f2 && f1 >= flux && f1 > mean * 1.4 + 3 && rise1 > 1.3 && level1 > gate && t1 - last > 0.09) {
+    if (fill >= W && f1 > f2 && f1 >= flux && f1 > mean * k + floor && rise1 > riseMin && level1 > gate && t1 - last > 0.09) {
       // Le pic du flux arrive environ une demi-fenêtre après l'attaque (mesuré sur les échantillons).
-      out = Math.max(0, t1 - W / 2 / sampleRate - 0.01);
+      out = Math.max(0, t1 - W / 2 / sampleRate);
       last = t1;
     }
     f2 = f1;

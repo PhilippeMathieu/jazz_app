@@ -95,6 +95,8 @@ L'écran « Importer » accepte aussi du texte libre copié d'Ultimate Guitar ou
 
 ## Crédits
 
-- Piano : Salamander Grand Piano V3 par Alexander Holm, licence CC BY 3.0.
+- Piano : Salamander Grand Piano V3 par Alexander Holm, licence CC BY 3.0 (couches de vélocité 6 et 12, via sfzinstruments/SalamanderGrandPiano).
+- Contrebasse : soundfont Musyng Kite (rendu MIDI.js de gleitz/midi-js-soundfonts), licence CC BY-SA 3.0.
+- Batterie et percussions : Versilian Community Sample Library (sgossner/VCSL), CC0.
 - Clés et altérations : glyphes de la police Bravura (Steinberg), SIL Open Font License 1.1.
 - Polices : Big Shoulders Display, IBM Plex Sans et IBM Plex Mono (SIL Open Font License).

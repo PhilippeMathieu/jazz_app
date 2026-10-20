@@ -137,7 +137,11 @@ export function Home() {
         <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">
           CC BY 3.0
         </a>
-        . Notation : police Bravura (Steinberg), SIL OFL 1.1. Grilles d'accords uniquement.
+        . Contrebasse : soundfont Musyng Kite,{' '}
+        <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">
+          CC BY-SA 3.0
+        </a>
+        . Batterie : Versilian Community Sample Library, CC0. Notation : police Bravura (Steinberg), SIL OFL 1.1. Grilles d'accords uniquement.
       </p>
     </div>
   );

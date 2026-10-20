@@ -55,7 +55,7 @@ describe('arrangement du play-along', () => {
     const c = chartById('autumn-leaves')!;
     const flat = flatten(c);
     const scales = improvPlan(c).scales.map((s) => s.scale);
-    const sounds: Record<string, string[]> = { swing: ['ride', 'hat'], ballade: ['brush'], bossa: ['rim', 'shaker'], samba: ['surdo'], latin: ['clave', 'cowbell'], funk: ['snare', 'kick'] };
+    const sounds: Record<string, string[]> = { swing: ['ride', 'pedal'], ballade: ['brush'], bossa: ['rim', 'shaker'], samba: ['surdo'], latin: ['clave', 'cowbell'], funk: ['snare', 'kick'] };
     for (const [style, must] of Object.entries(sounds)) {
       const ev = arrangeChorus(c, flat, scales, { ...ALL, style }, newArrangeState(), seeded(2));
       const used = new Set(ev.filter((e) => e.kind === 'drum').map((e) => (e.kind === 'drum' ? e.sound : '')));

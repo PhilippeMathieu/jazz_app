@@ -8,29 +8,39 @@ const NAMES: [string, number][] = [
   ['Fs4', 66], ['A4', 69], ['C5', 72], ['Ds5', 75], ['Fs5', 78], ['A5', 81], ['C6', 84], ['Ds6', 87], ['Fs6', 90], ['A6', 93], ['C7', 96]
 ];
 export const SR = 44100;
-const cache = new Map<number, Float32Array>();
+const cache = new Map<string, Float32Array>();
+/** Couche de vélocité utilisée par note() : douce (p) ou forte (f). */
+export type Layer = 'p' | 'f';
 
 export async function loadSamples() {
   if (cache.size) return;
+  for (const layer of ['p', 'f'] as Layer[]) await loadLayer(layer);
+}
+
+async function loadLayer(layer: Layer) {
   const dec = new MPEGDecoder();
   await dec.ready;
   for (const [name, midi] of NAMES) {
-    const buf = readFileSync(resolve(__dirname, '../../../../public/samples/piano', name + '.mp3'));
+    const buf = readFileSync(resolve(__dirname, '../../../../public/samples/piano', name + '-' + layer + '.mp3'));
     const r = dec.decode(new Uint8Array(buf));
     const [l, rr] = r.channelData;
-    const mono = new Float32Array(Math.min(r.samplesDecoded, SR * 2));
-    for (let i = 0; i < mono.length; i++) mono[i] = 0.5 * (l[i] + (rr ? rr[i] : l[i]));
-    cache.set(midi, mono);
+    // Comme le moteur audio : on part de l'attaque (le MP3 commence par quelques ms de silence).
+    let on = 0;
+    while (on < r.samplesDecoded && Math.abs(l[on]) <= 0.002) on++;
+    on = Math.max(0, on - Math.round(SR * 0.001));
+    const mono = new Float32Array(Math.min(r.samplesDecoded - on, SR * 2));
+    for (let i = 0; i < mono.length; i++) mono[i] = 0.5 * (l[on + i] + (rr ? rr[on + i] : l[on + i]));
+    cache.set(layer + midi, mono);
     await dec.reset();
   }
   dec.free();
 }
 
 /** Note MIDI rendue (rééchantillonnage depuis l'échantillon le plus proche). */
-export function note(m: number, len: number, offset = 0.15): Float32Array {
+export function note(m: number, len: number, offset = 0.15, layer: Layer = 'p'): Float32Array {
   let best = NAMES[0][1];
   for (const [, s] of NAMES) if (Math.abs(s - m) < Math.abs(best - m)) best = s;
-  const src = cache.get(best)!;
+  const src = cache.get(layer + best)!;
   const ratio = Math.pow(2, (m - best) / 12);
   const out = new Float32Array(len);
   const start = offset * SR * ratio;

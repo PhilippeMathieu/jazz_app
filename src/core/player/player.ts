@@ -5,6 +5,9 @@ import { improvPlan } from '../analysis/improv';
 import { audio, bass, click, drum, playChord, silence } from '../audio/engine';
 import { ArrEvent, arrangeChorus, newArrangeState } from './arrange';
 
+/** Décalage aléatoire de ± ms millisecondes. */
+const human = (ms: number) => ((Math.random() * 2 - 1) * ms) / 1000;
+
 export interface PlayerOptions {
   tempo: number;
   /** Style d'accompagnement (sinon celui de la grille). */
@@ -137,14 +140,15 @@ export class ChartPlayer {
       case 'pos':
         this.positions.push({ time, pos: { chorus: this.chorus, bar: ev.bar, chord: ev.chord, beatInBar: ev.beatInBar } });
         break;
+      // Un peu de jeu humain : quelques millisecondes et quelques pourcents de nuance, jamais deux fois pareil.
       case 'bass':
-        bass(ev.midi, time, ev.dur * spb, ev.vel);
+        bass(ev.midi, time + human(4), ev.dur * spb, ev.vel * (0.95 + Math.random() * 0.1));
         break;
       case 'chord':
-        playChord(ev.notes, time, ev.dur * spb, ev.vel, 0.008);
+        playChord(ev.notes, time + human(7), ev.dur * spb, ev.vel * (0.92 + Math.random() * 0.16), 0.006 + Math.random() * 0.008);
         break;
       case 'drum':
-        drum(ev.sound, time, ev.vel);
+        drum(ev.sound, time + human(3), ev.vel * (0.9 + Math.random() * 0.2));
         break;
     }
   }

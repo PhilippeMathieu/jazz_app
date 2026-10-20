@@ -44,7 +44,7 @@ export const GROOVES: Record<StyleId, Groove> = {
     drums: [
       [
         [0, 'ride', 0.17], [1, 'ride', 0.22], [1 + SW, 'ride', 0.1], [2, 'ride', 0.17], [3, 'ride', 0.22], [3 + SW, 'ride', 0.1],
-        [1, 'hat', 0.28], [3, 'hat', 0.28]
+        [1, 'pedal', 0.28], [3, 'pedal', 0.28]
       ]
     ],
     bass: 'walking',
@@ -76,7 +76,7 @@ export const GROOVES: Record<StyleId, Groove> = {
     drums: [
       [
         [0, 'brush', 0.1], [1, 'brush', 0.14], [2, 'brush', 0.1], [3, 'brush', 0.14],
-        [1, 'hat', 0.12], [3, 'hat', 0.12], [0, 'ride', 0.07], [2, 'ride', 0.07]
+        [1, 'pedal', 0.12], [3, 'pedal', 0.12], [0, 'ride', 0.07], [2, 'ride', 0.07]
       ]
     ],
     bass: (b) => (b >= 4 ? [[0, 'root', 1.9], [2, 'fifth', 1.9]] : [[0, 'root', b - 0.1]]),
@@ -94,7 +94,7 @@ export const GROOVES: Record<StyleId, Groove> = {
     swing: SW,
     tempo: [100, 220],
     defaultTempo: 150,
-    drums: [[[0, 'ride', 0.2], [1, 'ride', 0.17], [1 + SW, 'ride', 0.1], [2, 'ride', 0.17], [1, 'hat', 0.22], [2, 'hat', 0.22], [0, 'kick', 0.22]]],
+    drums: [[[0, 'ride', 0.2], [1, 'ride', 0.17], [1 + SW, 'ride', 0.1], [2, 'ride', 0.17], [1, 'pedal', 0.22], [2, 'pedal', 0.22], [0, 'kick', 0.22]]],
     bass: (b) => (b >= 3 ? [[0, 'root', 1.8], [2, 'fifth', 0.9]] : [[0, 'root', b - 0.1]]),
     comp: {
       3: [[[1, 0.8], [2, 0.8]], [[0, 1.4], [1 + SW, 1.1]], [[0, 0.9], [2, 0.8]]],

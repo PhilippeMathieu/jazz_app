@@ -58,7 +58,7 @@ function backingBar(evs: Ev[], t: number, spb: number, feel: Feel, tempo: number
     if (feel === 'swing') {
       evs.push({ t: tb, run: (x) => drum('ride', x, b % 2 ? 0.22 : 0.17) });
       if (b % 2) {
-        evs.push({ t: tb, run: (x) => drum('hat', x, 0.26) });
+        evs.push({ t: tb, run: (x) => drum('pedal', x, 0.26) });
         evs.push({ t: tb + r * spb, run: (x) => drum('ride', x, 0.1) });
       }
     } else {
@@ -100,7 +100,7 @@ export function playRhythm(p: RPattern, tempo: number, o: { reps: number; demo: 
 /** Clics seuls (calibration, garder le tempo) : instants donnés, accentués ou non. */
 export function playClicks(times: { t: number; accent?: boolean; sound?: 'click' | 'hat' }[]): () => void {
   audio();
-  return schedule(times.map((c) => ({ t: c.t, run: (x) => (c.sound === 'hat' ? drum('hat', x, 0.4) : click(x, !!c.accent)) })));
+  return schedule(times.map((c) => ({ t: c.t, run: (x) => (c.sound === 'hat' ? drum('pedal', x, 0.4) : click(x, !!c.accent)) })));
 }
 
 /** Une petite grille par style, pour l'entendre (et la reconnaître). */
