@@ -3,6 +3,9 @@ import { load } from './storage';
 import { QUALITIES } from './theory/chords';
 import { PROGRESSIONS } from './theory/progressions';
 import { SECTIONS } from '../ui/sections';
+import { confusions } from './confusions';
+import { GROOVES, StyleId } from './rhythm/styles';
+import { rhythmById } from './rhythm/patterns';
 
 export interface Advice {
   text: string;
@@ -78,6 +81,18 @@ export function advice(): Advice[] {
       });
   }
   if (quiz.t >= 8 && quiz.c / quiz.t < 0.8) weak.push({ text: `${SECTIONS.grilles.title} · Analyser`, detail: `${pct(quiz)} % de réussite`, href: '#/grilles', score: quiz.c / quiz.t });
+  // Confusions : la paire la plus confondue de chaque exercice d'écoute.
+  const qual = (k: string) => (k === 'maj' ? 'majeur' : k === 'min' ? 'mineur' : QUALITIES[k]?.sym ?? k);
+  const conf: [string, string, (k: string) => string, string][] = [
+    ['accord', SECTIONS.oreille.title, qual, '#/oreille/confusions'],
+    ['prog', SECTIONS.oreille.title, (k) => PROGRESSIONS[k]?.name ?? k, '#/oreille/confusions'],
+    ['style', SECTIONS.rythme.title, (k) => GROOVES[k as StyleId]?.name ?? k, '#/rythme/style/confusions'],
+    ['rythme', SECTIONS.rythme.title, (k) => rhythmById(k)?.name ?? k, '#/rythme/oreille/confusions']
+  ];
+  for (const [d, section, name, href] of conf) {
+    const p = confusions(d as 'accord')[0];
+    if (p) weak.push({ text: `${section} · ${name(p.a)} ou ${name(p.b)} ?`, detail: `Confondus ${p.err} fois : à départager`, href, score: Math.max(0.2, 0.6 - p.score / 10) });
+  }
   weak.sort((a, b) => a.score - b.score);
 
   return weak.slice(0, 2);

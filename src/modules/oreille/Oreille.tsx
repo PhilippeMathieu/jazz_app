@@ -14,15 +14,21 @@ import { ConfirmButton } from '../../ui/ConfirmButton';
 import { PlayIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { notesMarks } from '../../ui/keyboardMarks';
-import { HINTS, LEVEL_LABELS, PROG_LEVELS, QUALITY_LEVELS } from './data';
-import { EarMode, EarQuestion, Tally, checkBuild, makeEarQuestion } from './questions';
+import { HINTS, LEVEL_LABELS, PROG_LEVELS, QUALITY_LEVELS, qualityDiff } from './data';
+import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, makeEarQuestion, progChords } from './questions';
+import { Domain, Pair, clearConfusions, confusions, recordAnswer } from '../../core/confusions';
+import { chordOnPc } from '../../core/theory/chords';
 
 interface Stats {
   mode: EarMode;
   lv: Record<EarMode, number>;
   items: Tally;
   recent: Record<string, number[]>;
+  /** Tout le niveau, ou seulement les paires confondues (duel à deux réponses). */
+  focus?: 'all' | 'confusions';
 }
+const domainOf = (m: EarMode): Domain => (m === 'prog' ? 'prog' : 'accord');
+const itemName = (m: EarMode, k: string) => (m === 'prog' ? PROGRESSIONS[k]?.name ?? k : qualSym(k));
 const DEFAULT: Stats = { mode: 'ear', lv: { ear: 0, prog: 0, build: 0 }, items: {}, recent: {} };
 const PROMPT: Record<EarMode, string> = { ear: 'Quel accord ?', prog: 'Quelle progression ?', build: 'Construis cet accord' };
 /** Accords de 3 sons : « majeur », « mineur » (le symbole seul serait vide pour le majeur). */
@@ -35,8 +41,14 @@ const EXERCISES: { value: EarMode; label: string; sub: string }[] = [
   { value: 'build', label: 'Construire', sub: 'Toucher les notes d’un accord' }
 ];
 
-export function Oreille() {
-  const [stats, setStats] = useState<Stats>(() => load('oreille', DEFAULT));
+/** preset « confusions » : ouvert depuis l'accueil (À travailler), sur les accords confondus. */
+export function Oreille({ preset }: { preset?: string }) {
+  const [stats, setStats] = useState<Stats>(() => {
+    const s = load('oreille', DEFAULT);
+    if (preset !== 'confusions') return s;
+    const mode: EarMode = confusions('accord').length || !confusions('prog').length ? 'ear' : 'prog';
+    return { ...s, mode, focus: 'confusions' };
+  });
   const [running, setRunning] = useState(false);
   useEffect(() => save('oreille', stats), [stats]);
   if (running) return <EarPlay stats={stats} setStats={setStats} onStop={() => setRunning(false)} />;
@@ -48,6 +60,9 @@ type SetStats = (f: (s: Stats) => Stats) => void;
 function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetStats; onStart: () => void }) {
   const mode = stats.mode;
   const level = clampLv(stats.lv[mode]);
+  const pairs = mode === 'build' ? [] : confusions(domainOf(mode));
+  const duel = stats.focus === 'confusions' && pairs.length > 0;
+  const what = mode === 'prog' ? 'progressions' : 'accords';
   const pool = mode === 'prog' ? PROG_LEVELS[level] : QUALITY_LEVELS[level];
   const rows = pool
     .map((k) => {
@@ -62,8 +77,45 @@ function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetSta
       <Field label="Exercice">
         <Segmented cards cols={3} label="Exercice" value={mode} onChange={(m) => setStats((s) => ({ ...s, mode: m }))} options={EXERCISES} />
       </Field>
-      <LevelPicker levels={LEVEL_LABELS[mode].map((desc) => ({ desc }))} value={level} onChange={(l) => setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }))} />
+      {mode !== 'build' && pairs.length ? (
+        <Field label="Questions">
+          <Segmented
+            label="Questions"
+            value={duel ? 'confusions' : 'all'}
+            onChange={(focus) => setStats((s) => ({ ...s, focus }))}
+            options={[
+              { value: 'all', label: 'Tout le niveau', sub: 'Les accords du niveau choisi ; ceux que tu confonds reviennent plus souvent.' },
+              { value: 'confusions', label: `Mes confusions (${pairs.length})`, sub: `Seulement les ${what} que tu confonds, à départager deux par deux.` }
+            ]}
+          />
+        </Field>
+      ) : null}
+      {duel ? null : <LevelPicker levels={LEVEL_LABELS[mode].map((desc) => ({ desc }))} value={level} onChange={(l) => setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }))} />}
       <StartButton onClick={onStart} />
+      {mode !== 'build' ? (
+        pairs.length ? (
+          <section>
+            <h2 class="label">Tu confonds</h2>
+            <div class="pairs">
+              {pairs.slice(0, 6).map((p) => (
+                <div key={p.a + p.b} class="pair">
+                  <b>
+                    {itemName(mode, p.a)} ↔ {itemName(mode, p.b)}
+                  </b>
+                  <span class="muted small">
+                    {p.err} erreur{p.err > 1 ? 's' : ''}
+                    {p.ok ? `, ${p.ok} bonne${p.ok > 1 ? 's' : ''} réponse${p.ok > 1 ? 's' : ''} depuis` : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p class="muted small">Une paire disparaît quand tu as 2 bonnes réponses pour chaque erreur.</p>
+            <ConfirmButton label="Oublier ces confusions" confirm="Toucher encore pour confirmer" onConfirm={() => (clearConfusions(domainOf(mode)), setStats((s) => ({ ...s, focus: 'all' })))} />
+          </section>
+        ) : (
+          <p class="muted small">Quand tu confonds deux {what}, l’appli s’en souvient : ils reviennent plus souvent, et tu pourras t’entraîner sur eux seuls.</p>
+        )
+      ) : null}
       {rows.some((r) => r.t) ? (
         <section>
           <h2 class="label">Réussite, {levelName(level).toLowerCase()}</h2>
@@ -75,11 +127,22 @@ function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetSta
   );
 }
 
+/** Question suivante : duel sur une paire confondue, ou tout le niveau (confusions plus fréquentes). */
+function nextQuestion(stats: Stats, mode: EarMode, level: number, last?: string): EarQuestion {
+  const pairs: Pair[] = mode === 'build' ? [] : confusions(domainOf(mode));
+  if (stats.focus === 'confusions' && mode !== 'build') {
+    const d = makeDuelQuestion(mode, pairs, level, last);
+    if (d) return d;
+  }
+  return makeEarQuestion(mode, level, stats.items, last, Math.random, pairs);
+}
+
 function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats; onStop: () => void }) {
   const mode = stats.mode;
   const level = clampLv(stats.lv[mode]);
   const last = useRef<string | undefined>(undefined);
-  const [q, setQ] = useState<EarQuestion>(() => makeEarQuestion(mode, level, stats.items));
+  const [q, setQ] = useState<EarQuestion>(() => nextQuestion(stats, mode, level));
+  const duel = !!((q.mode === 'ear' && q.choices) || (q.mode === 'prog' && stats.focus === 'confusions' && q.choices.length === 2));
   const [answer, setAnswer] = useState<string | null>(null);
   const [ok, setOk] = useState<boolean | null>(null);
   const [sel, setSel] = useState<number[]>([]);
@@ -116,7 +179,7 @@ function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats
   };
   const fresh = (m: EarMode, l: number, autoplay: boolean) => {
     stop();
-    const nq = makeEarQuestion(m, l, stats.items, last.current);
+    const nq = nextQuestion(stats, m, l, last.current);
     last.current = nq.mode === 'prog' ? nq.id : nq.q;
     setQ(nq);
     setAnswer(null);
@@ -139,10 +202,12 @@ function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats
   };
   const choose = (a: string) => {
     if (answer !== null || q.mode === 'build') return;
-    const good = q.mode === 'ear' ? a === q.q : a === q.id;
+    const truth = q.mode === 'ear' ? q.q : q.id;
+    const good = a === truth;
     setAnswer(a);
     setOk(good);
     record(q.mode === 'ear' ? 'ear:' + q.q : 'prog:' + q.id, good);
+    recordAnswer(domainOf(q.mode), truth, a, q.mode === 'ear' ? (q.choices ?? pool) : q.choices);
     play(q);
   };
   /** « J'ai deviné » : la dernière réponse juste compte comme à revoir. */
@@ -231,6 +296,40 @@ function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats
     kb = <Keyboard lo={36} hi={84} marks={km.marks} labels={km.labels} center={pc.notes} />;
   }
 
+  // Comparer côte à côte la bonne réponse et sa rivale (celle choisie par erreur, ou l'autre du duel).
+  let compare = null;
+  if (answered && q.mode !== 'build') {
+    const truth = q.mode === 'ear' ? q.q : q.id;
+    const other = !ok ? answer! : duel ? (q.choices ?? []).find((x) => x !== truth) : undefined;
+    if (other && other !== truth) {
+      const hear = (k: string) => {
+        audio();
+        stop();
+        const t0 = now() + 0.05;
+        if (q.mode === 'ear') playChord(earVoicing(chordOnPc(rootPc(q.c.chord), k), 1, () => 0), t0, 2, 0.6);
+        else progChords(k, q.tonic).forEach((c, i) => playChord(c.notes, t0 + i * 1.3, 1.2, 0.6));
+      };
+      const diff =
+        q.mode === 'ear'
+          ? qualityDiff(truth, other, (k) => QUALITIES[k].iv, qualSym)
+          : `${PROGRESSIONS[truth].name} : ${romanLine(truth)} ; ${PROGRESSIONS[other].name} : ${romanLine(other)}.`;
+      compare = (
+        <div class="compare">
+          <span class="label">Compare, sur la même {q.mode === 'ear' ? 'fondamentale' : 'tonalité'}</span>
+          <div class="row-actions">
+            <button class="btn sm" onClick={() => hear(truth)}>
+              <PlayIcon /> {itemName(mode, truth)}
+            </button>
+            <button class="btn sm" onClick={() => hear(other)}>
+              <PlayIcon /> {itemName(mode, other)}
+            </button>
+          </div>
+          {diff ? <p class="small">{diff}</p> : null}
+        </div>
+      );
+    }
+  }
+
   return (
     <div class="screen play-screen">
       <header class="topbar">
@@ -238,7 +337,7 @@ function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats
           Arrêter
         </button>
         <span class="play-meta">
-          {EXERCISES.find((e) => e.value === mode)?.label} · {levelShort(level)} · {session.c}/{session.t}
+          {EXERCISES.find((e) => e.value === mode)?.label} · {duel ? 'mes confusions' : levelShort(level)} · {session.c}/{session.t}
           {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
         </span>
       </header>
@@ -311,13 +410,14 @@ function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats
             )}
           </div>
         ) : null}
+        {compare}
         {kb}
       </section>
 
       <div class="thumb-zone">
         {q.mode !== 'build' && !answered ? (
-          <div class={'choices' + (mode === 'prog' ? ' long' : '')}>
-            {(q.mode === 'prog' ? q.choices : pool).map((k) => (
+          <div class={'choices' + (mode === 'prog' ? ' long' : '') + (duel && mode === 'ear' ? ' two' : '')}>
+            {(q.mode === 'prog' ? q.choices : (q.choices ?? pool)).map((k) => (
               <button key={k} class="choice" onClick={() => choose(k)}>
                 {mode === 'prog' ? (
                   <>

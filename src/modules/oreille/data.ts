@@ -43,3 +43,31 @@ export const LEVEL_LABELS = {
   prog: ['Débutant : I, IV, V, VIm en 3 sons', 'Diatonique', 'Mineur, secondaires', 'Substitutions', 'Avancé'],
   build: ['Débutant : majeur ou mineur (3 sons)', 'maj7 · m7 · 7', '+ ø7 · °7', '+ 6 · m6 · sus4 · m(maj7)', '9 · ♭9 · ♯9 · 13']
 };
+
+const INTERVAL: Record<number, string> = {
+  3: 'tierce mineure',
+  4: 'tierce majeure',
+  5: 'quarte',
+  6: 'quinte diminuée',
+  7: 'quinte juste',
+  8: 'quinte augmentée',
+  9: 'sixte',
+  10: '7e mineure',
+  11: '7e majeure',
+  13: '♭9',
+  14: '9',
+  15: '♯9',
+  21: '13'
+};
+const intervalName = (q: string, i: number) => (q === 'dim7' && i === 9 ? '7e diminuée' : INTERVAL[i] ?? `${i} demi-tons`);
+
+/** Ce qui distingue deux qualités d'accord, note par note (sur la même fondamentale). */
+export function qualityDiff(a: string, b: string, iv: (q: string) => number[], name: (q: string) => string): string {
+  const A = iv(a);
+  const B = iv(b);
+  const onlyA = A.filter((x) => !B.includes(x)).map((x) => intervalName(a, x));
+  const onlyB = B.filter((x) => !A.includes(x)).map((x) => intervalName(b, x));
+  if (!onlyA.length && !onlyB.length) return '';
+  const part = (q: string, l: string[]) => (l.length ? `${name(q)} a ${l.join(' et ')}` : `${name(q)} n’a rien de plus`);
+  return `Ce qui change : ${part(a, onlyA)} ; ${part(b, onlyB)}.`;
+}

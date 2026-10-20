@@ -1,14 +1,14 @@
 // Rythme : tenir le tempo, lire et taper un rythme, reconnaître un rythme ou un style.
 import { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { RHYTHMS, RHYTHM_LEVELS, RPattern, countOf, rhythmsOf } from '../../core/rhythm/patterns';
+import { RHYTHMS, RHYTHM_LEVELS, RPattern, countOf, rhythmById, rhythmsOf } from '../../core/rhythm/patterns';
 import { calibrate, countInHits, drift, scoreTiming, tolerance, TimingResult } from '../../core/rhythm/timing';
 import { GROOVES, STYLE_ORDER, StyleId } from '../../core/rhythm/styles';
 import { playClicks, playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
 import { audio, now } from '../../core/audio/engine';
 import { startMic, useMicRelease, useMicState } from '../../core/listen/mic';
 import { load, save } from '../../core/storage';
-import { pick, shuffle, weightedPick } from '../../core/random';
+import { shuffle, weightedPick } from '../../core/random';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
 import { Field, LevelPicker, MoreOptions, StartButton, levelShort } from '../../ui/Setup';
@@ -17,6 +17,8 @@ import { CountIn, GridLegend, RhythmGrid, HitMark, useBeatClock, useCursor } fro
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
 import { Input, useHits } from './input';
+import { Domain, Pair, clearConfusions, confusionWeight, confusions, recordAnswer, rivalsOf } from '../../core/confusions';
+import { ConfirmButton } from '../../ui/ConfirmButton';
 
 type Exercise = 'tempo' | 'taper' | 'oreille' | 'style';
 type Tally = Record<string, { c: number; t: number }>;
@@ -32,6 +34,8 @@ interface Saved {
   offsets: Record<string, number>;
   patterns: Tally;
   styles: Tally;
+  /** Reconnaître : tout, ou seulement les paires confondues. */
+  focus?: 'all' | 'confusions';
 }
 const DEFAULT: Saved = { exercise: 'tempo', input: 'tap', level: 0, tempo: {}, variant: 0, keepTempo: 80, offsets: {}, patterns: {}, styles: {} };
 const LEVEL_TEMPO = [80, 80, 90, 100, 70, 100];
@@ -110,7 +114,7 @@ const BARS = 8;
 type SetSaved = (p: Partial<Saved>) => void;
 
 /** piano : on écoute le micro. preset : exercice et niveau ouverts depuis une leçon (#/rythme/taper/3). */
-export function Rythme({ piano, preset }: { piano?: boolean; preset?: { exercise: string; level: number } }) {
+export function Rythme({ piano, preset }: { piano?: boolean; preset?: { exercise: string; level: number; confusions?: boolean } }) {
   const [saved, setSaved] = useState<Saved>(() => {
     const s: Saved = { ...DEFAULT, ...load('rythme', DEFAULT) };
     if (piano) s.input = 'mic';
@@ -123,6 +127,7 @@ export function Rythme({ piano, preset }: { piano?: boolean; preset?: { exercise
         else s.level = preset.level;
       }
     }
+    if (preset?.confusions) s.focus = 'confusions';
     if (s.variant >= VARIANTS.length) s.variant = 0;
     return s;
   });
@@ -170,6 +175,10 @@ function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: SetSav
   const timed = saved.exercise === 'taper' || saved.exercise === 'tempo';
   const offset = saved.offsets[saved.input];
   const ex = EXERCISES.find((e) => e.value === saved.exercise)!;
+  const earDomain: Domain | null = saved.exercise === 'style' ? 'style' : saved.exercise === 'oreille' ? 'rythme' : null;
+  const pairs = earDomain ? confusions(earDomain) : [];
+  const duel = saved.focus === 'confusions' && pairs.length > 0;
+  const what = saved.exercise === 'style' ? 'styles' : 'rythmes';
   const start = async () => {
     audio();
     if (timed && saved.input === 'mic') await startMic({ echo: true });
@@ -189,7 +198,20 @@ function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: SetSav
         ))}
       </ol>
       {saved.exercise === 'tempo' ? <LevelPicker levels={VARIANTS.map((v) => ({ name: v.name, desc: v.hint }))} value={saved.variant} onChange={(variant) => set({ variant })} /> : null}
-      {saved.exercise === 'taper' || saved.exercise === 'oreille' ? (
+      {earDomain && pairs.length ? (
+        <Field label="Questions">
+          <Segmented
+            label="Questions"
+            value={duel ? 'confusions' : 'all'}
+            onChange={(focus) => set({ focus })}
+            options={[
+              { value: 'all', label: saved.exercise === 'style' ? 'Tous les styles' : 'Tout le niveau', sub: `Ce que tu confonds revient plus souvent.` },
+              { value: 'confusions', label: `Mes confusions (${pairs.length})`, sub: `Seulement les ${what} que tu confonds, à départager deux par deux.` }
+            ]}
+          />
+        </Field>
+      ) : null}
+      {(saved.exercise === 'taper' || saved.exercise === 'oreille') && !duel ? (
         <LevelPicker levels={RHYTHM_LEVELS.map((l) => ({ name: l.label, desc: l.desc }))} value={saved.level} onChange={(level) => set({ level })} />
       ) : null}
       {timed ? (
@@ -219,9 +241,33 @@ function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: SetSav
         </MoreOptions>
       ) : null}
       <StartButton onClick={start} />
+      {earDomain ? (
+        pairs.length ? (
+          <section>
+            <h2 class="label">Tu confonds</h2>
+            <div class="pairs">
+              {pairs.slice(0, 6).map((p) => (
+                <div key={p.a + p.b} class="pair">
+                  <b>
+                    {nameOf(earDomain, p.a)} ↔ {nameOf(earDomain, p.b)}
+                  </b>
+                  <span class="muted small">
+                    {p.err} erreur{p.err > 1 ? 's' : ''}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <ConfirmButton label="Oublier ces confusions" confirm="Toucher encore pour confirmer" onConfirm={() => (clearConfusions(earDomain), set({ focus: 'all' }))} />
+          </section>
+        ) : (
+          <p class="muted small">Quand tu confonds deux {what}, l’appli s’en souvient : ils reviennent plus souvent, et tu pourras t’entraîner sur eux seuls.</p>
+        )
+      ) : null}
     </div>
   );
 }
+
+const nameOf = (d: Domain, k: string) => (d === 'style' ? GROOVES[k as StyleId]?.name ?? k : RHYTHMS.find((r) => r.id === k)?.name ?? k);
 
 function TempoStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
@@ -761,11 +807,21 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
   const level = saved.level;
   const tempo = saved.tempo[level] ?? LEVEL_TEMPO[level];
   const makeQ = () => {
+    const pairs = confusions('rythme');
+    if (saved.focus === 'confusions' && pairs.length) {
+      const p = weightedPick(pairs, (x) => Math.min(4, x.score));
+      const ids = shuffle([p.a, p.b]);
+      const answer = rhythmById(ids[0]);
+      const other = rhythmById(ids[1]);
+      if (answer && other) return { answer, choices: shuffle([answer, other]), duel: true };
+    }
     const pool = rhythmsOf(level);
-    const answer = pick(pool);
-    const same = shuffle(pool.filter((x) => x.id !== answer.id && x.bars === answer.bars));
-    const others = shuffle(RHYTHMS.filter((x) => x.level !== level && x.bars === answer.bars && !!x.triplet === !!answer.triplet));
-    return { answer, choices: shuffle([answer, ...[...same, ...others].slice(0, 3)]) };
+    const answer = weightedPick(pool, (x) => confusionWeight(pairs, x.id) * (1 + 2 * (1 - ((saved.patterns['ear:' + x.id]?.c ?? 0) + 1) / ((saved.patterns['ear:' + x.id]?.t ?? 0) + 2))));
+    const fits = (x: RPattern) => x.id !== answer.id && x.bars === answer.bars && !!x.triplet === !!answer.triplet;
+    const rivals = rivalsOf(pairs, answer.id).map(rhythmById).filter((x): x is RPattern => !!x && fits(x));
+    const same = shuffle(pool.filter((x) => fits(x) && !rivals.includes(x)));
+    const others = shuffle(RHYTHMS.filter((x) => x.level !== level && fits(x) && !rivals.includes(x)));
+    return { answer, choices: shuffle([answer, ...[...rivals.slice(0, 2), ...same, ...others].slice(0, 3)]), duel: false };
   };
   const [q, setQ] = useState(makeQ);
   const [picked, setPicked] = useState<string | null>(null);
@@ -780,6 +836,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
   const choose = (id: string) => {
     if (picked) return;
     setPicked(id);
+    recordAnswer('rythme', q.answer.id, id, q.choices.map((c) => c.id));
     const ok = id === q.answer.id;
     setScore((s) => ({ c: s.c + (ok ? 1 : 0), t: s.t + 1 }));
     const it = saved.patterns['ear:' + q.answer.id] ?? { c: 0, t: 0 };
@@ -805,7 +862,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(level)} · {score.c}/{score.t}
+          {q.duel ? 'Mes confusions' : levelShort(level)} · {score.c}/{score.t}
         </span>
         <span />
       </header>
@@ -818,6 +875,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
           <p class="muted">
             On compte : {countOf(q.answer)}. {q.answer.hint}
           </p>
+          {!ok || q.duel ? <RhythmCompare a={q.answer} b={q.choices.find((c) => c.id !== q.answer.id && (ok || c.id === picked))!} tempo={tempo} /> : null}
         </div>
       ) : clock.count ? (
         <Say>
@@ -851,12 +909,40 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
   );
 }
 
+/** Réécouter côte à côte le bon rythme et celui qu'on a pris pour lui. */
+function RhythmCompare({ a, b, tempo }: { a: RPattern; b?: RPattern; tempo: number }) {
+  if (!b) return null;
+  return (
+    <div class="compare">
+      <span class="label">Compare</span>
+      <div class="row-actions">
+        {[a, b].map((p) => (
+          <button key={p.id} class="btn sm" onClick={() => playRhythm(p, tempo, { reps: 1, demo: true, feel: 'swing' })}>
+            <PlayIcon /> {p.name}
+          </button>
+        ))}
+      </div>
+      <p class="small">
+        {a.name} : {countOf(a)}. {b.name} : {countOf(b)}.
+      </p>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- Reconnaître un style
 
 function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack: () => void }) {
   const makeQ = () => {
-    const answer = weightedPick(STYLE_ORDER, (id) => 1 + 3 * (1 - ((saved.styles[id]?.c ?? 0) + 1) / ((saved.styles[id]?.t ?? 0) + 2)));
-    return { answer, choices: shuffle([answer, ...shuffle(STYLE_ORDER.filter((x) => x !== answer)).slice(0, 3)]) };
+    const pairs: Pair[] = confusions('style');
+    if (saved.focus === 'confusions' && pairs.length) {
+      const p = weightedPick(pairs, (x) => Math.min(4, x.score));
+      const two = shuffle([p.a, p.b]) as StyleId[];
+      return { answer: two[0], choices: shuffle(two), duel: true };
+    }
+    const answer = weightedPick(STYLE_ORDER, (id) => confusionWeight(pairs, id) * (1 + 3 * (1 - ((saved.styles[id]?.c ?? 0) + 1) / ((saved.styles[id]?.t ?? 0) + 2))));
+    const rivals = rivalsOf(pairs, answer).filter((x): x is StyleId => STYLE_ORDER.includes(x as StyleId)).slice(0, 2);
+    const rest = shuffle(STYLE_ORDER.filter((x) => x !== answer && !rivals.includes(x)));
+    return { answer, choices: shuffle([answer, ...[...rivals, ...rest].slice(0, 3)]), duel: false };
   };
   const [q, setQ] = useState(makeQ);
   const [picked, setPicked] = useState<StyleId | null>(null);
@@ -874,6 +960,7 @@ function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
   const choose = (id: StyleId) => {
     if (picked) return;
     setPicked(id);
+    recordAnswer('style', q.answer, id, q.choices);
     const ok = id === q.answer;
     setScore((s) => ({ c: s.c + (ok ? 1 : 0), t: s.t + 1 }));
     const it = saved.styles[q.answer] ?? { c: 0, t: 0 };
@@ -898,6 +985,7 @@ function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
           Arrêter
         </button>
         <span class="play-meta">
+          {q.duel ? 'Mes confusions · ' : ''}
           {score.c}/{score.t}
         </span>
         <span />

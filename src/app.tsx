@@ -31,10 +31,10 @@ export function App() {
   if (page === 'express') return <Express />;
   if (page === 'cours') return a === 'astuces' ? <TipsView /> : a ? <LessonView key={a} id={a} /> : <CoursList />;
   if (page === 'clavier') return <Clavier />;
-  if (page === 'rythme') return <Rythme key={(a ?? '') + (b ?? '')} piano={a === 'piano'} preset={a && a !== 'piano' ? { exercise: a, level: b ? Number(b) - 1 : -1 } : undefined} />;
+  if (page === 'rythme') return <Rythme key={(a ?? '') + (b ?? '')} piano={a === 'piano'} preset={a && a !== 'piano' ? { exercise: a, level: b && b !== 'confusions' ? Number(b) - 1 : -1, confusions: b === 'confusions' } : undefined} />;
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
-  if (page === 'oreille') return <Oreille />;
+  if (page === 'oreille') return <Oreille key={a ?? ''} preset={a} />;
   if (page === 'flash') return <Flash />;
   if (page === 'micro') return <Micro />;
   return <Home />;
