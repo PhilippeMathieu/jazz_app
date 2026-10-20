@@ -8,6 +8,7 @@ import { load, save } from '../../core/storage';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
+import { Field, LevelPicker, StartButton, levelName, levelShort } from '../../ui/Setup';
 import { StatBars } from '../../ui/StatBars';
 import { ConfirmButton } from '../../ui/ConfirmButton';
 import { PlayIcon } from '../../ui/icons';
@@ -28,11 +29,53 @@ const PROMPT: Record<EarMode, string> = { ear: 'Quel accord ?', prog: 'Quelle pr
 const qualSym = (k: string) => (k === 'maj' ? 'majeur' : k === 'min' ? 'mineur' : QUALITIES[k].sym);
 const qualSub = (k: string) => (k === 'maj' ? 'ex. C' : k === 'min' ? 'ex. Cm' : QUALITIES[k].name);
 const clampLv = (n: number) => (n >= 0 && n <= 4 ? n : 1);
-/** « Débutant » (3 sons), puis N1 à N4. */
-const levelName = (n: number) => (n === 0 ? 'Débutant' : `N${n}`);
+const EXERCISES: { value: EarMode; label: string; sub: string }[] = [
+  { value: 'ear', label: 'Accords', sub: 'Entendre un accord, dire lequel' },
+  { value: 'prog', label: 'Progressions', sub: 'Reconnaître une suite d’accords' },
+  { value: 'build', label: 'Construire', sub: 'Toucher les notes d’un accord' }
+];
 
 export function Oreille() {
   const [stats, setStats] = useState<Stats>(() => load('oreille', DEFAULT));
+  const [running, setRunning] = useState(false);
+  useEffect(() => save('oreille', stats), [stats]);
+  if (running) return <EarPlay stats={stats} setStats={setStats} onStop={() => setRunning(false)} />;
+  return <EarSetup stats={stats} setStats={setStats} onStart={() => (audio(), setRunning(true))} />;
+}
+
+type SetStats = (f: (s: Stats) => Stats) => void;
+
+function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetStats; onStart: () => void }) {
+  const mode = stats.mode;
+  const level = clampLv(stats.lv[mode]);
+  const pool = mode === 'prog' ? PROG_LEVELS[level] : QUALITY_LEVELS[level];
+  const rows = pool
+    .map((k) => {
+      const it = stats.items[mode + ':' + k] ?? { c: 0, t: 0 };
+      return { label: mode === 'prog' ? PROGRESSIONS[k].name : qualSym(k), c: it.c, t: it.t };
+    })
+    .sort((a, b) => (a.t ? a.c / a.t : 2) - (b.t ? b.c / b.t : 2));
+  return (
+    <div class="screen">
+      <TopBar title="Oreille" />
+      <p class="intro">Avec des écouteurs : l’appli joue, tu reconnais. Après chaque réponse, l’accord s’affiche au clavier.</p>
+      <Field label="Exercice">
+        <Segmented cards cols={3} label="Exercice" value={mode} onChange={(m) => setStats((s) => ({ ...s, mode: m }))} options={EXERCISES} />
+      </Field>
+      <LevelPicker levels={LEVEL_LABELS[mode].map((desc) => ({ desc }))} value={level} onChange={(l) => setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }))} />
+      <StartButton onClick={onStart} />
+      {rows.some((r) => r.t) ? (
+        <section>
+          <h2 class="label">Réussite, {levelName(level).toLowerCase()}</h2>
+          <StatBars rows={rows} />
+          <ConfirmButton label="Remettre les statistiques à zéro" confirm="Toucher encore pour confirmer" onConfirm={() => setStats((s) => ({ ...s, items: {}, recent: {} }))} />
+        </section>
+      ) : null}
+    </div>
+  );
+}
+
+function EarPlay({ stats, setStats, onStop }: { stats: Stats; setStats: SetStats; onStop: () => void }) {
   const mode = stats.mode;
   const level = clampLv(stats.lv[mode]);
   const last = useRef<string | undefined>(undefined);
@@ -44,8 +87,10 @@ export function Oreille() {
   const [shown, setShown] = useState(0);
   const [session, setSession] = useState({ c: 0, t: 0, streak: 0 });
   const timers = useRef<number[]>([]);
-  useEffect(() => save('oreille', stats), [stats]);
-  useEffect(() => () => stop(), []);
+  useEffect(() => {
+    if (q.mode !== 'build') play(q);
+    return () => stop();
+  }, []);
 
   const stop = () => {
     timers.current.forEach(clearTimeout);
@@ -131,11 +176,6 @@ export function Oreille() {
       return x;
     });
   };
-  const setMode = (m: EarMode) => {
-    if (m === mode) return;
-    setStats((s) => ({ ...s, mode: m }));
-    fresh(m, clampLv(stats.lv[m]), false);
-  };
   const setLevel = (l: number) => {
     setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }));
     fresh(mode, l, false);
@@ -193,29 +233,18 @@ export function Oreille() {
 
   return (
     <div class="screen play-screen">
-      <TopBar
-        title="Oreille"
-        actions={
-          <span class="play-meta">
-            {session.c}/{session.t}
-            {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
-          </span>
-        }
-      />
-      <Segmented
-        label="Exercice"
-        value={mode}
-        onChange={setMode}
-        options={[
-          { value: 'ear', label: 'Accords' },
-          { value: 'prog', label: 'Progressions' },
-          { value: 'build', label: 'Construire' }
-        ]}
-      />
-      <Segmented label="Niveau" value={level} onChange={setLevel} options={LEVEL_LABELS[mode].map((t, i) => ({ value: i, label: levelName(i), sub: t }))} />
+      <header class="topbar">
+        <button class="btn ghost sm" onClick={onStop}>
+          Arrêter
+        </button>
+        <span class="play-meta">
+          {EXERCISES.find((e) => e.value === mode)?.label} · {levelShort(level)} · {session.c}/{session.t}
+          {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
+        </span>
+      </header>
       {recent.length === 10 && recentScore >= 8 && level < 4 ? (
         <button class="banner ok" onClick={() => setLevel(level + 1)}>
-          {recentScore}/10 sur tes dernières réponses : passe au {levelName(level + 1)}
+          {recentScore}/10 sur tes dernières réponses : passe au {levelName(level + 1).toLowerCase()}
         </button>
       ) : null}
 
@@ -327,18 +356,6 @@ export function Oreille() {
         ) : null}
       </div>
 
-      <section>
-        <h2 class="label">Réussite, {levelName(level)}</h2>
-        <StatBars
-          rows={pool
-            .map((k) => {
-              const it = stats.items[mode + ':' + k] ?? { c: 0, t: 0 };
-              return { label: mode === 'prog' ? PROGRESSIONS[k].name : qualSym(k), c: it.c, t: it.t };
-            })
-            .sort((a, b) => (a.t ? a.c / a.t : 2) - (b.t ? b.c / b.t : 2))}
-        />
-        <ConfirmButton label="Remettre les statistiques à zéro" confirm="Toucher encore pour confirmer" onConfirm={() => setStats((s) => ({ ...s, items: {}, recent: {} }))} />
-      </section>
     </div>
   );
 }

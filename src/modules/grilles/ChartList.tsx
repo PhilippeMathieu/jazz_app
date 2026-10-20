@@ -7,7 +7,7 @@ import { TopBar } from '../../ui/Screen';
 import { ChevronIcon } from '../../ui/icons';
 import { ConfirmButton } from '../../ui/ConfirmButton';
 
-const STYLE: Record<string, string> = { swing: 'swing', bossa: 'bossa', ballade: 'ballade', blues: 'blues' };
+const STYLE: Record<string, string> = { swing: 'swing', bossa: 'bossa', ballade: 'ballade', blues: 'blues', valse: 'valse', samba: 'samba', latin: 'latin', funk: 'funk' };
 const LEVEL = ['', 'facile', 'moyen', 'avancé'];
 
 function Row({ c, extra }: { c: Chart; extra?: preact.ComponentChildren }) {
@@ -32,16 +32,17 @@ export function ChartList() {
   return (
     <div class="screen">
       <TopBar
-        title="Grilles"
+        title="Morceaux"
         actions={
           <a class="btn sm" href="#/importer">
             Importer
           </a>
         }
       />
+      <p class="intro">Choisis un morceau : l’appli analyse la grille (degrés, gammes, guide tones) et t’accompagne (basse, batterie, 7 styles). Avec le micro, elle vérifie ce que tu joues.</p>
       {mine.length ? (
         <section>
-          <h2 class="label">Mes grilles</h2>
+          <h2 class="label">Mes morceaux</h2>
           <div class="list">
             {mine.map((c) => (
               <Row
@@ -67,7 +68,7 @@ export function ChartList() {
         <div class="list">{LIBRARY.map((c) => <Row key={c.id} c={c} />)}</div>
       </section>
       <section>
-        <h2 class="label">Exercices</h2>
+        <h2 class="label">Grilles d’exercice</h2>
         <div class="list">{EXERCISES.map((c) => <Row key={c.id} c={c} />)}</div>
       </section>
     </div>

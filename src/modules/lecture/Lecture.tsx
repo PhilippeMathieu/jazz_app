@@ -8,6 +8,7 @@ import { NoteTracker } from '../../core/listen/tracker';
 import { load, save } from '../../core/storage';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
+import { Field, LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
 import { StatBars } from '../../ui/StatBars';
 import { Clock, fmtSec } from '../../ui/Clock';
 import { Keyboard, Mark } from '../../ui/Keyboard';
@@ -21,10 +22,10 @@ type RunMode = 'sprint' | 'serie';
 type AnswerMode = 'clavier' | 'noms' | 'piano';
 const SPRINT_MS = 60_000;
 const SERIE_N = 20;
-const ANSWER_LABEL: Record<AnswerMode, string> = { clavier: 'Clavier', noms: 'Noms', piano: 'Au piano' };
+const ANSWER_LABEL: Record<AnswerMode, string> = { clavier: 'Clavier', noms: 'Nom', piano: 'Au piano' };
 const ANSWER_SUB: Record<AnswerMode, string> = {
   clavier: 'Touche la note sur le clavier (octave libre).',
-  noms: 'Choisis le nom : lettre, et au N4 dièse ou bémol.',
+  noms: 'Choisis le nom de la note (au niveau 4, avec dièse ou bémol).',
   piano: 'Joue la note sur ton piano, à la bonne octave : le micro vérifie.'
 };
 
@@ -120,35 +121,22 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
   };
   return (
     <div class="screen">
-      <TopBar title="Lecture de notes" actions={answer === 'piano' ? <MicPill /> : undefined} />
-      <p class="intro">Une note sur la portée : touche-la, nomme-la ou joue-la au piano, le plus vite possible.</p>
-      <Segmented
-        label="Niveau"
-        value={level}
-        onChange={(v) => setSaved((s) => ({ ...s, level: v }))}
-        options={LEVELS.map((l, i) => ({ value: i + 1, label: l.label, sub: l.desc }))}
-      />
-      <Segmented
-        label="Réponse"
-        value={answer}
-        onChange={(v) => setSaved((s) => ({ ...s, answer: v }))}
-        options={(Object.keys(ANSWER_LABEL) as AnswerMode[]).map((a) => ({ value: a, label: ANSWER_LABEL[a], sub: ANSWER_SUB[a] }))}
-      />
-      <Segmented
-        label="Format"
-        value={mode}
-        onChange={(v) => setSaved((s) => ({ ...s, mode: v }))}
-        options={[
-          { value: 'sprint', label: 'Sprint 60 s' },
-          { value: 'serie', label: `${SERIE_N} notes` }
-        ]}
-      />
+      <TopBar title="Notes" actions={answer === 'piano' ? <MicPill /> : undefined} />
+      <p class="intro">Une note s’affiche sur la portée : trouve-la le plus vite possible.</p>
+      <LevelPicker levels={LEVELS} base={1} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
+      <Field label="Répondre">
+        <Segmented
+          label="Répondre"
+          value={answer}
+          onChange={(v) => setSaved((s) => ({ ...s, answer: v }))}
+          options={(Object.keys(ANSWER_LABEL) as AnswerMode[]).map((a) => ({ value: a, label: ANSWER_LABEL[a], sub: ANSWER_SUB[a] }))}
+        />
+      </Field>
+      <SprintOptions mode={mode} n={SERIE_N} what="notes" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
+      <StartButton onClick={start} />
       <p class="muted small">
         Record : {rec ? (mode === 'sprint' ? `${rec.correct} justes sur ${rec.total}` : `${rec.correct}/${rec.total} en ${fmtSec(rec.ms)}`) : 'aucun pour l’instant'}.
       </p>
-      <button class="btn primary block" onClick={start}>
-        Démarrer
-      </button>
       <details class="help">
         <summary>Les repères</summary>
         <p class="small">
@@ -295,7 +283,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          N{level} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {levelShort(level - 1)} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -421,7 +409,7 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
           <span>au total</span>
         </div>
       </div>
-      {newRecord ? <p class="banner ok">Nouveau record en N{saved.level}.</p> : null}
+      {newRecord ? <p class="banner ok">Nouveau record, {levelName(saved.level - 1).toLowerCase()}.</p> : null}
       <StatBars rows={per.map((x) => ({ label: CLEF_LABEL[x.c], c: x.ok, t: x.n, value: `${x.ok}/${x.n} · ${fmtSec(x.ms / x.n)}` }))} />
       <div class="row-actions">
         <button class="btn primary" onClick={onAgain}>

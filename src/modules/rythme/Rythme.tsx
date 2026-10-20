@@ -10,6 +10,7 @@ import { load, save } from '../../core/storage';
 import { pick, shuffle, weightedPick } from '../../core/random';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
+import { Field, LevelPicker, MoreOptions, StartButton, levelShort } from '../../ui/Setup';
 import { MicPill } from '../../ui/MicPill';
 import { RhythmGrid, HitMark, useCursor } from '../../ui/RhythmGrid';
 import { AnswerActions } from '../../ui/AnswerActions';
@@ -145,70 +146,46 @@ function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: (p: Pa
   return (
     <div class="screen">
       <TopBar title="Rythme" actions={timed && saved.input === 'mic' ? <MicPill echo /> : undefined} />
-      <p class="intro">Le placement, la pulsation et les styles. Avec des écouteurs dans le métro, ou au piano avec le micro.</p>
-      <Segmented cards cols={2} label="Exercice" value={saved.exercise} onChange={(exercise) => set({ exercise })} options={EXERCISES} />
-      {timed ? (
-        <>
-          <Segmented
-            label="Jouer"
-            value={saved.input}
-            onChange={(input) => set({ input })}
-            options={[
-              {
-                value: 'tap',
-                label: 'Tape l’écran',
-                sub: 'Tape avec un doigt, au casque de préférence.'
-              },
-              {
-                value: 'mic',
-                label: 'Au piano (micro)',
-                sub: 'Une note ou un accord par attaque : le micro mesure le placement. Avec un écouteur, il n’entend pas le métronome.'
-              }
-            ]}
-          />
-          <p class="muted small">
-            {offset === undefined ? 'Calibration à faire : 10 secondes, pour corriger le décalage du téléphone. ' : `Décalage mesuré : ${offset} ms (corrigé). `}
-            <button class="linkbtn inline" onClick={onCalibrate}>
-              {offset === undefined ? 'Calibrer' : 'Recalibrer'}
-            </button>
-          </p>
-        </>
-      ) : null}
+      <p class="intro">Le placement, le tempo et les styles. Au casque dans le métro, ou au piano avec le micro.</p>
+      <Field label="Exercice">
+        <Segmented cards cols={2} label="Exercice" value={saved.exercise} onChange={(exercise) => set({ exercise })} options={EXERCISES} />
+      </Field>
       {saved.exercise === 'taper' || saved.exercise === 'oreille' ? (
-        <>
-          <h2 class="label">Niveau</h2>
-          <div class="chips text">
-            {RHYTHM_LEVELS.map((l, i) => (
-              <button key={l.label} class="chip" aria-pressed={saved.level === i} onClick={() => set({ level: i })}>
-                {l.label}
-              </button>
-            ))}
-          </div>
-          <p class="muted small">{RHYTHM_LEVELS[saved.level].desc}</p>
-        </>
+        <LevelPicker levels={RHYTHM_LEVELS.map((l) => ({ name: l.label, desc: l.desc }))} value={saved.level} onChange={(level) => set({ level })} />
       ) : null}
-      {saved.exercise === 'tempo' ? (
-        <>
-          <h2 class="label">Variante</h2>
-          <div class="chips text">
-            {VARIANTS.map((v, i) => (
-              <button key={v.name} class="chip" aria-pressed={saved.variant === i} onClick={() => set({ variant: i })}>
-                {v.name}
-              </button>
-            ))}
-          </div>
-          <p class="muted small">{VARIANTS[saved.variant].hint}</p>
-          <TempoStepper value={saved.keepTempo} onChange={(keepTempo) => set({ keepTempo })} />
-        </>
-      ) : null}
+      {saved.exercise === 'tempo' ? <LevelPicker levels={VARIANTS.map((v) => ({ name: v.name, desc: v.hint }))} value={saved.variant} onChange={(variant) => set({ variant })} /> : null}
       {saved.exercise === 'style' ? (
         <p class="muted small">
           Quatre mesures d’un style, à reconnaître parmi : {STYLE_ORDER.map((id) => GROOVES[id].name).join(', ')}. Les indices pour les entendre sont donnés après chaque réponse.
         </p>
       ) : null}
-      <button class="btn primary block" onClick={start}>
-        Commencer
-      </button>
+      {timed ? (
+        <Field label="Répondre">
+          <Segmented
+            label="Répondre"
+            value={saved.input}
+            onChange={(input) => set({ input })}
+            options={[
+              { value: 'tap', label: 'Sur l’écran', sub: 'Tape l’écran avec un doigt, au casque de préférence.' },
+              { value: 'mic', label: 'Au piano', sub: 'Une note ou un accord par attaque : le micro mesure le placement. Avec un écouteur, il n’entend pas le métronome.' }
+            ]}
+          />
+        </Field>
+      ) : null}
+      {timed ? (
+        <MoreOptions summary={(saved.exercise === 'tempo' ? `${saved.keepTempo} BPM · ` : '') + (offset === undefined ? 'calibration à faire' : `décalage corrigé : ${offset} ms`)}>
+          {saved.exercise === 'tempo' ? <TempoStepper value={saved.keepTempo} onChange={(keepTempo) => set({ keepTempo })} /> : null}
+          <p class="muted small">
+            {offset === undefined
+              ? 'La calibration (10 secondes) corrige le décalage du téléphone ; elle se lance au premier exercice. '
+              : `Décalage mesuré : ${offset} ms, corrigé automatiquement. `}
+            <button class="linkbtn inline" onClick={onCalibrate}>
+              {offset === undefined ? 'Calibrer maintenant' : 'Recalibrer'}
+            </button>
+          </p>
+        </MoreOptions>
+      ) : null}
+      <StartButton onClick={start} />
     </div>
   );
 }
@@ -421,7 +398,7 @@ function TapRhythm({ saved, set, onBack }: { saved: Saved; set: (p: Partial<Save
           Arrêter
         </button>
         <span class="play-meta">
-          {RHYTHM_LEVELS[level].label} · {tempo} BPM
+          {levelShort(level)} · {tempo} BPM
         </span>
         <TempoMini value={tempo} onChange={(v) => set({ tempo: { ...saved.tempo, [level]: v } })} disabled={busy} />
       </header>
@@ -568,7 +545,9 @@ function KeepTime({ saved, set, onBack }: { saved: Saved; set: (p: Partial<Saved
         <button class="btn ghost sm" onClick={onBack}>
           Arrêter
         </button>
-        <span class="play-meta">{tempo} BPM</span>
+        <span class="play-meta">
+          {levelShort(saved.variant)} · {tempo} BPM
+        </span>
         <TempoMini value={tempo} onChange={(keepTempo) => set({ keepTempo })} disabled={phase === 'take'} />
       </header>
       <section class="r-card">
@@ -689,7 +668,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: (p: Partial<Save
           Arrêter
         </button>
         <span class="play-meta">
-          {RHYTHM_LEVELS[level].label} · {score.c}/{score.t}
+          {levelShort(level)} · {score.c}/{score.t}
         </span>
         <button class="icon-btn" aria-label="Réécouter" onClick={() => playRhythm(q.answer, tempo, { reps: 2, demo: true, feel: 'swing' })}>
           <PlayIcon />

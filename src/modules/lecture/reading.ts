@@ -10,10 +10,10 @@ export const solfegeName = (w: Written) => SOLFEGE[w.letter] + (w.acc > 0 ? ' di
 
 
 export const LEVELS = [
-  { label: 'N1', desc: 'Clé de sol, dans la portée' },
-  { label: 'N2', desc: 'Clé de fa, dans la portée' },
-  { label: 'N3', desc: 'Les deux clés, avec lignes supplémentaires' },
-  { label: 'N4', desc: 'Les deux clés, avec dièses et bémols' }
+  { desc: 'Débutant : clé de sol, dans la portée' },
+  { desc: 'Clé de fa, dans la portée' },
+  { desc: 'Les deux clés, avec lignes supplémentaires' },
+  { desc: 'Les deux clés, avec dièses et bémols' }
 ];
 
 /** Étendue par niveau, en rangs diatoniques (bornes incluses). */

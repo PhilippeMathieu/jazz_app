@@ -5,52 +5,30 @@ import { load } from './core/storage';
 import { advice } from './core/progress';
 import { chartById } from './library/charts';
 import { LESSONS, lessonById } from './modules/cours/lessons';
-import { TIPS } from './modules/cours/tips';
 import { coursProgress, nextLesson } from './modules/cours/Cours';
+import { SECTIONS, SectionId, TRAINING } from './ui/sections';
 
-interface Tile {
-  href: string;
-  title: string;
-  text: string;
-  tag?: string;
-}
-const METRO: Tile[] = [
-  { href: '#/lecture', title: 'Lecture de notes', text: 'Clé de sol, clé de fa : touche, nomme ou joue la note au piano.' },
-  { href: '#/tonalite', title: 'Accords de la tonalité', text: 'En D majeur, F♯ : majeur ou mineur ? Puis m7, 7, ø7. Chronométré.' },
-  { href: '#/express', title: 'Analyse express', text: 'Degrés, enchaînements, 9 ou ♭9, guide tones, chronométrés.' },
-  { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' },
-  { href: '#/rythme', title: 'Rythme', text: 'Taper un rythme en place, garder le tempo, reconnaître swing, bossa, samba…', tag: 'Écouteurs' }
-];
-const PIANO: Tile[] = [
-  { href: '#/grilles', title: 'Grilles', text: 'Analyse, quiz, gammes et guide tones sur le play-along. Mode pupitre.' },
-  { href: '#/flash', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli écoute et valide.' },
-  { href: '#/rythme/piano', title: 'Rythme au piano', text: 'Le micro mesure ton placement, à la milliseconde : comping, 2 et 4, claves.' }
-];
-
+/** Nom de l'écran où reprendre (les mêmes noms que sur l'accueil). */
 function resumeLabel(path: string): string | null {
   const [page, id] = path.split('/').filter(Boolean);
   if (page === 'grille') return chartById(id)?.title ?? null;
-  if (page === 'rythme') return id === 'piano' ? 'Rythme au piano' : 'Rythme';
-  if (page === 'cours') return id === 'astuces' ? 'Astuces d’enchaînement' : id ? `Cours · ${lessonById(id)?.title ?? ''}` : 'Cours';
-  return { lecture: 'Lecture de notes', tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings', rythme: 'Rythme' }[page] ?? null;
+  if (page === 'cours') return id === 'astuces' ? 'Cours · astuces d’enchaînement' : id ? `Cours · ${lessonById(id)?.title ?? ''}` : SECTIONS.cours.title;
+  return page in SECTIONS ? SECTIONS[page as SectionId].title : null;
 }
 
-function Rows({ list }: { list: Tile[] }) {
+function Row({ href, title, sub }: { href: string; title: string; sub: string }) {
   return (
-    <div class="list">
-      {list.map((t) => (
-        <a key={t.title} class="row" href={t.href}>
-          <span class="row-main">
-            <span class="row-title">{t.title}</span>
-            <span class="row-sub">{t.text}</span>
-          </span>
-          {t.tag ? <span class="tag">{t.tag}</span> : <ChevronIcon />}
-        </a>
-      ))}
-    </div>
+    <a class="row" href={href}>
+      <span class="row-main">
+        <span class="row-title">{title}</span>
+        <span class="row-sub">{sub}</span>
+      </span>
+      <ChevronIcon />
+    </a>
   );
 }
 
+/** Visible tant que l'appli n'est pas installée (Android, Chrome). */
 function InstallRow() {
   const [can, setCan] = useState(canInstall());
   useEffect(() => onInstallChange(() => setCan(canInstall())), []);
@@ -69,9 +47,10 @@ function InstallRow() {
 export function Home() {
   const last = load('last', { path: '' }).path;
   const label = last ? resumeLabel(last) : null;
-  const todo = advice();
+  const weak = advice();
   const cours = coursProgress();
   const nextL = nextLesson(cours);
+  const first = LESSONS[0];
   return (
     <div class="screen home">
       <h1 class="wordmark">
@@ -83,52 +62,74 @@ export function Home() {
       {label ? (
         <a class="resume" href={'#' + last}>
           <span class="row-main">
-            <span class="label">Reprendre</span>
+            <span class="label">Continuer</span>
             <span class="row-title">{label}</span>
           </span>
           <ChevronIcon />
         </a>
-      ) : null}
+      ) : (
+        <a class="resume" href={`#/cours/${first.id}`}>
+          <span class="row-main">
+            <span class="label">Pour commencer</span>
+            <span class="row-title">Leçon 1 · {first.title}</span>
+            <span class="row-sub">{first.minutes} minutes, puis un exercice pour pratiquer.</span>
+          </span>
+          <ChevronIcon />
+        </a>
+      )}
 
-      {todo.length ? (
+      {weak.length ? (
         <section>
           <h2 class="label">À travailler</h2>
-          <Rows list={todo.map((t) => ({ href: t.href, title: t.text, text: t.detail }))} />
+          <div class="list">
+            {weak.map((w) => (
+              <Row key={w.text} href={w.href} title={w.text} sub={w.detail} />
+            ))}
+          </div>
         </section>
       ) : null}
 
       <section>
-        <h2 class="label">Comprendre</h2>
-        <Rows
-          list={[
-            {
-              href: nextL && cours.read.length ? `#/cours/${nextL.id}` : '#/cours',
-              title: 'Cours',
-              text: nextL
-                ? `${cours.read.length}/${LESSONS.length} leçons lues · ${cours.read.length ? 'suivante' : 'pour commencer'} : ${nextL.title}`
+        <h2 class="label">Apprendre</h2>
+        <div class="list">
+          <Row
+            href={nextL && cours.read.length ? `#/cours/${nextL.id}` : '#/cours'}
+            title={SECTIONS.cours.title}
+            sub={
+              nextL
+                ? `${cours.read.length}/${LESSONS.length} leçons lues${cours.read.length ? ` · suivante : ${nextL.title}` : ''}`
                 : `Les ${LESSONS.length} leçons sont lues : à revoir quand tu veux.`
-            },
-            { href: '#/cours/astuces', title: 'Astuces d’enchaînement', text: `${TIPS.length} réflexes : quelle note vers quelle note, d’un accord à l’autre.` },
-            { href: '#/clavier', title: 'Clavier', text: 'Touche des notes (ou joue au piano) : l’appli nomme l’accord. Ou choisis un accord pour le voir.' }
-          ]}
-        />
+            }
+          />
+          <Row href="#/clavier" title={SECTIONS.clavier.title} sub={SECTIONS.clavier.sub} />
+        </div>
       </section>
 
       <section>
-        <h2 class="label">Dans le métro</h2>
-        <Rows list={METRO} />
-      </section>
-      <section>
-        <h2 class="label">Au piano</h2>
-        <Rows list={PIANO} />
+        <h2 class="label">S’entraîner</h2>
+        <div class="tiles">
+          {TRAINING.map((id) => {
+            const s = SECTIONS[id];
+            return (
+              <a key={id} class="tile" href={`#/${id}`}>
+                <span class="tile-title">{s.title}</span>
+                <span class="tile-sub">{s.sub}</span>
+                <span class="tile-where">{s.where}</span>
+              </a>
+            );
+          })}
+        </div>
       </section>
 
-      <a class="row plain" href="#/micro">
-        <span class="row-main">
-          <span class="row-title">Micro</span>
-          <span class="row-sub">Tester et régler l’écoute du piano</span>
-        </span>
-        <ChevronIcon />
+      <section>
+        <h2 class="label">Jouer</h2>
+        <div class="list">
+          <Row href="#/grilles" title={SECTIONS.grilles.title} sub={SECTIONS.grilles.sub + ', dans 7 styles'} />
+        </div>
+      </section>
+
+      <a class="tool-link" href="#/micro">
+        Régler le micro
       </a>
 
       <p class="credits">

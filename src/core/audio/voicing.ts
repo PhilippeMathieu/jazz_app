@@ -78,7 +78,7 @@ export function displayVoicing(c: Chord, scale?: string): number[] {
   return [bassRoot(c, 40), ...voiceLead(c, null, 52, 76, scale)];
 }
 
-// ---------------------------------------------------------------- Main gauche (Flash voicings)
+// ---------------------------------------------------------------- Main gauche (exercice Voicings)
 
 export type VoicingType = 'triad' | 'shell' | 'A' | 'B';
 export const VOICING_LABEL: Record<VoicingType, string> = {

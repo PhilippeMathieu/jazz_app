@@ -6,7 +6,7 @@ import { noteName } from '../../core/theory/notes';
 import { playOne } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
 import { TopBar } from '../../ui/Screen';
-import { Segmented } from '../../ui/Segmented';
+import { LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
 import { StatBars } from '../../ui/StatBars';
 import { Clock, fmtSec } from '../../ui/Clock';
 import { SpeakerIcon } from '../../ui/icons';
@@ -104,29 +104,14 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
     .slice(0, 4);
   return (
     <div class="screen">
-      <TopBar title="Accords de la tonalité" />
-      <p class="intro">Une tonalité, une fondamentale : trouve le type d’accord. En D majeur, F♯ → {level === 0 ? 'mineur (F♯m)' : 'm7 (F♯m7)'}.</p>
-      <Segmented
-        label="Niveau"
-        value={level}
-        onChange={(v) => setSaved((s) => ({ ...s, level: v }))}
-        options={LEVELS.map((l, i) => ({ value: i, label: l.label, sub: l.desc }))}
-      />
-      <Segmented
-        label="Format"
-        value={mode}
-        onChange={(v) => setSaved((s) => ({ ...s, mode: v }))}
-        options={[
-          { value: 'sprint', label: 'Sprint 60 s' },
-          { value: 'serie', label: `${SERIE_N} questions` }
-        ]}
-      />
+      <TopBar title="Accords" />
+      <p class="intro">Une tonalité et une note : quel accord ? En D majeur, F♯ → {level === 0 ? 'mineur (F♯m)' : 'm7 (F♯m7)'}.</p>
+      <LevelPicker levels={LEVELS} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
+      <SprintOptions mode={mode} n={SERIE_N} what="questions" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
+      <StartButton onClick={onStart} />
       <p class="muted small">
         Record : {rec ? (mode === 'sprint' ? `${rec.correct} justes sur ${rec.total}` : `${rec.correct}/${rec.total} en ${fmtSec(rec.ms)}`) : 'aucun pour l’instant'}.
       </p>
-      <button class="btn primary block" onClick={onStart}>
-        Démarrer
-      </button>
       <details class="help">
         <summary>Le truc à retenir</summary>
         <p class="small">
@@ -213,7 +198,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          {LEVELS[level].label} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {levelShort(level)} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -303,7 +288,7 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
           <span>de réflexion</span>
         </div>
       </div>
-      {newRecord ? <p class="banner ok">Nouveau record, niveau {LEVELS[saved.level].label}.</p> : null}
+      {newRecord ? <p class="banner ok">Nouveau record, {levelName(saved.level).toLowerCase()}.</p> : null}
       <StatBars rows={per.map((x) => ({ label: x.label, c: x.c, t: x.n, value: `${x.c}/${x.n} · ${fmtSec(x.ms / x.n)}` }))} />
       <div class="row-actions">
         <button class="btn primary" onClick={onAgain}>

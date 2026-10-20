@@ -87,8 +87,8 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/oreille', label: 'Oreille, niveau Débutant : majeur ou mineur ?' },
-              { href: '#/flash', label: 'Flash voicings, « Débutant : 3 sons »' }
+              { href: '#/oreille', label: 'Oreille › Accords, niveau 1 : majeur ou mineur ?' },
+              { href: '#/flash', label: 'Voicings, niveau 1 : accords de 3 sons' }
             ]
           }
         ]
@@ -127,7 +127,7 @@ export const PARTS: Part[] = [
             answer: 0,
             explain: 'I, IV, V : G, C, D.'
           },
-          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords de la tonalité, niveau Débutant' }] }
+          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords, niveau 1' }] }
         ]
       },
       {
@@ -171,9 +171,9 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/express', label: 'Analyse express, niveau Débutant' },
-              { href: '#/grille/debutant-1645', label: 'Grille : I – VI – IV – V' },
-              { href: '#/grille/cycle-tri', label: 'Grille : II – V – I en 3 sons, 12 tonalités' }
+              { href: '#/express', label: 'Enchaînements, niveau 1' },
+              { href: '#/grille/debutant-1645', label: 'Morceaux : I – VI – IV – V' },
+              { href: '#/grille/cycle-tri', label: 'Morceaux : II – V – I en 3 sons, 12 tonalités' }
             ]
           }
         ]
@@ -322,7 +322,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: 'B est le V : en mineur, le V prend la sensible (D♯) et devient B7.'
           },
-          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords de la tonalité : sprint de 60 s' }] }
+          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords, niveaux 2 à 5' }] }
         ]
       }
     ]
@@ -370,8 +370,8 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/grille/cycle-maj', label: 'Grille : ii–V–I dans les 12 tonalités' },
-              { href: '#/flash', label: 'Flash voicings : ii–V–I en shells' }
+              { href: '#/grille/cycle-maj', label: 'Morceaux : ii–V–I dans les 12 tonalités' },
+              { href: '#/flash', label: 'Voicings, niveau 2 (shell) : ii–V–I' }
             ]
           }
         ]
@@ -411,7 +411,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: 'En C mineur, A♭ (♭6) est la ♭9 de G7 : la gamme du morceau la donne.'
           },
-          { t: 'go', links: [{ href: '#/grille/cycle-min', label: 'Grille : ii–V–i mineur dans les 12 tonalités' }, { href: '#/grille/autumn-leaves', label: 'Grille : Autumn Leaves' }] }
+          { t: 'go', links: [{ href: '#/grille/cycle-min', label: 'Morceaux : ii–V–i mineur dans les 12 tonalités' }, { href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves' }] }
         ]
       },
       {
@@ -441,7 +441,7 @@ export const PARTS: Part[] = [
             answer: 0,
             explain: 'VI = D, II = G, V = C dans F.'
           },
-          { t: 'go', links: [{ href: '#/grille/rhythm-changes', label: 'Grille : Rhythm changes en B♭' }, { href: '#/express', label: 'Analyse express' }] }
+          { t: 'go', links: [{ href: '#/grille/rhythm-changes', label: 'Morceaux : Rhythm changes en B♭' }, { href: '#/express', label: 'Enchaînements, niveau 2' }] }
         ]
       },
       {
@@ -489,7 +489,7 @@ export const PARTS: Part[] = [
             answer: 0,
             explain: 'La dominante de E est B : B7 = V7/III.'
           },
-          { t: 'go', links: [{ href: '#/express', label: 'Analyse express, niveau 3' }, { href: '#/grille/a-train', label: 'Grille : Take the A Train (V7/V)' }] }
+          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 4' }, { href: '#/grille/a-train', label: 'Morceaux : Take the A Train (V7/V)' }] }
         ]
       },
       {
@@ -523,7 +523,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: 'Le triton 3ce–7e : B–F pour G7, F–C♭ pour D♭7.'
           },
-          { t: 'go', links: [{ href: '#/express', label: 'Analyse express, niveau 3' }] }
+          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 4' }] }
         ]
       },
       {
@@ -550,7 +550,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: 'IVm7 = Cm7, ♭VII7 = F7, puis Gmaj7.'
           },
-          { t: 'go', links: [{ href: '#/express', label: 'Analyse express, niveau 3' }] }
+          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 4' }] }
         ]
       },
       {
@@ -588,9 +588,9 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/grille/blues-f', label: 'Grille : Blues en F' },
-              { href: '#/grille/blues-mineur', label: 'Grille : Blues mineur' },
-              { href: '#/grille/blues-bird', label: 'Grille : Blues Bird' }
+              { href: '#/grille/blues-f', label: 'Morceaux : Blues en F' },
+              { href: '#/grille/blues-mineur', label: 'Morceaux : Blues mineur' },
+              { href: '#/grille/blues-bird', label: 'Morceaux : Blues Bird' }
             ]
           }
         ]
@@ -636,7 +636,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: '3-5-7-9 : E G B D.'
           },
-          { t: 'go', links: [{ href: '#/flash', label: 'Flash voicings : shells, A et B, avec le micro' }] }
+          { t: 'go', links: [{ href: '#/flash', label: 'Voicings, niveaux 2 à 4 : shell, A et B, avec le micro' }] }
         ]
       },
       {
@@ -678,7 +678,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: 'F est un demi-ton au-dessus de E (la 3ce) : il brouille l’accord.'
           },
-          { t: 'go', links: [{ href: '#/express', label: 'Analyse express, niveau 2 : 9 ou ♭9' }] }
+          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 3 : 9 ou ♭9' }] }
         ]
       },
       {
@@ -717,7 +717,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: 'Le II d’une tonalité majeure : dorien (D E F G A B C).'
           },
-          { t: 'go', links: [{ href: '#/grille/autumn-leaves', label: 'Grille Autumn Leaves, vue Gammes, avec le micro' }] }
+          { t: 'go', links: [{ href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves, vue Gammes, avec le micro' }] }
         ]
       }
     ]
@@ -766,7 +766,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: '2 clics par mesure de 4 temps : la moitié du tempo, 80.'
           },
-          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme : garder le tempo (2 et 4), taper des croches' }] }
+          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme › Garder le tempo, niveau 1 (2 et 4)' }] }
         ]
       },
       {
@@ -807,8 +807,8 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/rythme', label: 'Rythme : taper un rythme (Contretemps, Comping)' },
-              { href: '#/grille/autumn-leaves', label: 'Autumn Leaves au play-along : comper en Charleston' }
+              { href: '#/rythme', label: 'Rythme › Taper un rythme, niveaux 3 et 4' },
+              { href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves, comper en Charleston' }
             ]
           }
         ]
@@ -859,8 +859,8 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/rythme', label: 'Rythme : quel style ?' },
-              { href: '#/grilles', label: 'Grilles : change le style dans les réglages du play-along' }
+              { href: '#/rythme', label: 'Rythme › Quel style ?' },
+              { href: '#/grilles', label: 'Morceaux : change le style dans les réglages du play-along' }
             ]
           }
         ]
@@ -900,7 +900,7 @@ export const PARTS: Part[] = [
             answer: 0,
             explain: 'Même motif, mais le 3e coup recule d’une croche, du 4 au « et » de 4.'
           },
-          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme : taper un rythme, niveau Claves' }] }
+          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme › Taper un rythme, niveau 6 (claves)' }] }
         ]
       }
     ]

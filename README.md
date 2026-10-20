@@ -6,24 +6,30 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 
 ## Écrans
 
-Chaque exercice d'harmonie commence par un niveau **Débutant** : accords de 3 sons (majeur, mineur), sans 7e — Accords de la tonalité, Analyse express, Oreille (accords, construire, progressions I–IV–V, I–VI–IV–V, II–V–I) et Flash voicings (« 3 sons », renversement libre). Trois leçons et trois grilles en 3 sons pour démarrer.
+L'accueil a quatre blocs : **Continuer** (ou « Pour commencer » : leçon 1), **Apprendre** (Cours, Clavier), **S'entraîner** (six exercices, un par compétence, chacun marqué Métro, Piano ou les deux), **Jouer** (Morceaux). Les deux points les plus faibles apparaissent sous « À travailler ».
 
-- **Clavier** : 5 octaves qui défilent. « Nommer ce que je joue » : touche des notes (ou joue-les au piano, micro) et l'appli nomme l'accord, avec les autres lectures (renversement, sans quinte, sans fondamentale). « Voir un accord » : fondamentale, type (3 sons, 4 sons, enrichis), disposition (renversements, shell, A, B), à écouter.
-- **Astuces d'enchaînement** : 15 réflexes de conduite des voix (7e du II → 3ce du V, 5te du II → ♭9 du V, encadrements, SubV, backdoor…), chacun avec un exemple écrit (accords, ligne, degrés), à écouter et à transposer.
-- **Cours** : 20 leçons, dont 3 pour débuter (accords de 3 sons, accords de la gamme, premiers enchaînements) courtes (construire un accord, caractère des accords, accords de la tonalité, ii–V–I majeur et mineur, turnarounds, dominantes secondaires, SubV, backdoor, blues, voicings, tensions, gammes) et une partie **Le rythme** (le swing et le 2-4, placer ses accords, reconnaître les styles, la clave), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice.
-- **Accueil** : reprendre le dernier exercice, trois suggestions « À travailler » tirées de tes erreurs.
-- **Lecture de notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux jusqu'aux lignes supplémentaires et aux altérations.
-- **Accords de la tonalité** (métro) : une tonalité et une fondamentale (en D majeur, F♯), trouver le type d'accord (maj7, m7, 7, ø7, °7). 4 niveaux jusqu'au mineur et aux 12 tonalités ; les couples tonalité-degré ratés reviennent plus souvent ; réussite et temps par degré.
-- **Analyse express** (métro) : questions chronométrées sur des suites d'accords (degré, schéma, tonalité, la note de la 9 ou ♭9, 3ce/7e, gamme), l'accord visé affiché au clavier après chaque réponse, sprint 60 s ou série de 20. Les types de questions et les enchaînements ratés reviennent plus souvent.
-- **Oreille** (métro, écouteurs) : reconnaître accords et progressions, construire un accord au clavier, 4 niveaux.
-- **Rythme** (métro au casque, ou piano au micro) : *Taper un rythme* (6 niveaux : noires, croches swing, contretemps/Charleston, comping sur 2 mesures avec anticipations, triolets, claves son/rumba/bossa ; écart mesuré en ms par attaque, tempo +4 à chaque réussite), *Garder le tempo* (clic sur les 4 temps et taper 2 et 4, clic sur 2 et 4, clic une mesure sur deux, clic qui disparaît ; dérive en BPM), *Quel rythme ?* et *Quel style ?* (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk, avec les indices pour les reconnaître). Calibration de la latence (écran ou micro) ; au micro, détection des attaques par flux spectral et alerte si le micro entend le métronome.
-- **Grilles** (piano) : 10 standards + ii–V–I dans les 12 tonalités, import Ultimate Guitar / ChordPro. Trois vues sur la même grille :
+Chaque exercice démarre sur le même écran : le but en une ligne, l'exercice s'il y en a plusieurs, le **niveau** (1 à 4, 5 ou 6, avec ce qu'il contient ; le niveau 1 est toujours le plus simple, en accords de 3 sons pour l'harmonie), la façon de répondre si on a le choix (écran ou piano), des **options** repliées (format sprint ou série, enchaînement, temps, tempo, calibration) et **Commencer**. En jeu : « Arrêter » à gauche, « Niv. n » et le score au centre.
+
+Apprendre
+- **Cours** : 20 leçons de 3 à 5 minutes (débuter en 3 sons, les accords, les enchaînements, au clavier, le rythme), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice. Dedans, les **astuces d'enchaînement** : 15 réflexes de conduite des voix, à écouter et à transposer.
+- **Clavier** : 5 octaves qui défilent. Nommer ce que je joue (au toucher ou au micro) ; voir n'importe quel accord (type, renversements, shell, A, B) et l'entendre.
+
+S'entraîner
+- **Notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux.
+- **Accords** (métro) : une tonalité et une note (en D majeur, F♯) ; trouver l'accord (majeur/mineur, puis maj7, m7, 7, ø7, °7). 5 niveaux, jusqu'au mineur et aux 12 tonalités.
+- **Enchaînements** (métro) : une suite d'accords, trois questions dessus (degré, schéma, tonalité, 9 ou ♭9, 3ce/7e, gamme), l'accord affiché au clavier après chaque réponse. 4 niveaux.
+- **Oreille** (métro, écouteurs) : reconnaître un accord ou une progression, construire un accord au clavier. 5 niveaux.
+- **Rythme** (métro au casque, ou piano au micro) : taper un rythme (6 niveaux : noires, croches swing, contretemps, comping avec anticipations, triolets, claves ; écart en ms par attaque), garder le tempo (4 niveaux, dérive en BPM), quel rythme ?, quel style ? (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Calibration de la latence ; au micro, détection des attaques et alerte si le micro entend le métronome.
+- **Voicings** (piano) : un accord s'affiche, tu le joues (niveaux : 3 sons, shell, A, B), le micro valide et passe au suivant.
+
+Jouer
+- **Morceaux** : 10 standards + grilles d'exercice, import Ultimate Guitar / ChordPro. Trois vues :
   - *Degrés* : analyse (ii–V, centres tonaux, dominantes secondaires, SubV, backdoor), quiz à degrés masqués ; avec le micro, vérifie que ton comping contient la 3ce et la 7e.
-  - *Gammes* : gamme de chaque accord ; avec le micro, classe chaque note jouée (accord, gamme, approche, hors) et compte les notes de l'accord jouées sur le 1er temps.
+  - *Gammes* : gamme de chaque accord ; avec le micro, classe chaque note jouée et compte les notes de l'accord jouées sur le 1er temps.
   - *Guide tones* : deux lignes 3ce/7e conduites par demi-ton ; le micro vérifie le guide tone au 1er temps.
-  - Play-along (piano, contrebasse, batterie) dans 7 styles (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk), transposition, mode pupitre plein écran (portrait ou paysage).
-- **Flash voicings** (piano) : un accord s'affiche, tu le joues (shell, sans fondamentale A/B), le micro valide et passe au suivant ; les accords ratés reviennent plus souvent.
-- **Micro** : niveau, seuil de silence, note et accord entendus.
+  - Play-along (piano, contrebasse, batterie) dans 7 styles, transposition, mode pupitre plein écran.
+
+Partout : explication après chaque réponse, « J'ai deviné », questions ratées qui reviennent plus souvent. **Micro** (en bas de l'accueil) : niveau, seuil de silence, note et accord entendus.
 
 ## Architecture
 

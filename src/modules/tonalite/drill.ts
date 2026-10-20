@@ -76,11 +76,11 @@ const key = (name: string, mode: Mode): Key => ({ tonic: parseNote(name)!.note, 
 
 /** Niveaux 0 (débutant) à 4. */
 export const LEVELS = [
-  { label: 'Débutant', desc: 'Accords de 3 sons : majeur, mineur (et un diminué), 7 tonalités courantes' },
-  { label: 'N1', desc: 'Majeur, 7 tonalités courantes (jusqu’à 3 altérations)' },
-  { label: 'N2', desc: 'Majeur, les 12 tonalités' },
-  { label: 'N3', desc: 'Mineur, les 12 tonalités (V7 et VII°7 de l’harmonique)' },
-  { label: 'N4', desc: 'Majeur et mineur mélangés' }
+  { desc: 'Débutant : accords de 3 sons, majeur ou mineur (et un diminué), 7 tonalités courantes' },
+  { desc: 'Accords de 4 sons (maj7, m7, 7, ø7), 7 tonalités courantes' },
+  { desc: 'Accords de 4 sons, les 12 tonalités' },
+  { desc: 'Tonalités mineures (V7 et VII°7 de l’harmonique)' },
+  { desc: 'Majeur et mineur mélangés' }
 ];
 
 export function keysFor(level: number): Key[] {

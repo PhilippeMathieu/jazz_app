@@ -28,10 +28,10 @@ const LEVEL_OF: Record<string, number> = {
 };
 /** Niveaux 0 (débutant, accords de 3 sons) à 3. */
 export const LEVELS = [
-  { label: 'Débutant', desc: 'Accords de 3 sons (C, Am, F, G…), tonalité affichée' },
-  { label: 'N1', desc: 'Majeur, tonalité affichée' },
-  { label: 'N2', desc: '+ mineur, 9 ou ♭9' },
-  { label: 'N3', desc: '+ substitutions, gammes' }
+  { desc: 'Débutant : accords de 3 sons (C, Am, F, G…), tonalité affichée' },
+  { desc: 'Accords de 4 sons en majeur : ii–V–I, turnarounds' },
+  { desc: '+ ii–V–i mineur, 9 ou ♭9 sur les V' },
+  { desc: '+ dominantes secondaires, SubV, backdoor, gammes' }
 ];
 const idsFor = (level: number) => Object.keys(LEVEL_OF).filter((id) => (level === 0 ? LEVEL_OF[id] === 0 : LEVEL_OF[id] >= 1 && LEVEL_OF[id] <= level));
 

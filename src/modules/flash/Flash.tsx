@@ -1,4 +1,4 @@
-// Flash voicings : un accord s'affiche, tu le joues, l'appli écoute (ou révèle) puis passe au suivant.
+// Voicings (« flash ») : un accord s'affiche, tu le joues, l'appli écoute (ou révèle) puis passe au suivant.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { chordSymbol, degreeLabel, rootPc, spellInChord } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
@@ -10,6 +10,7 @@ import { micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '
 import { Keyboard } from '../../ui/Keyboard';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
+import { Field, LevelPicker, MoreOptions, StartButton } from '../../ui/Setup';
 import { MicPill } from '../../ui/MicPill';
 import { CloseIcon } from '../../ui/icons';
 import { useWakeLock } from '../../ui/wakeLock';
@@ -18,7 +19,8 @@ import { notesMarks } from '../../ui/keyboardMarks';
 import { ChordStats, FlashSettings, Item, ORDER_LABEL, Order, nextBatch, statKey } from './batch';
 import { LEVEL_LABELS } from '../oreille/data';
 
-const VOICING_NAME: Record<VoicingType, string> = { triad: 'Débutant : 3 sons', shell: 'Shell', A: 'Type A', B: 'Type B' };
+const VOICING_NAME: Record<VoicingType, string> = { triad: 'Débutant, 3 sons', shell: 'Shell', A: 'Type A', B: 'Type B' };
+const TYPES: VoicingType[] = ['triad', 'shell', 'A', 'B'];
 const DEFAULT: FlashSettings = { level: 1, type: 'shell', order: 'iiVI', delay: 4, sound: true };
 const DELAYS = [2, 4, 6, 10, 0];
 
@@ -38,54 +40,51 @@ export function Flash() {
   if (running) return <Run s={s} onEnd={() => setRunning(false)} />;
   return (
     <div class="screen">
-      <TopBar title="Flash voicings" actions={<MicPill />} />
+      <TopBar title="Voicings" actions={<MicPill />} />
       <p class="intro">Un accord s’affiche : joue-le à la main gauche. Avec le micro, l’appli valide et passe au suivant.</p>
-      <h2 class="label">Voicing</h2>
-      <Segmented
-        cards
-        cols={2}
-        label="Voicing"
-        value={s.type}
-        onChange={(type) => setS({ ...s, type })}
-        options={(Object.keys(VOICING_LABEL) as VoicingType[]).map((t) => ({ value: t, label: VOICING_NAME[t], sub: VOICING_LABEL[t] }))}
+      <LevelPicker
+        levels={TYPES.map((t) => ({ name: VOICING_NAME[t], desc: VOICING_LABEL[t] }))}
+        value={TYPES.indexOf(s.type)}
+        onChange={(i) => setS({ ...s, type: TYPES[i] })}
       />
-      <h2 class="label">Enchaînement</h2>
-      <Segmented
-        cards
-        cols={2}
-        label="Enchaînement"
-        value={s.order}
-        onChange={(order) => setS({ ...s, order })}
-        options={(Object.keys(ORDER_LABEL) as Order[]).map((o) => ({ value: o, label: ORDER_LABEL[o] }))}
-      />
-      {(s.order === 'random' || s.order === 'cycle') && s.type !== 'triad' ? (
-        <>
-          <h2 class="label">Accords</h2>
+      <MoreOptions summary={`${ORDER_LABEL[s.order]} · ${s.delay ? `${s.delay} s` : 'temps libre'}${s.sound ? '' : ' · sans son'}`}>
+        <Field label="Enchaînement">
           <Segmented
-            label="Accords"
-            value={Math.max(1, s.level)}
-            onChange={(level) => setS({ ...s, level })}
-            options={LEVEL_LABELS.build.slice(1).map((t, i) => ({ value: i + 1, label: `N${i + 1}`, sub: t }))}
+            cards
+            cols={2}
+            label="Enchaînement"
+            value={s.order}
+            onChange={(order) => setS({ ...s, order })}
+            options={(Object.keys(ORDER_LABEL) as Order[]).map((o) => ({ value: o, label: ORDER_LABEL[o] }))}
           />
-        </>
-      ) : null}
-      <h2 class="label">Temps pour jouer</h2>
-      <Segmented label="Temps pour jouer" value={s.delay} onChange={(delay) => setS({ ...s, delay })} options={DELAYS.map((d) => ({ value: d, label: d ? `${d} s` : 'Libre' }))} />
-      <label class="toggle">
-        <input type="checkbox" checked={s.sound} onChange={() => setS({ ...s, sound: !s.sound })} />
-        <span>Faire entendre le voicing après chaque accord</span>
-      </label>
+        </Field>
+        {(s.order === 'random' || s.order === 'cycle') && s.type !== 'triad' ? (
+          <Field label="Types d’accords">
+            <Segmented
+              label="Types d’accords"
+              value={Math.max(1, s.level)}
+              onChange={(level) => setS({ ...s, level })}
+              options={LEVEL_LABELS.build.slice(1).map((t, i) => ({ value: i + 1, label: String(i + 1), sub: t }))}
+            />
+          </Field>
+        ) : null}
+        <Field label="Temps pour jouer">
+          <Segmented label="Temps pour jouer" value={s.delay} onChange={(delay) => setS({ ...s, delay })} options={DELAYS.map((d) => ({ value: d, label: d ? `${d} s` : 'Libre' }))} />
+        </Field>
+        <label class="toggle">
+          <input type="checkbox" checked={s.sound} onChange={() => setS({ ...s, sound: !s.sound })} />
+          <span>Faire entendre le voicing après chaque accord</span>
+        </label>
+      </MoreOptions>
+      <StartButton onClick={() => setRunning(true)} />
       <p class="muted small">
         {s.type === 'triad'
-          ? 'Débutant : accords de 3 sons, majeurs et mineurs. Joue-les dans le renversement que tu veux ; l’appli montre le plus proche du précédent.'
+          ? 'Joue-les dans le renversement que tu veux ; l’appli montre le plus proche du précédent.'
           : s.type === 'shell'
-            ? 'Shell : fondamentale à la basse, puis 3ce et 7e. Sous la, la 3ce passe au-dessus de la 7e (1-7-10).'
+            ? 'Fondamentale à la basse, puis 3ce et 7e. Sous la, la 3ce passe au-dessus de la 7e (1-7-10).'
             : 'Sans fondamentale : la basse joue la fondamentale. A et B alternent pour que les voix bougent peu.'}{' '}
         Les accords ratés ou lents reviennent plus souvent.
       </p>
-      <button class="btn primary block" onClick={() => setRunning(true)}>
-        Commencer
-      </button>
     </div>
   );
 }
