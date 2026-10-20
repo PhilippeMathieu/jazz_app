@@ -6,7 +6,7 @@ export const go = (path: string) => {
 };
 
 /** Écrans d'exercice mémorisés pour « Reprendre » sur l'accueil. */
-const RESUMABLE = ['grille', 'cours', 'lecture', 'tonalite', 'express', 'oreille', 'flash'];
+const RESUMABLE = ['grille', 'cours', 'lecture', 'tonalite', 'express', 'oreille', 'flash', 'rythme'];
 
 export function useRoute(): string[] {
   const read = () => (location.hash.replace(/^#\/?/, '') || '').split('/').filter(Boolean);

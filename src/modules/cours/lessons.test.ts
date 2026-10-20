@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { parseChord } from '../../core/theory/chords';
 import { chartById } from '../../library/charts';
 import { LESSONS } from './lessons';
+import { rhythmById } from '../../core/rhythm/patterns';
+import { GROOVES } from '../../core/rhythm/styles';
 
-const ROUTES = ['oreille', 'tonalite', 'express', 'flash', 'lecture', 'grilles'];
+const ROUTES = ['oreille', 'tonalite', 'express', 'flash', 'lecture', 'grilles', 'rythme'];
 
 describe('cours', () => {
   it('identifiants uniques', () => {
@@ -22,6 +24,8 @@ describe('cours', () => {
           expect(b.answer).toBeLessThan(b.choices.length);
           expect(new Set(b.choices).size).toBe(b.choices.length);
         }
+        if (b.t === 'rhythm') expect(rhythmById(b.id), b.id).toBeTruthy();
+        if (b.t === 'grooves') for (const id of b.styles) expect(GROOVES[id], id).toBeTruthy();
         if (b.t === 'table') for (const r of b.rows) expect(r).toHaveLength(b.head.length);
         if (b.t === 'go')
           for (const g of b.links) {

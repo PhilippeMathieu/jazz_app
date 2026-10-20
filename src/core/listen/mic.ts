@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { audio } from '../audio/engine';
 import { load, save } from '../storage';
 import { PitchResult, analyzeChordBuffer, rms, yin } from './detect';
+import { onsetDetector } from './onset';
 
 export type MicState = 'off' | 'asking' | 'on' | 'denied' | 'unsupported' | 'error';
 
@@ -10,6 +11,12 @@ let stream: MediaStream | null = null;
 let nodes: AudioNode[] = [];
 let chordAn: AnalyserNode | null = null;
 let monoAn: AnalyserNode | null = null;
+let source: MediaStreamAudioSourceNode | null = null;
+let sinkNode: GainNode | null = null;
+let onsetNode: AudioNode | null = null;
+const onsetListeners = new Set<(t: number) => void>();
+/** Module d'attaques chargé (une fois par contexte audio). */
+let workletReady: Promise<boolean> | null = null;
 let state: MicState = 'off';
 const listeners = new Set<(s: MicState) => void>();
 const setState = (s: MicState) => {
@@ -37,10 +44,19 @@ let pending: Promise<boolean> | null = null;
 /** Incrémenté à chaque arrêt : une ouverture en cours devenue obsolète se referme d'elle-même. */
 let generation = 0;
 
-/** À appeler depuis un geste (tap). Renvoie true si le micro est actif. */
-export function startMic(): Promise<boolean> {
-  if (stream && state === 'on') return Promise.resolve(true);
+let echoOn = false;
+
+/**
+ * À appeler depuis un geste (tap). Renvoie true si le micro est actif.
+ * echo : annulation d'écho du téléphone (le rythme n'a besoin que des attaques, et il ne faut pas
+ * que le micro entende le métronome du haut-parleur) ; sans, le son est plus fidèle (hauteur, accords).
+ */
+export function startMic(o: { echo?: boolean } = {}): Promise<boolean> {
+  const echo = !!o.echo;
+  if (stream && state === 'on' && echo === echoOn) return Promise.resolve(true);
   if (pending) return pending;
+  if (stream) stopMic();
+  echoOn = echo;
   pending = open().finally(() => {
     pending = null;
   });
@@ -58,7 +74,7 @@ async function open(): Promise<boolean> {
     const ctx = audio();
     setSession('play-and-record');
     const s = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+      audio: { echoCancellation: echoOn, noiseSuppression: false, autoGainControl: false }
     });
     if (gen !== generation) {
       // L'écran a été quitté pendant la demande d'autorisation.
@@ -95,7 +111,10 @@ async function open(): Promise<boolean> {
     monoAn.connect(sink);
     sink.connect(ctx.destination);
     nodes = [src, hp, lp, chordAn, monoAn, sink];
+    source = src;
+    sinkNode = sink;
     setState('on');
+    if (onsetListeners.size) void ensureOnsets();
     return true;
   } catch (e) {
     setSession('playback');
@@ -108,6 +127,9 @@ export function stopMic() {
   generation++;
   stream?.getTracks().forEach((t) => t.stop());
   nodes.forEach((n) => n.disconnect());
+  onsetNode?.disconnect();
+  onsetNode = null;
+  source = sinkNode = null;
   nodes = [];
   stream = null;
   chordAn = monoAn = null;
@@ -138,6 +160,79 @@ export function readNote(gate = 0): { level: number; pitch: PitchResult | null }
   noteBuf.set(chordBuf.subarray(chordBuf.length - noteBuf.length));
   const level = rms(noteBuf);
   return { level, pitch: level > Math.max(gate, 1e-5) ? yin(noteBuf, chordAn.context.sampleRate, 60, 2200) : null };
+}
+
+// ---------------------------------------------------------------- Attaques (rythme)
+
+const WORKLET = (gate: number) => `const make = ${onsetDetector.toString()};
+class OnsetProcessor extends AudioWorkletProcessor {
+  constructor() { super(); this.d = make(sampleRate); this.gate = ${gate}; this.port.onmessage = (e) => { this.gate = e.data; }; }
+  process(inputs) {
+    const ch = inputs[0] && inputs[0][0];
+    if (ch) { const t = this.d(ch, currentTime, this.gate); if (t >= 0) this.port.postMessage(t); }
+    return true;
+  }
+}
+registerProcessor('onsets', OnsetProcessor);`;
+
+async function loadWorklet(ctx: AudioContext): Promise<boolean> {
+  if (!ctx.audioWorklet) return false;
+  workletReady ??= (async () => {
+    const url = URL.createObjectURL(new Blob([WORKLET(micSettings().gate)], { type: 'application/javascript' }));
+    try {
+      await ctx.audioWorklet.addModule(url);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  })();
+  return workletReady;
+}
+
+async function ensureOnsets() {
+  if (onsetNode || !source || !sinkNode) return;
+  const ctx = source.context as AudioContext;
+  const emit = (t: number) => onsetListeners.forEach((l) => l(t));
+  if (await loadWorklet(ctx)) {
+    if (!source || !sinkNode || onsetNode) return; // micro coupé entre-temps
+    const node = new AudioWorkletNode(ctx, 'onsets');
+    node.port.postMessage(micSettings().gate);
+    node.port.onmessage = (e) => emit(e.data as number);
+    source.connect(node);
+    node.connect(sinkNode);
+    onsetNode = node;
+  } else {
+    // Repli pour les navigateurs sans AudioWorklet.
+    const sp = ctx.createScriptProcessor(256, 1, 1);
+    const d = onsetDetector(ctx.sampleRate);
+    const gate = micSettings().gate;
+    sp.onaudioprocess = (e) => {
+      const ch = e.inputBuffer.getChannelData(0);
+      const t0 = ctx.currentTime - 256 / ctx.sampleRate;
+      for (let i = 0; i < 256; i += 128) {
+        const t = d(ch.subarray(i, i + 128), t0 + i / ctx.sampleRate, gate);
+        if (t >= 0) emit(t);
+      }
+    };
+    source.connect(sp);
+    sp.connect(sinkNode);
+    onsetNode = sp;
+  }
+}
+
+/** Écoute les attaques jouées au piano (instants sur l'horloge audio). Renvoie la fonction d'arrêt. */
+export function listenOnsets(f: (t: number) => void): () => void {
+  onsetListeners.add(f);
+  void ensureOnsets();
+  return () => {
+    onsetListeners.delete(f);
+    if (!onsetListeners.size && onsetNode) {
+      onsetNode.disconnect();
+      onsetNode = null;
+    }
+  };
 }
 
 /** Dernière grande fenêtre : niveau, chroma et note grave (null sous le seuil). */

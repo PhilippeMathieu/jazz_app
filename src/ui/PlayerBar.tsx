@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { Drawer } from './Drawer';
 import { PlayIcon, SlidersIcon, StopIcon } from './icons';
 import { PlayerApi, PlayerToggle } from './usePlayer';
+import { GROOVES, STYLE_ORDER, grooveOf } from '../core/rhythm/styles';
 
 const TOGGLES: [PlayerToggle, string][] = [
   ['bass', 'Basse'],
@@ -40,7 +41,7 @@ export function PlayerBar({ p, fromBar = 0 }: { p: PlayerApi; fromBar?: number }
         ) : null}
       </div>
       <Drawer open={open} onClose={() => setOpen(false)} label="Instruments">
-        <h2 class="drawer-title">Instruments</h2>
+        <h2 class="drawer-title">Accompagnement</h2>
         <div class="toggles">
           {TOGGLES.map(([k, l]) => (
             <label key={k} class="toggle">
@@ -49,6 +50,17 @@ export function PlayerBar({ p, fromBar = 0 }: { p: PlayerApi; fromBar?: number }
             </label>
           ))}
         </div>
+        <h2 class="label">Style</h2>
+        <div class="chips text">
+          {STYLE_ORDER.filter((id) => (GROOVES[id].meter === 3) === (p.meter === 3)).map((id) => (
+            <button key={id} class="chip" aria-pressed={grooveOf(p.style).id === id} onClick={() => p.setStyle(id)}>
+              {GROOVES[id].name}
+            </button>
+          ))}
+        </div>
+        <p class="muted small">
+          {grooveOf(p.style).summary} Tempo habituel : {grooveOf(p.style).tempo[0]} à {grooveOf(p.style).tempo[1]}.
+        </p>
         <label class="field">
           <span>Tempo : {p.tempo} BPM</span>
           <input id="tempo" type="range" min={40} max={300} step={2} value={p.tempo} onInput={(e) => p.setTempo(Number((e.target as HTMLInputElement).value))} />

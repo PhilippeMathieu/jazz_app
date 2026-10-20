@@ -18,18 +18,21 @@ const METRO: Tile[] = [
   { href: '#/lecture', title: 'Lecture de notes', text: 'Clé de sol, clé de fa : touche, nomme ou joue la note au piano.' },
   { href: '#/tonalite', title: 'Accords de la tonalité', text: 'En D majeur, F♯ : majeur ou mineur ? Puis m7, 7, ø7. Chronométré.' },
   { href: '#/express', title: 'Analyse express', text: 'Degrés, enchaînements, 9 ou ♭9, guide tones, chronométrés.' },
-  { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' }
+  { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' },
+  { href: '#/rythme', title: 'Rythme', text: 'Taper un rythme en place, garder le tempo, reconnaître swing, bossa, samba…', tag: 'Écouteurs' }
 ];
 const PIANO: Tile[] = [
   { href: '#/grilles', title: 'Grilles', text: 'Analyse, quiz, gammes et guide tones sur le play-along. Mode pupitre.' },
-  { href: '#/flash', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli écoute et valide.' }
+  { href: '#/flash', title: 'Flash voicings', text: 'Un accord s’affiche, tu le joues, l’appli écoute et valide.' },
+  { href: '#/rythme/piano', title: 'Rythme au piano', text: 'Le micro mesure ton placement, à la milliseconde : comping, 2 et 4, claves.' }
 ];
 
 function resumeLabel(path: string): string | null {
   const [page, id] = path.split('/').filter(Boolean);
   if (page === 'grille') return chartById(id)?.title ?? null;
+  if (page === 'rythme') return id === 'piano' ? 'Rythme au piano' : 'Rythme';
   if (page === 'cours') return id === 'astuces' ? 'Astuces d’enchaînement' : id ? `Cours · ${lessonById(id)?.title ?? ''}` : 'Cours';
-  return { lecture: 'Lecture de notes', tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
+  return { lecture: 'Lecture de notes', tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings', rythme: 'Rythme' }[page] ?? null;
 }
 
 function Rows({ list }: { list: Tile[] }) {

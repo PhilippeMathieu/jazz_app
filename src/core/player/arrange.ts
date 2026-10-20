@@ -4,18 +4,22 @@ import { Chord, QUALITIES, rootPc } from '../theory/chords';
 import { mod, pcOf } from '../theory/notes';
 import { voiceLead } from '../audio/voicing';
 import { Rng, pick } from '../random';
+import type { DrumSound } from '../audio/engine';
+import { BassRole, CompHit, GROOVES, grooveOf } from '../rhythm/styles';
 
 export interface ArrangeOptions {
   bass: boolean;
   comp: boolean;
   drums: boolean;
+  /** Style joué, à la place de celui de la grille. */
+  style?: string;
 }
 export type ArrEvent =
   /** Début de temps (pour l'affichage). */
   | { beat: number; kind: 'pos'; bar: number; chord: number; beatInBar: number }
   | { beat: number; kind: 'bass'; midi: number; dur: number; vel: number }
   | { beat: number; kind: 'chord'; notes: number[]; dur: number; vel: number }
-  | { beat: number; kind: 'ride' | 'hat'; vel: number };
+  | { beat: number; kind: 'drum'; sound: DrumSound; vel: number };
 
 /** Ce qui se prolonge d'un chorus à l'autre (conduite des voix). */
 export interface ArrangeState {
@@ -24,7 +28,6 @@ export interface ArrangeState {
 }
 export const newArrangeState = (): ArrangeState => ({ prevBass: 40, prevVoicing: null });
 
-const SWING = 2 / 3;
 export const BASS_LO = 31;
 export const BASS_HI = 52;
 
@@ -64,62 +67,55 @@ function walkingLine(c: FlatChord, nextC: Chord, prevNote: number, first: boolea
  */
 export function arrangeChorus(chart: Chart, chords: FlatChord[], scales: string[], opts: ArrangeOptions, state: ArrangeState, rng: Rng): ArrEvent[] {
   const ev: ArrEvent[] = [];
-  const bossa = chart.style === 'bossa';
-  const sw = bossa ? 0.5 : SWING;
+  const bpb = chart.beatsPerBar;
+  // Une grille à 3 temps se joue en valse ; une valse ne s'impose pas à une grille à 4 temps.
+  const wanted = grooveOf(opts.style ?? chart.style);
+  const g = bpb === 3 ? GROOVES.valse : wanted.meter === 3 ? GROOVES.swing : wanted;
   const total = chords.reduce((s, c) => s + c.beats, 0);
 
   chords.forEach((c, i) => {
     const nextC = chords[(i + 1) % chords.length].chord;
     for (let b = 0; b < c.beats; b++) {
       const beat = c.start + b;
-      ev.push({ beat, kind: 'pos', bar: c.bar, chord: c.index, beatInBar: beat % chart.beatsPerBar });
+      ev.push({ beat, kind: 'pos', bar: c.bar, chord: c.index, beatInBar: beat % bpb });
     }
     if (opts.bass) {
-      if (bossa) {
-        const root = nearest(bassPc(c.chord), state.prevBass, 33, 48);
-        const fifth = nearest(mod(bassPc(c.chord) + 7, 12), root + 7, 33, BASS_HI);
-        const pattern: [number, number, number][] =
-          c.beats >= 4 ? [[0, root, 1.4], [1.5, fifth, 0.45], [2, fifth, 1.4], [3.5, root, 0.45]] : [[0, root, 1.4], [1.5, fifth, 0.45]];
-        pattern.forEach(([o, midi, dur]) => ev.push({ beat: c.start + o, kind: 'bass', midi, dur, vel: 0.75 }));
-        state.prevBass = root;
-      } else {
+      if (g.bass === 'walking') {
         const line = walkingLine(c, nextC, state.prevBass, i === 0, rng);
         state.prevBass = line[line.length - 1];
         line.forEach((midi, k) => ev.push({ beat: c.start + k, kind: 'bass', midi, dur: 0.92, vel: k === 0 ? 0.85 : 0.72 }));
+      } else {
+        const root = nearest(bassPc(c.chord), state.prevBass, 33, 48);
+        const note = (role: BassRole) =>
+          role === 'root'
+            ? root
+            : role === 'fifth'
+              ? nearest(mod(bassPc(c.chord) + 7, 12), root + 7, 33, BASS_HI)
+              : role === 'oct'
+                ? (root + 12 <= BASS_HI ? root + 12 : root)
+                : nearest(bassPc(nextC), root, 33, 48);
+        // Tumbao : pas de note sur le 1, sauf pour lancer le morceau.
+        const pattern = g.bass(c.beats);
+        if (i === 0 && pattern.every(([o]) => o > 0)) pattern.unshift([0, 'root', 1.4]);
+        for (const [o, role, dur] of pattern) if (o < c.beats) ev.push({ beat: c.start + o, kind: 'bass', midi: note(role), dur, vel: o === 0 ? 0.8 : 0.7 });
+        state.prevBass = root;
       }
     }
     if (opts.comp) {
       const notes = voiceLead(c.chord, state.prevVoicing, 50, 74, scales[i]);
       state.prevVoicing = notes;
-      let hits: [number, number][];
-      if (bossa) {
-        hits = c.beats >= 4 ? pick<[number, number][]>([[[0, 1], [1.5, 0.8], [3, 0.8]], [[0, 1.4], [2.5, 1.2]], [[0.5, 1], [2, 1], [3.5, 0.5]]], rng) : [[0, 1], [1.5, 0.4]];
-      } else if (c.beats >= 4) {
-        hits = pick<[number, number][]>(
-          [
-            [[0, 0.9], [1 + sw, 1.3]], // Charleston
-            [[1, 0.7], [3, 0.7]],
-            [[0, 1.8], [2 + sw, 0.9]],
-            [[1 + sw, 1.8]],
-            [[0, 0.5], [2, 0.9], [3 + sw, 0.4]]
-          ],
-          rng
-        );
-      } else if (c.beats >= 2) {
-        hits = pick<[number, number][]>([[[0, 0.9]], [[sw, 1.1]], [[0, 0.5], [1 + sw, 0.4]]], rng);
-      } else hits = [[0, 0.8]];
-      hits.forEach(([o, dur]) => ev.push({ beat: c.start + o, kind: 'chord', notes, dur, vel: 0.42 + rng() * 0.14 }));
+      const options = (c.beats >= 4 ? g.comp[4] : c.beats === 3 ? g.comp[3] : undefined) ?? g.comp[2];
+      const hits: CompHit[] = c.beats >= 2 || options !== g.comp[2] ? pick(options, rng) : [[0, 0.8]];
+      for (const [o, dur] of hits) if (o < c.beats) ev.push({ beat: c.start + o, kind: 'chord', notes, dur, vel: 0.42 + rng() * 0.14 });
     }
   });
 
   if (opts.drums) {
-    for (let b = 0; b < total; b++) {
-      const inBar = b % chart.beatsPerBar;
-      if (bossa) {
-        ev.push({ beat: b, kind: 'hat', vel: 0.16 }, { beat: b + 0.5, kind: 'hat', vel: 0.1 });
-      } else {
-        ev.push({ beat: b, kind: 'ride', vel: inBar % 2 === 1 ? 0.22 : 0.17 });
-        if (inBar % 2 === 1) ev.push({ beat: b, kind: 'hat', vel: 0.28 }, { beat: b + sw, kind: 'ride', vel: 0.1 });
+    const bars = Math.ceil(total / bpb);
+    for (let bar = 0; bar < bars; bar++) {
+      for (const [o, sound, vel] of g.drums[bar % g.drums.length]) {
+        const beat = bar * bpb + o;
+        if (o < bpb && beat < total) ev.push({ beat, kind: 'drum', sound, vel });
       }
     }
   }

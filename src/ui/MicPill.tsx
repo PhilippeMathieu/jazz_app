@@ -3,7 +3,7 @@ import { MIC_MESSAGES, startMic, stopMic, useMicState } from '../core/listen/mic
 import { MicIcon } from './icons';
 import { go } from './router';
 
-export function MicPill({ onChange }: { onChange?: (on: boolean) => void }) {
+export function MicPill({ onChange, echo }: { onChange?: (on: boolean) => void; echo?: boolean }) {
   const st = useMicState();
   const on = st === 'on';
   const failed = st === 'denied' || st === 'error' || st === 'unsupported';
@@ -21,7 +21,7 @@ export function MicPill({ onChange }: { onChange?: (on: boolean) => void }) {
           return;
         }
         // Attention : onChange?.(await startMic()) n'appellerait pas startMic sans onChange.
-        const ok = await startMic();
+        const ok = await startMic({ echo });
         onChange?.(ok);
       }}
     >

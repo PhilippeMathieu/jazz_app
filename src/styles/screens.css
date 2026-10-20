@@ -322,6 +322,7 @@
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { min-height: 40px; min-width: 44px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--fg); font-family: var(--mono); font-size: 15px; font-weight: 600; }
 .chip[aria-pressed='true'] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chips.text .chip { font-family: var(--body); font-size: var(--t-sec); }
 .chips.roots .chip { flex: 1 0 calc(16.66% - 6px); padding: 0; }
 
 /* ---------------------------------------------------------------- Oreille */
@@ -351,3 +352,94 @@
 .cbar small { font-family: var(--mono); font-size: 9.5px; color: var(--muted); }
 .cbar.on small { color: var(--fg); }
 .read-card + .thumb-zone .listen-line { font-family: var(--body); font-size: var(--t-body); font-weight: 600; }
+
+/* ---------------------------------------------------------------- Rythme */
+.tempo-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.tempo-row .label { margin: 0; }
+.linkbtn.inline { display: inline; padding: 0; color: var(--accent); }
+.tempo-mini { display: inline-flex; gap: 2px; }
+.r-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+.r-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); }
+.r-head b { font-size: var(--t-title); font-weight: 600; }
+.rgrid { display: flex; flex-direction: column; gap: var(--s3); }
+.rgrid-bar { display: grid; gap: 3px; }
+.rcell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.rbox { width: 100%; height: 28px; border-radius: 5px; border: 1px solid var(--line-strong); background: transparent; }
+.rcell.beat .rbox { border-color: var(--faint); }
+.rbox.on { background: var(--accent); border-color: var(--accent); }
+.rbox.on.ok { background: var(--ok); border-color: var(--ok); }
+.rbox.on.early { background: var(--info); border-color: var(--info); }
+.rbox.on.late { background: var(--bad); border-color: var(--bad); }
+.rbox.on.miss { background: transparent; border: 2px dashed var(--bad); }
+.rlabel { font-family: var(--mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
+.rcell.beat .rlabel { color: var(--fg); font-weight: 600; }
+.rgrid.small { gap: 4px; width: 100%; }
+.rgrid.small .rgrid-bar { gap: 2px; }
+.rgrid.small .rbox { height: 16px; border-radius: 3px; }
+.rgrid.small .rlabel { font-size: 9px; }
+.r-choices { display: grid; grid-template-columns: 1fr; gap: var(--s2); }
+.r-choice { align-items: stretch; padding: var(--s3); }
+.r-result { display: flex; flex-direction: column; gap: var(--s1); font-size: var(--t-sec); border-top: 1px solid var(--line); padding-top: var(--s3); }
+.r-devs { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; font-family: var(--mono); font-size: var(--t-cap); }
+.r-devs span { padding: 1px 6px; border-radius: 4px; background: var(--surface-2); }
+.r-devs .ok { color: var(--ok); }
+.r-devs .early { color: var(--info); }
+.r-devs .late, .r-devs .miss { color: var(--bad); }
+.r-devs small { color: var(--muted); font-family: var(--body); }
+.tap-pad {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: var(--t-body);
+  font-weight: 600;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.tap-pad.live { border: 2px solid var(--accent); color: var(--fg); background: var(--accent-soft); }
+.tap-pad.mic { min-height: 72px; }
+.tap-pad.mic span { display: inline-flex; align-items: center; gap: var(--s2); }
+.tap-flash { animation: tapflash 140ms ease-out; padding: var(--s3) var(--s4); border-radius: var(--r-md); }
+@keyframes tapflash { from { background: var(--accent); color: var(--on-accent); } to { background: transparent; } }
+.cues { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 2px; }
+.choice.text { font-family: var(--body); font-size: var(--t-body); }
+.timeline { position: relative; display: flex; align-items: stretch; gap: 2px; height: 72px; margin-top: var(--s2); }
+.tl-col { position: relative; flex: 1; min-width: 0; }
+.tl-bar { position: absolute; left: 0; right: 0; border-radius: 2px; }
+.tl-bar.ok { background: var(--ok); }
+.tl-bar.early { background: var(--info); }
+.tl-bar.late { background: var(--bad); }
+.tl-miss { position: absolute; left: 25%; right: 25%; top: calc(50% - 3px); height: 6px; border-radius: 3px; background: var(--faint); }
+.tl-axis { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--line-strong); }
+.tl-wrap { display: flex; flex-direction: column; gap: 2px; }
+.tl-wrap > small { font-size: 11px; color: var(--faint); }
+.timeline { margin-top: 0; }
+.r-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: var(--t-cap); color: var(--muted); }
+.r-legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; margin-left: 4px; }
+.r-legend i:first-child { margin-left: 0; }
+.r-legend .ok { background: var(--ok); }
+.r-legend .early { background: var(--info); }
+.r-legend .late { background: var(--bad); }
+.r-legend .miss { border: 2px dashed var(--bad); }
+.rbox.now { outline: 3px solid var(--fg); outline-offset: 1px; }
+.row-actions.tight { gap: var(--s2); flex-wrap: nowrap; }
+.grooves { display: flex; flex-direction: column; gap: var(--s2); }
+.groove { border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.groove.on { border-color: var(--accent); }
+.groove-head { display: flex; align-items: center; gap: var(--s3); width: 100%; padding: var(--s3); border: 0; background: none; text-align: left; font: inherit; color: inherit; }
+.groove-head > svg { flex: none; width: 22px; height: 22px; color: var(--accent); }
+.groove .cues { padding: 0 var(--s3) var(--s3) calc(var(--s3) + 1.2em); font-size: var(--t-sec); color: var(--muted); }

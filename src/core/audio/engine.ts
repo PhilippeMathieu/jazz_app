@@ -231,6 +231,74 @@ function cymbal(when: number, vel: number, decay: number, hp: number) {
 export const ride = (when: number, vel = 0.25) => cymbal(when, vel, 0.45, 6500);
 export const hat = (when: number, vel = 0.3) => cymbal(when, vel, 0.06, 8000);
 
+/** Percussion accordée (grosse caisse, surdo, conga, cloche, clave) : sinus qui chute vers sa hauteur. */
+function tone(when: number, vel: number, f0: number, f1: number, decay: number, type: OscillatorType = 'sine') {
+  const a = audio();
+  const t = Math.max(when, a.currentTime);
+  const o = a.createOscillator();
+  o.type = type;
+  o.frequency.setValueAtTime(f0, t);
+  o.frequency.exponentialRampToValueAtTime(f1, t + Math.min(0.08, decay / 2));
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vel, t + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  o.connect(g);
+  g.connect(drumBus);
+  o.start(t);
+  o.stop(t + decay + 0.05);
+}
+/** Bruit filtré en bande (caisse claire, rim, shaker, balais). */
+function band(when: number, vel: number, freq: number, q: number, decay: number) {
+  const a = audio();
+  const t = Math.max(when, a.currentTime);
+  const src = a.createBufferSource();
+  src.buffer = noiseBuffer(a);
+  const f = a.createBiquadFilter();
+  f.type = 'bandpass';
+  f.frequency.value = freq;
+  f.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(vel, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+  src.connect(f);
+  f.connect(g);
+  g.connect(drumBus);
+  src.start(t);
+  src.stop(t + decay + 0.05);
+}
+
+export type DrumSound = 'ride' | 'hat' | 'kick' | 'snare' | 'rim' | 'brush' | 'shaker' | 'clave' | 'cowbell' | 'surdo' | 'conga';
+/** Une frappe de batterie ou de percussion. */
+export function drum(sound: DrumSound, when: number, vel = 0.3) {
+  switch (sound) {
+    case 'ride':
+      return ride(when, vel);
+    case 'hat':
+      return hat(when, vel);
+    case 'kick':
+      return tone(when, vel * 1.6, 140, 48, 0.28);
+    case 'snare':
+      band(when, vel * 1.4, 1800, 0.7, 0.16);
+      return tone(when, vel * 0.6, 260, 180, 0.08, 'triangle');
+    case 'rim':
+      return band(when, vel * 1.5, 2600, 6, 0.045);
+    case 'brush':
+      return band(when, vel, 3500, 0.6, 0.22);
+    case 'shaker':
+      return band(when, vel, 7000, 1.2, 0.05);
+    case 'clave':
+      return tone(when, vel * 1.2, 2500, 2400, 0.07);
+    case 'cowbell':
+      tone(when, vel * 0.7, 800, 790, 0.18, 'square');
+      return tone(when, vel * 0.5, 540, 535, 0.18, 'square');
+    case 'surdo':
+      return tone(when, vel * 1.8, 110, 62, 0.5);
+    case 'conga':
+      return tone(when, vel * 1.3, 330, 220, 0.18);
+  }
+}
+
 /** Clic de décompte. */
 export function click(when: number, accent = false) {
   const a = audio();

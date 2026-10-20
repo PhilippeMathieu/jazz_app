@@ -1,5 +1,6 @@
 // Cours : contenu des leçons (texte court, exemples à écouter, mini-quiz, lien vers l'exercice).
 import { SeqVoicing } from '../../core/audio/play';
+import { GROOVES, StyleId } from '../../core/rhythm/styles';
 
 export type Block =
   | { t: 'p'; text: string }
@@ -9,7 +10,13 @@ export type Block =
   | { t: 'table'; head: string[]; rows: string[][] }
   | { t: 'tip'; text: string }
   | { t: 'quiz'; q: string; choices: string[]; answer: number; explain: string }
-  | { t: 'go'; links: { href: string; label: string }[] };
+  | { t: 'go'; links: { href: string; label: string }[] }
+  /** Un rythme en cases, à écouter (compare : en swing puis en croches droites). */
+  | { t: 'rhythm'; id: string; label?: string; compare?: boolean; tempo?: number }
+  /** Des styles à écouter, avec leurs indices. */
+  | { t: 'grooves'; styles: StyleId[]; label?: string };
+
+const tempoOf = (id: StyleId) => `${GROOVES[id].tempo[0]}–${GROOVES[id].tempo[1]}`;
 
 export interface Lesson {
   id: string;
@@ -711,6 +718,189 @@ export const PARTS: Part[] = [
             explain: 'Le II d’une tonalité majeure : dorien (D E F G A B C).'
           },
           { t: 'go', links: [{ href: '#/grille/autumn-leaves', label: 'Grille Autumn Leaves, vue Gammes, avec le micro' }] }
+        ]
+      }
+    ]
+  },
+  {
+    title: 'Le rythme',
+    lessons: [
+      {
+        id: 'swing',
+        title: 'Le swing',
+        sub: 'Croches ternaires, 2 et 4',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'En jazz, deux croches ne durent pas pareil : la 1re est **longue**, la 2e **courte**, à peu près ⅔ – ⅓ du temps. C’est un triolet dont on lie les deux premières notes : « dou-ba, dou-ba ». C’est le **swing**.'
+          },
+          { t: 'rhythm', id: 'c-all', label: 'Les mêmes croches, en swing puis droites', compare: true },
+          {
+            t: 'table',
+            head: ['Croches', 'Longue / courte', 'Où'],
+            rows: [
+              ['Droites (binaire)', '50 / 50', 'bossa, samba, latin, funk'],
+              ['Swing, tempo moyen', '67 / 33', 'swing, ballade, valse jazz'],
+              ['Swing, plus de 200 BPM', '≈ 60 / 40', 'le swing se resserre en allant vite']
+            ]
+          },
+          { t: 'h', text: 'Le 2 et le 4' },
+          {
+            t: 'p',
+            text: 'En swing, la batterie ferme le charleston sur **2 et 4**, et le public claque des doigts sur 2 et 4. La contrebasse, elle, joue les 4 temps. Taper sur 1 et 3 sonne « fanfare ».'
+          },
+          { t: 'rhythm', id: 'n-24', label: '2 et 4, sur la ride' },
+          { t: 'tip', text: 'Règle le métronome pour qu’il ne clique que sur 2 et 4 : à 60 sur le métronome, tu joues à 120 BPM. Tu sens le 1 toi-même, comme avec un batteur.' },
+          {
+            t: 'quiz',
+            q: 'En swing, la 2e croche du temps (le « et ») tombe :',
+            choices: ['Au milieu du temps', 'Aux ⅔ du temps (la 3e note du triolet)', 'Au ¼ du temps', 'Sur le temps suivant'],
+            answer: 1,
+            explain: 'Longue-courte : ⅔ puis ⅓ du temps. Au milieu, ce sont des croches droites (bossa, funk).'
+          },
+          {
+            t: 'quiz',
+            q: 'Morceau à 160 BPM, métronome sur 2 et 4 seulement : on le règle à…',
+            choices: ['40', '80', '160', '320'],
+            answer: 1,
+            explain: '2 clics par mesure de 4 temps : la moitié du tempo, 80.'
+          },
+          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme : garder le tempo (2 et 4), taper des croches' }] }
+        ]
+      },
+      {
+        id: 'comping',
+        title: 'Placer ses accords',
+        sub: 'Charleston, contretemps, anticipation',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Accompagner (« comper »), ce n’est pas jouer l’accord sur chaque temps. Peu d’attaques, **courtes**, bien placées, souvent sur les **contretemps** (les « et ») : le piano répond à la batterie et laisse de la place au soliste.'
+          },
+          { t: 'rhythm', id: 's-charleston', label: 'Le Charleston : 1, puis le « et » de 2' },
+          { t: 'p', text: 'Le **Charleston** est le rythme de comping le plus joué. Variante : seulement le « et » de 2, plus léger.' },
+          { t: 'rhythm', id: 's-24e', label: 'Les contretemps de 2 et de 4' },
+          { t: 'h', text: 'L’anticipation' },
+          {
+            t: 'p',
+            text: 'L’accord de la mesure suivante arrive **une croche plus tôt**, sur le « et » de 4, et on le tient sur le 1. Ça donne de l’élan à la grille : très typique du jazz (et de la bossa).'
+          },
+          { t: 'rhythm', id: 'p-ant4', label: 'Mesure 1 : le 1, puis l’accord suivant sur le « et » de 4' },
+          { t: 'rhythm', id: 'p-charl-ant', label: 'Charleston, puis anticipation' },
+          { t: 'tip', text: 'Accords courts sur les contretemps, longs sur les anticipations. Et de l’espace : une mesure sans rien jouer, c’est aussi du comping.' },
+          {
+            t: 'quiz',
+            q: 'Le Charleston, c’est :',
+            choices: ['1 et 3', '1 et le « et » de 2', '2 et 4', 'Le « et » de 4'],
+            answer: 1,
+            explain: 'Le 1, puis le contretemps de 2 : « TA – ta », la 2e attaque juste avant le 3.'
+          },
+          {
+            t: 'quiz',
+            q: 'Une anticipation de l’accord de la mesure 2 se joue :',
+            choices: ['Sur le 1 de la mesure 2', 'Sur le « et » de 4 de la mesure 1', 'Sur le 4 de la mesure 1', 'Sur le 2 de la mesure 2'],
+            answer: 1,
+            explain: 'Une croche avant la barre de mesure, puis tenu sur le 1 : le changement d’accord arrive en avance.'
+          },
+          {
+            t: 'go',
+            links: [
+              { href: '#/rythme', label: 'Rythme : taper un rythme (Contretemps, Comping)' },
+              { href: '#/grille/autumn-leaves', label: 'Autumn Leaves au play-along : comper en Charleston' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'styles',
+        title: 'Reconnaître les styles',
+        sub: 'Swing, ballade, valse, bossa, samba, latin, funk',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Un style se reconnaît d’abord à la **batterie** et à la **basse** : croches ternaires ou droites, ce qui marque le 2 et le 4, le jeu de la basse. Écoute chaque style et suis les indices.'
+          },
+          { t: 'grooves', styles: ['swing', 'ballade', 'valse'], label: 'Ternaire (swing)' },
+          { t: 'grooves', styles: ['bossa', 'samba', 'latin', 'funk'], label: 'Binaire (croches droites)' },
+          {
+            t: 'table',
+            head: ['Style', 'Croches', 'BPM', 'Signe distinctif'],
+            rows: [
+              ['Swing', 'ternaires', tempoOf('swing'), 'ride « ding, ding-ga ding », walking bass'],
+              ['Ballade', 'ternaires', tempoOf('ballade'), 'balais, basse sur 1 et 3, accords tenus'],
+              ['Valse jazz', 'ternaires', tempoOf('valse'), '3 temps : « UN deux trois »'],
+              ['Bossa nova', 'droites', tempoOf('bossa'), 'clave au bord de la caisse, basse 1 et 3'],
+              ['Samba', 'droites', tempoOf('samba'), 'rapide, surdo sur 2 et 4, shaker continu'],
+              ['Afro-cubain', 'droites', tempoOf('latin'), 'clave, cloche, basse tumbao'],
+              ['Funk', 'doubles droites', tempoOf('funk'), 'caisse claire forte sur 2 et 4']
+            ]
+          },
+          {
+            t: 'tip',
+            text: 'Bossa ou samba ? Même famille brésilienne : la bossa est **lente et feutrée** (bord de caisse, guitare), la samba **rapide et percussive** (surdo, shaker). Ternaire ou binaire ? Écoute la cymbale : « longue-courte » = swing.'
+          },
+          {
+            t: 'quiz',
+            q: 'Croches droites, tempo modéré, coups au bord de la caisse claire sur un motif de 2 mesures :',
+            choices: ['Swing', 'Bossa nova', 'Samba', 'Funk'],
+            answer: 1,
+            explain: 'Le cross-stick en clave de bossa, les croches droites et le tempo modéré : bossa nova.'
+          },
+          {
+            t: 'quiz',
+            q: 'Cymbale « ding, ding-ga ding », charleston sur 2 et 4, contrebasse sur chaque temps :',
+            choices: ['Funk', 'Afro-cubain', 'Swing', 'Valse jazz'],
+            answer: 2,
+            explain: 'Ride ternaire, 2 et 4 et walking bass : le swing à 4 temps (en valse, 3 temps par mesure).'
+          },
+          {
+            t: 'go',
+            links: [
+              { href: '#/rythme', label: 'Rythme : quel style ?' },
+              { href: '#/grilles', label: 'Grilles : change le style dans les réglages du play-along' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'clave',
+        title: 'La clave',
+        sub: 'Son, rumba, bossa : le motif qui organise tout',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Dans la musique afro-cubaine, tout s’organise autour de la **clave** : 5 coups sur 2 mesures, joués par deux bâtons de bois. Une mesure à **3 coups**, une à **2 coups**. Personne n’est obligé de la jouer, mais tout le monde la sent.'
+          },
+          { t: 'rhythm', id: 'k-son32', label: 'Clave de son 3-2', tempo: 100 },
+          { t: 'rhythm', id: 'k-son23', label: 'Clave de son 2-3 : les deux mesures inversées', tempo: 100 },
+          {
+            t: 'p',
+            text: 'Le sens (3-2 ou 2-3) dépend de la mélodie et ne change pas pendant le morceau. La **rumba** décale le 3e coup sur le « et » de 4 : plus tendue.'
+          },
+          { t: 'rhythm', id: 'k-rumba32', label: 'Clave de rumba 3-2', tempo: 100 },
+          { t: 'h', text: 'La clave de bossa' },
+          { t: 'p', text: 'La bossa nova a la sienne, jouée au bord de la caisse claire : comme le son 3-2, mais le dernier coup glisse sur le « et » de 3.' },
+          { t: 'rhythm', id: 'k-bossa', label: 'Clave de bossa nova', tempo: 120 },
+          { t: 'grooves', styles: ['latin', 'bossa'], label: 'Dans le contexte : afro-cubain, puis bossa' },
+          {
+            t: 'quiz',
+            q: 'Clave de son 3-2, la mesure à 3 coups :',
+            choices: ['1, « et » de 2, 4', '2, 3', '1, 2, 3', '« Et » de 1, 3, 4'],
+            answer: 0,
+            explain: '1, « et » de 2, 4 ; puis 2 et 3 dans la mesure suivante.'
+          },
+          {
+            t: 'quiz',
+            q: 'Ce qui distingue la clave de rumba de celle du son :',
+            choices: ['Le 3e coup est sur le « et » de 4', 'Elle se joue en ternaire', 'Elle a 6 coups', 'Elle commence toujours par la mesure à 2 coups'],
+            answer: 0,
+            explain: 'Même motif, mais le 3e coup recule d’une croche, du 4 au « et » de 4.'
+          },
+          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme : taper un rythme, niveau Claves' }] }
         ]
       }
     ]

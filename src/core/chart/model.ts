@@ -6,7 +6,7 @@ export interface Key {
   tonic: Note;
   mode: Mode;
 }
-export type Style = 'swing' | 'bossa' | 'ballade' | 'blues';
+export type Style = 'swing' | 'bossa' | 'ballade' | 'blues' | 'samba' | 'latin' | 'funk' | 'valse';
 
 export interface ChordEvent {
   chord: Chord;
@@ -80,7 +80,7 @@ export function barsFrom(chords: Chord[], beatsPerBar: number, section?: string)
   return out;
 }
 
-const STYLES: Style[] = ['swing', 'bossa', 'ballade', 'blues'];
+const STYLES: Style[] = ['swing', 'bossa', 'ballade', 'blues', 'samba', 'latin', 'funk', 'valse'];
 const clampInt = (v: string | undefined, lo: number, hi: number, dflt: number) => {
   const n = Math.round(Number(v));
   return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt;

@@ -10,6 +10,7 @@ import { Lecture } from './modules/lecture/Lecture';
 import { CoursList, LessonView } from './modules/cours/Cours';
 import { TipsView } from './modules/cours/Tips';
 import { Clavier } from './modules/clavier/Clavier';
+import { Rythme } from './modules/rythme/Rythme';
 import { Flash } from './modules/flash/Flash';
 import { Micro } from './modules/micro/Micro';
 import { chartById } from './library/charts';
@@ -30,6 +31,7 @@ export function App() {
   if (page === 'express') return <Express />;
   if (page === 'cours') return a === 'astuces' ? <TipsView /> : a ? <LessonView key={a} id={a} /> : <CoursList />;
   if (page === 'clavier') return <Clavier />;
+  if (page === 'rythme') return <Rythme key={a} piano={a === 'piano'} />;
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
   if (page === 'oreille') return <Oreille />;

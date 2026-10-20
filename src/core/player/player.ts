@@ -2,11 +2,13 @@
 // de 150 ms pour un tempo stable même si l'interface est chargée.
 import { Chart, FlatChord, flatten } from '../chart/model';
 import { improvPlan } from '../analysis/improv';
-import { audio, bass, click, hat, playChord, ride, silence } from '../audio/engine';
+import { audio, bass, click, drum, playChord, silence } from '../audio/engine';
 import { ArrEvent, arrangeChorus, newArrangeState } from './arrange';
 
 export interface PlayerOptions {
   tempo: number;
+  /** Style d'accompagnement (sinon celui de la grille). */
+  style?: string;
   bass: boolean;
   comp: boolean;
   drums: boolean;
@@ -141,11 +143,8 @@ export class ChartPlayer {
       case 'chord':
         playChord(ev.notes, time, ev.dur * spb, ev.vel, 0.008);
         break;
-      case 'ride':
-        ride(time, ev.vel);
-        break;
-      case 'hat':
-        hat(time, ev.vel);
+      case 'drum':
+        drum(ev.sound, time, ev.vel);
         break;
     }
   }

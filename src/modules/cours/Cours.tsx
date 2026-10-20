@@ -7,10 +7,14 @@ import { SeqVoicing, playSequence, sequenceVoicings } from '../../core/audio/pla
 import { load, save } from '../../core/storage';
 import { TopBar } from '../../ui/Screen';
 import { Keyboard, Mark } from '../../ui/Keyboard';
-import { ChevronIcon, PlayIcon } from '../../ui/icons';
+import { ChevronIcon, PlayIcon, StopIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 import { Block, LESSONS, Lesson, PARTS, lessonById } from './lessons';
 import { TIPS } from './tips';
+import { RhythmGrid, useCursor } from '../../ui/RhythmGrid';
+import { rhythmById } from '../../core/rhythm/patterns';
+import { playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
+import { GROOVES, StyleId } from '../../core/rhythm/styles';
 
 interface Progress {
   read: string[];
@@ -139,6 +143,10 @@ function BlockView({ b }: { b: Block }): JSX.Element {
       return <ChordDemo chords={b.chords} romans={b.romans} label={b.label} voicing={b.voicing} gap={b.gap} />;
     case 'quiz':
       return <QuizBlock q={b.q} choices={b.choices} answer={b.answer} explain={b.explain} />;
+    case 'rhythm':
+      return <RhythmDemo id={b.id} label={b.label} compare={b.compare} tempo={b.tempo} />;
+    case 'grooves':
+      return <GroovesDemo styles={b.styles} label={b.label} />;
     case 'go':
       return (
         <section>
@@ -211,6 +219,86 @@ function ChordDemo({ chords, romans, label, voicing, gap = 1.1 }: { chords: stri
         ))}
       </div>
       {v ? <Keyboard lo={lo} hi={hi} fit marks={marks} labels={labels} /> : null}
+    </div>
+  );
+}
+
+/** Un rythme en cases ; « Écouter » le joue (décompte d'une mesure) en allumant chaque attaque. */
+function RhythmDemo({ id, label, compare, tempo = 100 }: { id: string; label?: string; compare?: boolean; tempo?: number }) {
+  const p = rhythmById(id)!;
+  const [active, follow, unfollow] = useCursor();
+  useEffect(() => () => stopPlayback(), []);
+  const play = (feel: 'swing' | 'straight') => {
+    unfollow();
+    follow(playRhythm(p, tempo, { reps: 2, demo: true, feel }), p);
+  };
+  return (
+    <div class="ls-demo">
+      <div class="ls-demo-head">
+        <span class="muted small">{label ?? p.name}</span>
+        {compare ? (
+          <span class="row-actions tight">
+            <button class="btn sm" onClick={() => play('swing')}>
+              <PlayIcon /> Swing
+            </button>
+            <button class="btn sm" onClick={() => play('straight')}>
+              <PlayIcon /> Droit
+            </button>
+          </span>
+        ) : (
+          <button class="btn sm" onClick={() => play('swing')}>
+            <PlayIcon /> Écouter
+          </button>
+        )}
+      </div>
+      <RhythmGrid p={p} active={active} />
+    </div>
+  );
+}
+
+/** Quelques mesures de chaque style, avec ce qu'il faut entendre. */
+function GroovesDemo({ styles, label }: { styles: StyleId[]; label?: string }) {
+  const [playing, setPlaying] = useState<StyleId | null>(null);
+  const timer = useRef(0);
+  useEffect(() => () => (clearTimeout(timer.current), stopPlayback()), []);
+  const toggle = (id: StyleId) => {
+    clearTimeout(timer.current);
+    if (playing === id) {
+      stopPlayback();
+      setPlaying(null);
+      return;
+    }
+    const g = playGroove(id, 8);
+    setPlaying(id);
+    timer.current = window.setTimeout(() => setPlaying(null), g.duration * 1000 + 300);
+  };
+  return (
+    <div class="ls-demo">
+      {label ? <span class="muted small">{label}</span> : null}
+      <div class="grooves">
+        {styles.map((id) => {
+          const g = GROOVES[id];
+          const on = playing === id;
+          return (
+            <div key={id} class={'groove' + (on ? ' on' : '')}>
+              <button class="groove-head" aria-pressed={on} onClick={() => toggle(id)}>
+                {on ? <StopIcon /> : <PlayIcon />}
+                <span class="row-main">
+                  <span class="row-title">{g.name}</span>
+                  <span class="row-sub">{g.summary}</span>
+                </span>
+              </button>
+              {on ? (
+                <ul class="cues">
+                  {g.cues.map((c) => (
+                    <li key={c}>{c}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
