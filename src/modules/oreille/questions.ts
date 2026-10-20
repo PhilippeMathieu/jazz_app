@@ -1,9 +1,9 @@
 // Questions du module Oreille, sans interface (testables).
 import { Chord, QUALITIES, chordOnPc, chordPcs, rootPc } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
-import { keyFor, spellProgression } from '../../core/theory/progressions';
+import { PROGRESSIONS, keyFor, spellProgression } from '../../core/theory/progressions';
 import { bassRoot, closeVoicing, lhVoicing, voiceLead } from '../../core/audio/voicing';
-import { Rng, rndInt, weightedPick } from '../../core/random';
+import { Rng, rndInt, shuffle, weightedPick } from '../../core/random';
 import { PROG_LEVELS, QUALITY_LEVELS } from './data';
 
 export type EarMode = 'ear' | 'prog' | 'build';
@@ -15,7 +15,7 @@ export interface Played {
 export type EarQuestion =
   | { mode: 'ear'; q: string; c: Played }
   | { mode: 'build'; q: string; c: Played }
-  | { mode: 'prog'; id: string; chords: Played[] };
+  | { mode: 'prog'; id: string; chords: Played[]; choices: string[] };
 
 export type Tally = Record<string, { c: number; t: number }>;
 
@@ -49,11 +49,24 @@ export function makeEarQuestion(mode: EarMode, level: number, tally: Tally, last
       prev = v;
       return { chord, roman, notes: [bassRoot(chord, 40), ...v] };
     });
-    return { mode, id, chords };
+    return { mode, id, chords, choices: progChoices(id, level, rng) };
   }
   const q = weightedPick(QUALITY_LEVELS[level - 1], (k) => weight(tally, mode + ':' + k, last), rng);
   const c = chordOnPc(rndInt(12, rng), q);
   return { mode, q, c: { chord: c, notes: earVoicing(c, mode === 'ear' ? level : 1, rng) } };
+}
+
+/**
+ * Choix pour « quelle progression ? » : seulement des progressions du même nombre d'accords,
+ * pour que compter les accords ne suffise pas. D'abord celles du niveau, puis les voisines.
+ */
+export function progChoices(id: string, level: number, rng: Rng = Math.random): string[] {
+  const n = PROGRESSIONS[id].steps.length;
+  const same = (ids: string[]) => ids.filter((x) => x !== id && PROGRESSIONS[x].steps.length === n);
+  const near = [level - 1, level, level - 2, level + 1].filter((l) => l >= 0 && l < PROG_LEVELS.length);
+  const ordered: string[] = [];
+  for (const l of near) for (const x of shuffle(same(PROG_LEVELS[l]), rng)) if (!ordered.includes(x)) ordered.push(x);
+  return shuffle([id, ...ordered.slice(0, 3)], rng);
 }
 
 export interface BuildCheck {

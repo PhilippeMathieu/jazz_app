@@ -14,7 +14,8 @@ import { Keyboard, Mark } from '../../ui/Keyboard';
 import { Staff } from '../../ui/Staff';
 import { MicPill } from '../../ui/MicPill';
 import { SpeakerIcon } from '../../ui/icons';
-import { CLEF_LABEL, LETTER_CHOICES, LEVELS, Question, keyIsRight, makeQuestion, nameIsRight, playedVerdict, solfegeName } from './reading';
+import { AnswerActions } from '../../ui/AnswerActions';
+import { CLEF_LABEL, LETTER_CHOICES, explainNote, LEVELS, Question, keyIsRight, makeQuestion, nameIsRight, playedVerdict, solfegeName } from './reading';
 
 type RunMode = 'sprint' | 'serie';
 type AnswerMode = 'clavier' | 'noms' | 'piano';
@@ -49,7 +50,10 @@ interface Answer {
   ms: number;
   /** Ce qui a été donné (nom ou note entendue), pour « À revoir ». */
   given: string;
+  /** Juste, mais au hasard : compte comme à revoir. */
+  guessed?: boolean;
 }
+const known = (a: Answer) => a.ok && !a.guessed;
 
 const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
   !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
@@ -67,7 +71,7 @@ export function Lecture() {
 
   const finish = (list: Answer[], complete: boolean) => {
     const { level, mode, answer } = saved;
-    const res: RunRecord = { correct: list.filter((a) => a.ok).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
+    const res: RunRecord = { correct: list.filter(known).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
     const rk = `${level}-${mode}-${answer}`;
     const rec = complete && res.total > 0 && better(res, saved.records[rk], mode);
     setNewRecord(rec);
@@ -76,7 +80,7 @@ export function Lecture() {
       const byItem = { ...s.byItem };
       list.forEach((a) => {
         const b = byItem[a.q.id] ?? { c: 0, t: 0, ms: 0 };
-        byItem[a.q.id] = { c: b.c + (a.ok ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
+        byItem[a.q.id] = { c: b.c + (known(a) ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
       });
       return { ...s, byItem, records: rec ? { ...s.records, [rk]: res } : s.records };
     });
@@ -222,8 +226,20 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     const list = [...answers, a];
     setAnswers(list);
     setCurrent(a);
-    // Juste (ou trouvée au piano) : on enchaîne. Faux au clavier ou aux noms : jusqu'à « Continuer ».
-    if (ok || answer === 'piano') timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), ok ? 450 : 900);
+    // Au piano, les mains restent sur le clavier : l'explication s'affiche puis on enchaîne seul.
+    // Ailleurs, elle reste jusqu'au tap, même si c'est juste.
+    if (answer === 'piano') timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), 1800);
+  };
+  const proceed = (guessed: boolean) => {
+    let list = answers;
+    if (guessed) {
+      list = answers.map((a, i) => (i === answers.length - 1 ? { ...a, guessed: true } : a));
+      setAnswers(list);
+      const it = tally.current[q.id];
+      if (it) tally.current[q.id] = { ...it, c: Math.max(0, it.c - 1) };
+    }
+    if (over(list.length)) end(list);
+    else next();
   };
 
   // ---- Au piano
@@ -263,7 +279,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     piano(q.midi, now() + 0.02, 1.2, 0.6);
   };
 
-  const correct = answers.filter((a) => a.ok).length;
+  const correct = answers.filter(known).length;
   const target = mod(q.midi, 12) + 60;
   const marks: Record<number, Mark> = {};
   const labels: Record<number, string> = {};
@@ -303,7 +319,10 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
             {micState !== 'on' ? (
               <p class="muted">{MIC_MESSAGES[micState]} Active le micro avec le bouton ci-dessous.</p>
             ) : current ? (
-              <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>{current.ok ? 'Juste.' : 'Trouvée, mais pas du premier coup.'}</p>
+              <>
+                <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>{current.ok ? 'Juste.' : current.given === 'passée' ? 'Passée.' : 'Trouvée, mais pas du premier coup.'}</p>
+                <p class="muted">{explainNote(q.clef, q.note)}</p>
+              </>
             ) : heard ? (
               <p class="listen-line">
                 <i class="rec" /> {midiName(heard.midi)} : {heard.verdict === 'octave' ? (heard.midi < q.midi ? 'bonne note, une octave trop bas' : 'bonne note, une octave trop haut') : 'pas cette note'}
@@ -314,11 +333,10 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
               </p>
             )}
           </div>
-        ) : current && !current.ok ? (
+        ) : current ? (
           <div class="fb">
-            <p class="verdict bad">
-              Non : {fullName(q.note)} (tu as dit {current.given}).
-            </p>
+            <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>{current.ok ? 'Juste.' : `Non (tu as dit ${current.given}).`}</p>
+            <p class="muted">{explainNote(q.clef, q.note)}</p>
           </div>
         ) : null}
 
@@ -363,10 +381,8 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
               Activer le micro
             </button>
           )
-        ) : current && !current.ok ? (
-          <button class="btn primary block" onClick={() => (over(answers.length) ? end(answers) : next())}>
-            Continuer
-          </button>
+        ) : current ? (
+          <AnswerActions ok={current.ok} onNext={() => proceed(false)} onGuess={() => proceed(true)} />
         ) : null}
       </div>
     </div>
@@ -376,13 +392,13 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
 // ---------------------------------------------------------------- Résultat
 
 function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
-  const correct = answers.filter((a) => a.ok).length;
+  const correct = answers.filter(known).length;
   const ms = answers.reduce((s, a) => s + a.ms, 0);
-  const wrong = answers.filter((a) => !a.ok);
+  const wrong = answers.filter((a) => !known(a));
   const per = (['treble', 'bass'] as const)
     .map((c) => {
       const l = answers.filter((a) => a.q.clef === c);
-      return { c, n: l.length, ok: l.filter((a) => a.ok).length, ms: l.reduce((s, a) => s + a.ms, 0) };
+      return { c, n: l.length, ok: l.filter(known).length, ms: l.reduce((s, a) => s + a.ms, 0) };
     })
     .filter((x) => x.n);
   return (
@@ -424,7 +440,7 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
                 <span class="small muted">{CLEF_LABEL[a.q.clef]}</span>
                 <b>{fullName(a.q.note)}</b>
                 <span class="small">
-                  tu as donné <span class="bad">{a.given}</span>
+                  {a.guessed ? 'juste, mais deviné' : <>tu as donné <span class="bad">{a.given}</span></>}
                 </span>
               </div>
             ))}

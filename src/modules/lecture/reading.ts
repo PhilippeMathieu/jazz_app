@@ -1,6 +1,6 @@
 // Lecture de notes : une note sur la portée (clé de sol ou de fa), la nommer, la toucher ou la jouer.
 import { LETTERS, mod } from '../../core/theory/notes';
-import { BOTTOM_STEP, Clef, Written, midiOf, writtenName } from '../../core/theory/staff';
+import { BOTTOM_STEP, Clef, Written, midiOf, stepOf, writtenName } from '../../core/theory/staff';
 import { Rng, weightedPick } from '../../core/random';
 
 export const SOLFEGE = ['do', 'ré', 'mi', 'fa', 'sol', 'la', 'si'];
@@ -80,3 +80,29 @@ export function playedVerdict(q: Question, midi: number): 'ok' | 'octave' | 'wro
 }
 
 export const LETTER_CHOICES = LETTERS.map((l, i) => ({ letter: i, name: l, solfege: SOLFEGE[i] }));
+
+const nth = (n: number, fem = true) => (n === 1 ? (fem ? '1re' : '1er') : `${n}e`);
+const REF: Record<Clef, string> = {
+  treble: 'lignes mi sol si ré fa, interlignes fa la do mi',
+  bass: 'lignes sol si ré fa la, interlignes la do mi sol'
+};
+
+/** Où se trouve la note, en mots : « 4e ligne », « 2e interligne », « 1re ligne supplémentaire en dessous »… */
+export function positionOf(clef: Clef, w: Written): string {
+  const s = stepOf(w) - BOTTOM_STEP[clef];
+  if (s >= 0 && s <= 8) return s % 2 === 0 ? `${nth(s / 2 + 1)} ligne` : `${nth((s + 1) / 2, false)} interligne`;
+  const below = s < 0;
+  const k = below ? -s : s - 8;
+  const side = below ? 'en dessous' : 'au-dessus';
+  if (k === 1) return below ? 'juste sous la portée' : 'juste au-dessus de la portée';
+  if (k % 2 === 0) return `${nth(k / 2)} ligne supplémentaire ${side}`;
+  return `${below ? 'sous' : 'au-dessus de'} la ${nth((k - 1) / 2)} ligne supplémentaire`;
+}
+
+/** Explication affichée après chaque réponse. */
+export function explainNote(clef: Clef, w: Written): string {
+  const name = `${writtenName(w)} (${solfegeName(w)})`;
+  const acc = w.acc > 0 ? ' Le dièse monte la note d’un demi-ton.' : w.acc < 0 ? ' Le bémol la descend d’un demi-ton.' : '';
+  const central = midiOf(w) === 60 && w.acc === 0 ? ', le do central' : '';
+  return `${name}${central} : ${positionOf(clef, w)}. ${CLEF_LABEL[clef]} : ${REF[clef]}.${acc}`;
+}

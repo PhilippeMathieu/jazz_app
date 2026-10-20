@@ -1,8 +1,11 @@
+import { useEffect, useState } from 'preact/hooks';
+import { canInstall, install, onInstallChange } from './core/app/pwa';
 import { ChevronIcon } from './ui/icons';
 import { load } from './core/storage';
 import { advice } from './core/progress';
 import { chartById } from './library/charts';
 import { LESSONS, lessonById } from './modules/cours/lessons';
+import { TIPS } from './modules/cours/tips';
 import { coursProgress, nextLesson } from './modules/cours/Cours';
 
 interface Tile {
@@ -25,7 +28,7 @@ const PIANO: Tile[] = [
 function resumeLabel(path: string): string | null {
   const [page, id] = path.split('/').filter(Boolean);
   if (page === 'grille') return chartById(id)?.title ?? null;
-  if (page === 'cours') return id ? `Cours · ${lessonById(id)?.title ?? ''}` : 'Cours';
+  if (page === 'cours') return id === 'astuces' ? 'Astuces d’enchaînement' : id ? `Cours · ${lessonById(id)?.title ?? ''}` : 'Cours';
   return { lecture: 'Lecture de notes', tonalite: 'Accords de la tonalité', express: 'Analyse express', oreille: 'Oreille', flash: 'Flash voicings' }[page] ?? null;
 }
 
@@ -45,6 +48,21 @@ function Rows({ list }: { list: Tile[] }) {
   );
 }
 
+function InstallRow() {
+  const [can, setCan] = useState(canInstall());
+  useEffect(() => onInstallChange(() => setCan(canInstall())), []);
+  if (!can) return null;
+  return (
+    <button class="row plain install" onClick={() => void install()}>
+      <span class="row-main">
+        <span class="row-title">Installer l’appli</span>
+        <span class="row-sub">Icône sur l’écran d’accueil, plein écran, hors ligne.</span>
+      </span>
+      <ChevronIcon />
+    </button>
+  );
+}
+
 export function Home() {
   const last = load('last', { path: '' }).path;
   const label = last ? resumeLabel(last) : null;
@@ -56,6 +74,8 @@ export function Home() {
       <h1 class="wordmark">
         Harmonie <em>jazz</em>
       </h1>
+
+      <InstallRow />
 
       {label ? (
         <a class="resume" href={'#' + last}>
@@ -84,7 +104,8 @@ export function Home() {
               text: nextL
                 ? `${cours.read.length}/${LESSONS.length} leçons lues · ${cours.read.length ? 'suivante' : 'pour commencer'} : ${nextL.title}`
                 : `Les ${LESSONS.length} leçons sont lues : à revoir quand tu veux.`
-            }
+            },
+            { href: '#/cours/astuces', title: 'Astuces d’enchaînement', text: `${TIPS.length} réflexes : quelle note vers quelle note, d’un accord à l’autre.` }
           ]}
         />
       </section>

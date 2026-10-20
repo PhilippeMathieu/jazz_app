@@ -11,6 +11,7 @@ import { Segmented } from '../../ui/Segmented';
 import { StatBars } from '../../ui/StatBars';
 import { ConfirmButton } from '../../ui/ConfirmButton';
 import { PlayIcon } from '../../ui/icons';
+import { AnswerActions } from '../../ui/AnswerActions';
 import { notesMarks } from '../../ui/keyboardMarks';
 import { HINTS, LEVEL_LABELS, PROG_LEVELS, QUALITY_LEVELS } from './data';
 import { EarMode, EarQuestion, Tally, checkBuild, makeEarQuestion } from './questions';
@@ -93,6 +94,18 @@ export function Oreille() {
     setOk(good);
     record(q.mode === 'ear' ? 'ear:' + q.q : 'prog:' + q.id, good);
     play(q);
+  };
+  /** « J'ai deviné » : la dernière réponse juste compte comme à revoir. */
+  const regradeLast = () => {
+    const item = q.mode === 'ear' ? 'ear:' + q.q : q.mode === 'prog' ? 'prog:' + q.id : 'build:' + q.q;
+    setStats((s) => {
+      const it = s.items[item];
+      const rk = s.mode + clampLv(s.lv[s.mode]);
+      const rec = [...(s.recent[rk] ?? [])];
+      if (rec.length) rec[rec.length - 1] = 0;
+      return { ...s, items: it ? { ...s.items, [item]: { ...it, c: Math.max(0, it.c - 1) } } : s.items, recent: { ...s.recent, [rk]: rec } };
+    });
+    setSession((x) => ({ ...x, c: Math.max(0, x.c - 1), streak: 0 }));
   };
   const validate = () => {
     if (q.mode !== 'build') return;
@@ -270,7 +283,7 @@ export function Oreille() {
       <div class="thumb-zone">
         {q.mode !== 'build' && !answered ? (
           <div class={'choices' + (mode === 'prog' ? ' long' : '')}>
-            {pool.map((k) => (
+            {(q.mode === 'prog' ? q.choices : pool).map((k) => (
               <button key={k} class="choice" onClick={() => choose(k)}>
                 {mode === 'prog' ? (
                   <>
@@ -298,9 +311,14 @@ export function Oreille() {
           </div>
         ) : null}
         {answered ? (
-          <button class="btn primary block" onClick={() => fresh(mode, level, q.mode !== 'build')}>
-            Suivant
-          </button>
+          <AnswerActions
+            ok={!!ok}
+            onNext={() => fresh(mode, level, q.mode !== 'build')}
+            onGuess={() => {
+              regradeLast();
+              fresh(mode, level, q.mode !== 'build');
+            }}
+          />
         ) : null}
       </div>
 

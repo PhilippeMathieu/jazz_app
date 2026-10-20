@@ -1,3 +1,4 @@
+import { PROGRESSIONS } from '../../core/theory/progressions';
 import { describe, expect, it } from 'vitest';
 import { checkBuild, earVoicing, makeEarQuestion } from './questions';
 import { chordPcs, parseChord } from '../../core/theory/chords';
@@ -30,5 +31,16 @@ describe('oreille', () => {
       const q = makeEarQuestion('prog', 1 + (i % 4), {}, undefined, rng);
       expect(q.mode === 'prog' && q.chords.length >= 3).toBe(true);
     }
+  });
+  it('progressions : les choix ont tous le même nombre d’accords', () => {
+    const rng = seeded(8);
+    for (let level = 1; level <= 4; level++)
+      for (let i = 0; i < 60; i++) {
+        const q = makeEarQuestion('prog', level, {}, undefined, rng);
+        if (q.mode !== 'prog') throw new Error();
+        expect(q.choices).toContain(q.id);
+        expect(q.choices.length).toBeGreaterThanOrEqual(2);
+        for (const c of q.choices) expect(PROGRESSIONS[c].steps.length).toBe(q.chords.length);
+      }
   });
 });

@@ -10,6 +10,7 @@ import { Keyboard, Mark } from '../../ui/Keyboard';
 import { ChevronIcon, PlayIcon } from '../../ui/icons';
 import { go } from '../../ui/router';
 import { Block, LESSONS, Lesson, PARTS, lessonById } from './lessons';
+import { TIPS } from './tips';
 
 interface Progress {
   read: string[];
@@ -42,6 +43,13 @@ export function CoursList() {
           <ChevronIcon />
         </a>
       ) : null}
+      <a class="row plain" href="#/cours/astuces">
+        <span class="row-main">
+          <span class="row-title">Astuces d’enchaînement</span>
+          <span class="row-sub">{TIPS.length} réflexes de conduite des voix, à écouter dans toutes les tonalités</span>
+        </span>
+        <ChevronIcon />
+      </a>
       {PARTS.map((part) => (
         <section key={part.title}>
           <h2 class="label">{part.title}</h2>

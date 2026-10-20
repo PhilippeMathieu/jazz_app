@@ -355,3 +355,5 @@ input[type='range'] { width: 100%; accent-color: var(--accent); min-height: var(
 .kl.oct { fill: var(--key-line); font-weight: 500; }
 .big .kl { font-size: 11px; }
 .big .kl.dk { font-size: 8.5px; }
+.answer-actions .btn { min-height: 52px; }
+.answer-actions .btn.primary { flex: 2; }

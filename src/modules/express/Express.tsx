@@ -9,6 +9,7 @@ import { Segmented } from '../../ui/Segmented';
 import { StatBars } from '../../ui/StatBars';
 import { SpeakerIcon } from '../../ui/icons';
 import { Clock, fmtSec } from '../../ui/Clock';
+import { AnswerActions } from '../../ui/AnswerActions';
 import { LEVELS, QTYPE_LABEL, QType, Question, Seq, Tally, isRight, makeRound } from './drill';
 
 type RunMode = 'sprint' | 'serie';
@@ -34,7 +35,11 @@ interface Answer {
   choice: string;
   ok: boolean;
   ms: number;
+  /** Juste, mais au hasard (« J'ai deviné ») : compte comme à revoir. */
+  guessed?: boolean;
 }
+/** Réponse vraiment sue. */
+const known = (a: Answer) => a.ok && !a.guessed;
 
 const fmt = fmtSec;
 const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
@@ -51,7 +56,7 @@ export function Express() {
 
   const finish = (list: Answer[], complete: boolean) => {
     const { level, mode } = saved;
-    const res: RunRecord = { correct: list.filter((a) => a.ok).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
+    const res: RunRecord = { correct: list.filter(known).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
     const key = `${level}-${mode}`;
     const rec = complete && res.total > 0 && better(res, saved.records[key], mode);
     setNewRecord(rec);
@@ -61,10 +66,10 @@ export function Express() {
       const byTemplate = { ...s.byTemplate };
       list.forEach((a) => {
         const b = byType[a.q.type] ?? { c: 0, t: 0, ms: 0 };
-        byType[a.q.type] = { c: b.c + (a.ok ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
+        byType[a.q.type] = { c: b.c + (known(a) ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
         const id = a.q.seq.template.id;
         const tt = byTemplate[id] ?? { c: 0, t: 0 };
-        byTemplate[id] = { c: tt.c + (a.ok ? 1 : 0), t: tt.t + 1 };
+        byTemplate[id] = { c: tt.c + (known(a) ? 1 : 0), t: tt.t + 1 };
       });
       return { ...s, byType, byTemplate, records: rec ? { ...s.records, [key]: res } : s.records };
     });
@@ -135,11 +140,6 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   const qStart = useRef(performance.now());
   const spent = useRef(0);
   const done = useRef(false);
-  const timer = useRef<number | null>(null);
-  useEffect(() => () => {
-    if (timer.current !== null) clearTimeout(timer.current);
-  }, []);
-
   const end = (list: Answer[], complete = true) => {
     if (done.current) return;
     done.current = true;
@@ -161,13 +161,18 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     const list = [...answers, a];
     setAnswers(list);
     setCurrent(a);
-    // Juste : on enchaîne. Faux : l'explication reste jusqu'à « Continuer ».
-    if (a.ok) timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), choice === q.answer ? 450 : 1400);
+  };
+  // Après chaque réponse, juste ou non, l'explication reste affichée (chrono arrêté) jusqu'au tap.
+  const proceed = (guessed: boolean) => {
+    const list = guessed ? answers.map((a, i) => (i === answers.length - 1 ? { ...a, guessed: true } : a)) : answers;
+    if (guessed) setAnswers(list);
+    if (over(list.length)) end(list);
+    else next();
   };
 
   if (!q) return null;
   const long = q.type === 'pattern' || q.type === 'key' || q.type === 'scale';
-  const correct = answers.filter((a) => a.ok).length;
+  const correct = answers.filter(known).length;
   const alsoOk = current?.ok && current.choice !== q.answer;
   return (
     <div class="screen play-screen">
@@ -201,9 +206,11 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
       <h2 class="prompt">{q.prompt}</h2>
 
       <div class="thumb-zone">
-        {current && (!current.ok || alsoOk) ? (
+        {current ? (
           <div class="fb">
-            <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>{current.ok ? `Juste aussi. L’appli conseille : ${q.answer}.` : `Non : ${q.answer}.`}</p>
+            <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>
+              {current.ok ? (alsoOk ? `Juste aussi. L’appli conseille : ${q.answer}.` : 'Juste.') : `Non : ${q.answer}.`}
+            </p>
             <p class="muted">{q.explain}</p>
           </div>
         ) : null}
@@ -217,11 +224,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
             );
           })}
         </div>
-        {current && !current.ok ? (
-          <button class="btn primary block" onClick={() => (over(answers.length) ? end(answers) : next())}>
-            Continuer
-          </button>
-        ) : null}
+        {current ? <AnswerActions ok={current.ok} onNext={() => proceed(false)} onGuess={() => proceed(true)} /> : null}
       </div>
     </div>
   );
@@ -230,13 +233,13 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
 // ---------------------------------------------------------------- Résultat
 
 function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
-  const correct = answers.filter((a) => a.ok).length;
+  const correct = answers.filter(known).length;
   const ms = answers.reduce((s, a) => s + a.ms, 0);
-  const wrong = answers.filter((a) => !a.ok);
+  const wrong = answers.filter((a) => !known(a));
   const per = (Object.keys(QTYPE_LABEL) as QType[])
     .map((t) => {
       const l = answers.filter((a) => a.q.type === t);
-      return { t, n: l.length, c: l.filter((a) => a.ok).length, ms: l.reduce((s, a) => s + a.ms, 0) };
+      return { t, n: l.length, c: l.filter(known).length, ms: l.reduce((s, a) => s + a.ms, 0) };
     })
     .filter((x) => x.n);
   return (
@@ -278,7 +281,8 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
                 <span class="mono small muted">{a.q.seq.chords.map((c) => chordSymbol(c.chord)).join('  ')}</span>
                 <b>{a.q.prompt}</b>
                 <span class="small">
-                  <span class="bad">{a.choice}</span> → <span class="good">{a.q.answer}</span>
+                  {a.ok ? <span class="muted">deviné : </span> : <span class="bad">{a.choice} → </span>}
+                  <span class="good">{a.q.answer}</span>
                 </span>
                 <span class="muted small">{a.q.explain}</span>
               </div>

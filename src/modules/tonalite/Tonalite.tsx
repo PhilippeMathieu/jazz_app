@@ -10,6 +10,7 @@ import { Segmented } from '../../ui/Segmented';
 import { StatBars } from '../../ui/StatBars';
 import { Clock, fmtSec } from '../../ui/Clock';
 import { SpeakerIcon } from '../../ui/icons';
+import { AnswerActions } from '../../ui/AnswerActions';
 import { DegQuality, LEVELS, MAJOR, MINOR, Question, Tally, chordOf, choicesFor, harmonize, makeQuestion } from './drill';
 
 type RunMode = 'sprint' | 'serie';
@@ -39,7 +40,10 @@ interface Answer {
   choice: DegQuality;
   ok: boolean;
   ms: number;
+  /** Juste, mais au hasard : compte comme à revoir. */
+  guessed?: boolean;
 }
+const known = (a: Answer) => a.ok && !a.guessed;
 
 const degKey = (q: Question) => `${q.key.mode === 'major' ? 'M' : 'm'}:${q.degree.roman}`;
 const symOf = (q: DegQuality) => QUALITIES[q].sym;
@@ -63,7 +67,7 @@ export function Tonalite() {
 
   const finish = (list: Answer[], complete: boolean) => {
     const { level, mode } = saved;
-    const res: RunRecord = { correct: list.filter((a) => a.ok).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
+    const res: RunRecord = { correct: list.filter(known).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
     const rk = `${level}-${mode}`;
     const rec = complete && res.total > 0 && better(res, saved.records[rk], mode);
     setNewRecord(rec);
@@ -72,9 +76,9 @@ export function Tonalite() {
       let { items, byDeg, byKey } = s;
       list.forEach((a) => {
         const it = items[a.q.id] ?? { c: 0, t: 0 };
-        items = { ...items, [a.q.id]: { c: it.c + (a.ok ? 1 : 0), t: it.t + 1 } };
-        byDeg = add(byDeg, degKey(a.q), a.ok, a.ms);
-        byKey = add(byKey, keyName(a.q.key), a.ok, a.ms);
+        items = { ...items, [a.q.id]: { c: it.c + (known(a) ? 1 : 0), t: it.t + 1 } };
+        byDeg = add(byDeg, degKey(a.q), known(a), a.ms);
+        byKey = add(byKey, keyName(a.q.key), known(a), a.ms);
       });
       return { ...s, items, byDeg, byKey, records: rec ? { ...s.records, [rk]: res } : s.records };
     });
@@ -160,11 +164,6 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   const qStart = useRef(performance.now());
   const spent = useRef(0);
   const done = useRef(false);
-  const timer = useRef<number | null>(null);
-  useEffect(() => () => {
-    if (timer.current !== null) clearTimeout(timer.current);
-  }, []);
-
   const end = (list: Answer[], complete = true) => {
     if (done.current) return;
     done.current = true;
@@ -187,11 +186,21 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     const list = [...answers, a];
     setAnswers(list);
     setCurrent(a);
-    // Juste : on montre l'accord et la gamme harmonisée un instant. Faux : jusqu'à « Continuer ».
-    if (a.ok) timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), 900);
+  };
+  // Explication après chaque réponse (chrono arrêté). « J'ai deviné » : la question reviendra.
+  const proceed = (guessed: boolean) => {
+    let list = answers;
+    if (guessed) {
+      list = answers.map((a, i) => (i === answers.length - 1 ? { ...a, guessed: true } : a));
+      setAnswers(list);
+      const it = tally.current[q.id];
+      if (it) tally.current[q.id] = { c: Math.max(0, it.c - 1), t: it.t };
+    }
+    if (over(list.length)) end(list);
+    else next();
   };
 
-  const correct = answers.filter((a) => a.ok).length;
+  const correct = answers.filter(known).length;
   const row = harmonize(q.key);
   return (
     <div class="screen play-screen">
@@ -232,10 +241,11 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
       </section>
 
       <div class="thumb-zone">
-        {current && !current.ok ? (
+        {current ? (
           <div class="fb">
-            <p class="verdict bad">
-              Non : {noteName(q.root)}
+            <p class={'verdict ' + (current.ok ? 'ok' : 'bad')}>
+              {current.ok ? 'Juste : ' : 'Non : '}
+              {noteName(q.root)}
               {symOf(q.answer)}.
             </p>
             <p class="muted">{q.explain}</p>
@@ -252,11 +262,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
             );
           })}
         </div>
-        {current && !current.ok ? (
-          <button class="btn primary block" onClick={() => (over(answers.length) ? end(answers) : next())}>
-            Continuer
-          </button>
-        ) : null}
+        {current ? <AnswerActions ok={current.ok} onNext={() => proceed(false)} onGuess={() => proceed(true)} /> : null}
       </div>
     </div>
   );
@@ -265,12 +271,12 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
 // ---------------------------------------------------------------- Résultat
 
 function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
-  const correct = answers.filter((a) => a.ok).length;
+  const correct = answers.filter(known).length;
   const ms = answers.reduce((s, a) => s + a.ms, 0);
-  const wrong = answers.filter((a) => !a.ok);
+  const wrong = answers.filter((a) => !known(a));
   const per = DEG_ORDER.map((d) => {
     const l = answers.filter((a) => degKey(a.q) === d.id);
-    return { ...d, n: l.length, c: l.filter((a) => a.ok).length, ms: l.reduce((s, a) => s + a.ms, 0) };
+    return { ...d, n: l.length, c: l.filter(known).length, ms: l.reduce((s, a) => s + a.ms, 0) };
   }).filter((x) => x.n);
   return (
     <div class="screen">
@@ -314,7 +320,7 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
                   {symOf(a.q.answer)} · {a.q.degree.roman}
                 </b>
                 <span class="small">
-                  tu as répondu <span class="bad">{symOf(a.choice)}</span>
+                  {a.ok ? 'juste, mais deviné' : <>tu as répondu <span class="bad">{symOf(a.choice)}</span></>}
                 </span>
               </div>
             ))}

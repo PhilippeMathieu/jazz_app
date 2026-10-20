@@ -6,6 +6,7 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 
 ## Écrans
 
+- **Astuces d'enchaînement** : 15 réflexes de conduite des voix (7e du II → 3ce du V, 5te du II → ♭9 du V, encadrements, SubV, backdoor…), chacun avec un exemple écrit (accords, ligne, degrés), à écouter et à transposer.
 - **Cours** : 13 leçons courtes (construire un accord, caractère des accords, accords de la tonalité, ii–V–I majeur et mineur, turnarounds, dominantes secondaires, SubV, backdoor, blues, voicings, tensions, gammes), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice.
 - **Accueil** : reprendre le dernier exercice, trois suggestions « À travailler » tirées de tes erreurs.
 - **Lecture de notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux jusqu'aux lignes supplémentaires et aux altérations.
@@ -44,12 +45,13 @@ Stack : TypeScript, Preact, Vite, WebAudio, service worker (hors ligne), GitHub 
 
 À venir : rythme (comping, placement), dictée de basse, voicings à deux mains.
 
-## Installer sur iPhone
+## Installer
 
-1. Ouvrir https://philippemathieu.github.io/jazz_app/ dans Safari.
-2. Partager → « Sur l'écran d'accueil ».
+**iPhone** : ouvrir https://philippemathieu.github.io/jazz_app/ dans Safari, Partager → « Sur l'écran d'accueil ».
 
-L'appli fonctionne ensuite hors ligne.
+**Android** : ouvrir la même adresse dans Chrome, puis le bouton « Installer l'appli » de l'accueil (ou menu ⋮ → « Installer l'application »).
+
+L'appli fonctionne ensuite hors ligne. Les mises à jour se téléchargent seules et s'appliquent à l'ouverture, sur l'accueil (jamais au milieu d'un exercice).
 
 ## Développement
 

@@ -1,11 +1,12 @@
 // Analyse express : génération de séquences et de questions à réponse rapide.
-import { Chart, Key, Mode, flatten, keyLabel, keyOnPc } from '../../core/chart/model';
+import { Chart, Key, flatten, keyLabel, keyOnPc } from '../../core/chart/model';
 import { Chord, QUALITIES, chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
 import { noteName, pcOf, spellWith } from '../../core/theory/notes';
 import { SCALES } from '../../core/theory/scales';
 import { PROGRESSIONS, Progression, spellProgression } from '../../core/theory/progressions';
 import { guideTones, scaleFor } from '../../core/analysis/improv';
 import { analyze } from '../../core/analysis/analyze';
+import { patternChoices } from '../../core/analysis/quiz';
 import { Rng, pick, shuffle, weightedPick } from '../../core/random';
 
 export type QType = 'degree' | 'pattern' | 'key' | 'nine' | 'tone' | 'scale';
@@ -115,27 +116,29 @@ function degreeQ(seq: Seq, rng: Rng): Question {
   };
 }
 
-function patternQ(seq: Seq, level: number, rng: Rng): Question {
-  // Les choix sont les chiffrages : uniques, et c'est l'analyse elle-même qui est demandée.
-  const pool = idsFor(level).map((id) => romanLineOf(makeSeq(level, () => 0, id)));
+function patternQ(seq: Seq, rng: Rng): Question {
   const answer = romanLineOf(seq);
   return {
     type: 'pattern',
     seq,
     prompt: 'Quel enchaînement ?',
-    choices: withDistractors(answer, pool, 3, rng),
+    // Mêmes accords lus dans d'autres tonalités : même longueur, mêmes types, seul le chiffrage change.
+    choices: patternChoices(
+      seq.chords.map((c) => c.chord),
+      seq.key,
+      answer,
+      rng
+    ),
     answer,
-    explain: `${seq.template.name}. ${seq.template.hint}`
+    explain: `${seq.template.name} en ${keyLabel(seq.key)} : ${seq.chords.map((c) => `${chordSymbol(c.chord)} = ${c.roman}`).join(', ')}. ${seq.template.hint}`
   };
 }
 
 function keyQ(seq: Seq, rng: Rng): Question {
   const k = seq.key;
   const pc = pcOf(k.tonic);
-  const other: Mode = k.mode === 'major' ? 'minor' : 'major';
-  const relative = keyOnPc(k.mode === 'major' ? pc + 9 : pc + 3, other);
-  // Sans résolution, la tonalité homonyme (C majeur pour Dø7 G7) serait défendable : on ne la propose pas.
-  const pool = [relative, keyOnPc(pc + 7, k.mode), keyOnPc(pc + 5, k.mode), keyOnPc(pc + 2, k.mode), keyOnPc(pc + 7, other)].map(keyLabel);
+  // Même mode que la réponse : le type des accords (m7 ou ø7) ne doit pas suffire à trancher.
+  const pool = [5, 7, 2, 10, 3, 9, 1].map((d) => keyLabel(keyOnPc(pc + d, k.mode)));
   const ii = seq.chords.find((c) => c.roman.startsWith('II'));
   const v = seq.chords.find((c) => c.roman === 'V7');
   return {
@@ -236,7 +239,7 @@ export function makeRound(level: number, rng: Rng = Math.random, stats: { types?
   const seq = makeSeq(level, rng, undefined, stats.templates);
   const unresolved = seq.chords.length === 2;
   const qs: Question[] = [degreeQ(seq, rng)];
-  qs.push(level >= 2 && hasIIV(seq) && (unresolved || rng() < 0.4) ? keyQ(seq, rng) : patternQ(seq, level, rng));
+  qs.push(level >= 2 && hasIIV(seq) && (unresolved || rng() < 0.4) ? keyQ(seq, rng) : patternQ(seq, rng));
   const third: Question[] = [toneQ(seq, rng)];
   if (level >= 2) {
     const n = nineQ(seq, rng);

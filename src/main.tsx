@@ -10,5 +10,9 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
 import { App } from './app';
+import { setupInstall, setupUpdates } from './core/app/pwa';
+
+setupInstall();
+setupUpdates();
 
 render(<App />, document.getElementById('app')!);

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { isRight, makeRound, makeSeq } from './drill';
 import { chordSymbol } from '../../core/theory/chords';
 import { seeded } from '../../core/random';
+import { functionalRomans } from '../../core/analysis/quiz';
 
 const rounds = (level: number, n: number, seed: number) => {
   const rng = seeded(seed);
@@ -60,6 +61,40 @@ describe('analyse express', () => {
       expect(q.seq.chords.some((c) => c.roman === 'V7')).toBe(true);
       const [tonic, mode] = q.answer.split(' ');
       expect(q.choices).not.toContain(`${tonic} ${mode === 'majeur' ? 'mineur' : 'majeur'}`);
+    }
+  });
+
+  it('le chiffrage fonctionnel retrouve celui des enchaînements types', () => {
+    for (const id of ['iiVI', 'iiV', 'turn1', 'turn3', 'iiVim', 'iiVm', 'minTurn', 'sec', 'subV', 'back', 'casc', 'subVm', 'I7IV'])
+      for (let pc = 0; pc < 12; pc++) {
+        const seq = makeSeq(3, () => pc / 12 + 0.01, id);
+        expect(functionalRomans(seq.chords.map((c) => c.chord), seq.key), `${id} ${pc}`).toEqual(seq.chords.map((c) => c.roman));
+      }
+  });
+
+  it('enchaînements : mêmes longueur et types d’accords dans tous les choix', () => {
+    const type = (r: string) => /(Δ7|m7|m6|ø7|°7|7)(\/.*)?$/.exec(r)?.[1];
+    let seen = 0;
+    for (const level of [1, 2, 3])
+      for (const q of rounds(level, 200, 20 + level)) {
+        if (q.type !== 'pattern') continue;
+        seen++;
+        const a = q.answer.split(' – ');
+        expect(q.choices.length).toBeGreaterThanOrEqual(3);
+        for (const c of q.choices) {
+          const parts = c.split(' – ');
+          expect(parts).toHaveLength(a.length);
+          expect(parts.map(type)).toEqual(a.map(type));
+        }
+      }
+    expect(seen).toBeGreaterThan(50);
+  });
+
+  it('tonalités : toutes dans le même mode que la réponse', () => {
+    for (const q of rounds(3, 300, 6)) {
+      if (q.type !== 'key') continue;
+      const mode = q.answer.split(' ')[1];
+      for (const c of q.choices) expect(c.split(' ')[1]).toBe(mode);
     }
   });
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { seeded } from '../../core/random';
 import { midiOf, stepOf, writtenName } from '../../core/theory/staff';
 import { BOTTOM_STEP } from '../../core/theory/staff';
-import { itemsFor, keyIsRight, makeQuestion, nameIsRight, playedVerdict, solfegeName } from './reading';
+import { explainNote, itemsFor, keyIsRight, positionOf, makeQuestion, nameIsRight, playedVerdict, solfegeName } from './reading';
 
 const names = (level: number, clef: 'treble' | 'bass') =>
   itemsFor(level)
@@ -56,5 +56,18 @@ describe('lecture de notes', () => {
     let hits = 0;
     for (let i = 0; i < 2000; i++) if (makeQuestion(1, tally, rng).id === 'G:A4') hits++;
     expect(hits / 2000).toBeGreaterThan(0.15); // 11 notes : ≈ 9 % sans pondération
+  });
+  it('explique où se trouve la note', () => {
+    const n = (letter: number, octave: number, acc = 0) => ({ letter, acc, octave });
+    expect(positionOf('treble', n(1, 5))).toBe('4e ligne'); // D5
+    expect(positionOf('treble', n(3, 4))).toBe('1er interligne'); // F4
+    expect(positionOf('treble', n(0, 4))).toBe('1re ligne supplémentaire en dessous'); // C4
+    expect(positionOf('treble', n(1, 4))).toBe('juste sous la portée'); // D4
+    expect(positionOf('treble', n(5, 5))).toBe('1re ligne supplémentaire au-dessus'); // A5
+    expect(positionOf('bass', n(0, 4))).toBe('1re ligne supplémentaire au-dessus'); // C4
+    expect(positionOf('bass', n(3, 3))).toBe('4e ligne'); // F3
+    expect(positionOf('bass', n(0, 2))).toBe('2e ligne supplémentaire en dessous'); // C2
+    expect(positionOf('bass', n(1, 2))).toBe('sous la 1re ligne supplémentaire'); // D2
+    expect(explainNote('treble', n(0, 4))).toContain('do central');
   });
 });
