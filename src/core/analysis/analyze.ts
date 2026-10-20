@@ -172,9 +172,10 @@ export function analyze(chart: Chart): Analysis {
   const hasIIbefore = (v: number) => unitBrackets.some((b) => b.v === v);
 
   // 3. Viterbi sur les centres tonaux
-  const states: { pc: number; mode: Mode }[] = [];
-  for (let pc = 0; pc < 12; pc++) states.push({ pc, mode: 'major' }, { pc, mode: 'minor' });
   const chartPc = pcOf(chart.key.tonic);
+  // États dans l'ordre à partir de la tonalité de la grille : en cas d'égalité, le même choix dans toutes les tonalités.
+  const states: { pc: number; mode: Mode }[] = [];
+  for (let k = 0; k < 12; k++) states.push({ pc: (chartPc + k) % 12, mode: 'major' }, { pc: (chartPc + k) % 12, mode: 'minor' });
   const blues = chart.style === 'blues';
   const home = { pc: chartPc, mode: chart.key.mode };
   const sameState = (a: { pc: number; mode: Mode }, b: { pc: number; mode: Mode }) => a.pc === b.pc && a.mode === b.mode;
@@ -266,7 +267,20 @@ export function analyze(chart: Chart): Analysis {
     const hit = units.find((u) => rootPc(u.chord) === s.pc);
     if (pcOf(chart.key.tonic) === s.pc) return { tonic: chart.key.tonic, mode: s.mode };
     if (hit) return { tonic: hit.chord.root, mode: s.mode };
-    return keyOnPc(s.pc, s.mode);
+    // Pas d'accord sur la tonique : l'orthographe (C♯ ou D♭…) qui donne les degrés les plus simples
+    // aux accords de la région (pas de ♭♭V), pour une analyse identique dans toutes les tonalités.
+    const def = keyOnPc(s.pc, s.mode);
+    const members = units.filter((_, i) => keyIdx[i] === si);
+    const cost = (k: Key) =>
+      members.reduce((t, u) => t + Math.abs(signedPc(rootPc(u.chord) - (pcOf(k.tonic) + NATURAL_PC[mod(u.chord.root.letter - k.tonic.letter, 7)]))), 0);
+    let best = def;
+    for (const dl of [-1, 1]) {
+      const n = spellWith(def.tonic.letter + dl, s.pc);
+      if (Math.abs(n.acc) > 1) continue;
+      const k = { tonic: n, mode: s.mode };
+      if (cost(k) < cost(best)) best = k;
+    }
+    return best;
   };
   const unitKeys = keyIdx.map(keyFor);
 

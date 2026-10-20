@@ -3,7 +3,7 @@ import { canInstall, install, onInstallChange } from './core/app/pwa';
 import { ChevronIcon } from './ui/icons';
 import { load } from './core/storage';
 import { advice } from './core/progress';
-import { chartById } from './library/charts';
+import { LIBRARY, chartById } from './library/charts';
 import { LESSONS, lessonById } from './modules/cours/lessons';
 import { coursProgress, nextLesson } from './modules/cours/Cours';
 import { SECTIONS, SectionId, TRAINING } from './ui/sections';
@@ -130,7 +130,7 @@ export function Home() {
       <section>
         <h2 class="label">Jouer</h2>
         <div class="list">
-          <Row href="#/grilles" title={SECTIONS.grilles.title} sub={SECTIONS.grilles.sub + ', dans 7 styles'} />
+          <Row href="#/grilles" title={SECTIONS.grilles.title} sub={`${LIBRARY.length} standards analysés et accompagnés, dans 7 styles`} />
         </div>
       </section>
 

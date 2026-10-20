@@ -25,7 +25,7 @@ S'entraîner
 - **Voicings** (piano) : un accord s'affiche, tu le joues (niveaux : 3 sons, shell, A, B), le micro valide et passe au suivant.
 
 Jouer
-- **Morceaux** : 10 standards + grilles d'exercice, import Ultimate Guitar / ChordPro. Quatre vues :
+- **Morceaux** : 28 standards (faciles, moyens, avancés) + grilles d’exercice, import Ultimate Guitar / ChordPro. Quatre vues :
   - *Degrés* : analyse (ii–V, centres tonaux, dominantes secondaires, SubV, backdoor) ; avec le micro, vérifie que ton comping contient la 3ce et la 7e.
   - *Analyser* : à toi. Touche le premier puis le dernier accord d'un enchaînement, dis ce que c'est (ii–V–I, ii–V–i mineur, ii–V, V–I, dominante secondaire, SubV, backdoor, turnaround) et vers quelle tonalité. « Vérifier » : juste / presque / faux avec l'explication, ce que tu as manqué, et à voir aussi (turnarounds, changements de tonalité, diminués de passage). Repérages gardés par grille.
   - *Gammes* : gamme de chaque accord ; avec le micro, classe chaque note jouée et compte les notes de l'accord jouées sur le 1er temps.

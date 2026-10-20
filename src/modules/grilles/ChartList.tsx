@@ -63,10 +63,18 @@ export function ChartList() {
           </div>
         </section>
       ) : null}
-      <section>
-        <h2 class="label">Standards</h2>
-        <div class="list">{LIBRARY.map((c) => <Row key={c.id} c={c} />)}</div>
-      </section>
+      {([1, 2, 3] as const).map((lv) => (
+        <section key={lv}>
+          <h2 class="label">
+            Standards · {['', 'faciles', 'moyens', 'avancés'][lv]}
+          </h2>
+          <div class="list">
+            {LIBRARY.filter((c) => c.level === lv).map((c) => (
+              <Row key={c.id} c={c} />
+            ))}
+          </div>
+        </section>
+      ))}
       <section>
         <h2 class="label">Grilles d’exercice</h2>
         <div class="list">{EXERCISES.map((c) => <Row key={c.id} c={c} />)}</div>

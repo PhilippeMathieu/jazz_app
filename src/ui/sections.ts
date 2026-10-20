@@ -18,7 +18,7 @@ export const SECTIONS: Record<SectionId, Section> = {
   oreille: { title: 'Oreille', sub: 'Reconnaître accords et suites', where: 'Métro' },
   rythme: { title: 'Rythme', sub: 'Placement, tempo, styles', where: 'Métro · piano' },
   flash: { title: 'Voicings', sub: 'Jouer les accords, le micro valide', where: 'Piano' },
-  grilles: { title: 'Morceaux', sub: '10 standards analysés et accompagnés', where: 'Piano' },
+  grilles: { title: 'Morceaux', sub: 'Les standards, analysés et accompagnés', where: 'Piano' },
   micro: { title: 'Micro', sub: 'Tester et régler l’écoute du piano' }
 };
 
