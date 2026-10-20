@@ -55,6 +55,12 @@ export interface Question {
   /** Réponses aussi acceptées (ex. la gamme alternative). */
   alsoCorrect?: string[];
   explain: string;
+  /** Pour la question des 9es : laquelle (« 9 » ou « ♭9 »). */
+  tag?: string;
+  /** Note à montrer au clavier en plus de l'accord (classe de hauteur). */
+  extraPc?: number;
+  /** Gamme à montrer au clavier (identifiant). */
+  scaleId?: string;
 }
 
 /** Statistiques par clé (type de question ou enchaînement) : réussites / essais. */
@@ -169,19 +175,34 @@ function nineQ(seq: Seq, rng: Rng): Question | null {
   const r = rootPc(c.chord);
   const flat9 = spellInChord(c.chord, r + 1);
   const nat9 = spellInChord(c.chord, r + 2);
-  let answer: string;
-  let explain: string;
+  // ♯9 écrite comme une 9e (A♯ sur G7), pas comme une tierce mineure.
+  const sharp9 = noteName(spellWith(c.chord.root.letter + 1, r + 3));
+  const thirteen = spellInChord(c.chord, r + 9);
+  let tag: '9' | '♭9';
+  let why: string;
   if (c.roman.startsWith('SubV') || c.roman.startsWith('♭VII')) {
-    answer = '9';
-    explain = `${sym} est un ${c.roman} : lydien ♭7, 9 naturelle (${nat9}).`;
+    tag = '9';
+    why = `${sym} est un ${c.roman} : lydien ♭7, 9 naturelle.`;
   } else if (isMinor(target)) {
-    answer = '♭9';
-    explain = `${sym} va vers ${chordSymbol(target)}, accord mineur : la ♭9 (${flat9}) appartient à la tonalité visée.`;
+    tag = '♭9';
+    why = `${sym} va vers ${chordSymbol(target)}, accord mineur : la ♭9 appartient à la tonalité visée.`;
   } else {
-    answer = '9';
-    explain = `${sym} va vers ${chordSymbol(target)}, accord majeur : la 9 naturelle (${nat9}) est dans la tonalité. La ♭9 reste une couleur possible.`;
+    tag = '9';
+    why = `${sym} va vers ${chordSymbol(target)}, accord majeur : la 9 naturelle est dans la tonalité (la ♭9 reste une couleur possible).`;
   }
-  return { type: 'nine', seq, focus: i, prompt: `Sur ${sym}, quelle 9 colle à la tonalité visée ?`, choices: ['9', '♭9'], answer, explain };
+  const answer = tag === '♭9' ? flat9 : nat9;
+  return {
+    type: 'nine',
+    seq,
+    focus: i,
+    prompt: `Sur ${sym}, quelle 9 colle à la tonalité visée ? Donne la note.`,
+    // ♭9, 9, ♯9 et la 13 : il faut savoir quelle 9 ET la trouver.
+    choices: shuffle([flat9, nat9, sharp9, thirteen], rng),
+    answer,
+    tag,
+    extraPc: (r + (tag === '♭9' ? 1 : 2)) % 12,
+    explain: `${why} Sur ${sym} : ♭9 = ${flat9}, 9 = ${nat9}, ♯9 = ${sharp9}. Ici ${tag} = ${answer}.`
+  };
 }
 
 function toneQ(seq: Seq, rng: Rng): Question {
@@ -249,6 +270,7 @@ function scaleQ(seq: Seq, rng: Rng): Question {
     // L'alternative n'est jamais proposée comme piège ; si elle sort quand même, elle compte juste.
     choices: withDistractors(answer, pool, 3, rng, alt ? [alt] : []),
     answer,
+    scaleId: choice.scale,
     alsoCorrect: alt ? [alt] : undefined,
     explain: choice.why + (alt ? ` (${alt} marche aussi.)` : '')
   };

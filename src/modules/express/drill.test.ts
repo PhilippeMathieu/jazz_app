@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { isRight, makeRound, makeSeq } from './drill';
-import { chordSymbol } from '../../core/theory/chords';
+import { chordSymbol, rootPc } from '../../core/theory/chords';
+import { parseNote, pcOf } from '../../core/theory/notes';
 import { seeded } from '../../core/random';
 import { functionalRomans } from '../../core/analysis/quiz';
 
@@ -39,8 +40,13 @@ describe('analyse express', () => {
       seen++;
       const t = q.seq.template.id;
       const roman = q.seq.chords[q.focus!].roman;
-      if (['iiVim', 'iiVm', 'minTurn'].includes(t) || roman === 'V7/II') expect(q.answer).toBe('♭9');
-      if (roman.startsWith('SubV') || roman.startsWith('♭VII') || t === 'iiVI') expect(q.answer).toBe('9');
+      if (['iiVim', 'iiVm', 'minTurn'].includes(t) || roman === 'V7/II') expect(q.tag).toBe('♭9');
+      if (roman.startsWith('SubV') || roman.startsWith('♭VII') || t === 'iiVI') expect(q.tag).toBe('9');
+      // La note demandée est bien la 9 (ou ♭9) de l'accord.
+      const c = q.seq.chords[q.focus!].chord;
+      const want = (rootPc(c) + (q.tag === '♭9' ? 1 : 2)) % 12;
+      expect(pcOf(parseNote(q.answer)!.note)).toBe(want);
+      expect(q.choices).toHaveLength(4);
     }
     expect(seen).toBeGreaterThan(20);
   });

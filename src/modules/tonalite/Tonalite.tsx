@@ -11,6 +11,7 @@ import { StatBars } from '../../ui/StatBars';
 import { Clock, fmtSec } from '../../ui/Clock';
 import { SpeakerIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
+import { ChordKeys } from '../../ui/ChordKeys';
 import { DegQuality, LEVELS, MAJOR, MAJOR_TRIADS, MINOR, Question, Tally, chordOf, choicesFor, harmonize, makeQuestion } from './drill';
 
 type RunMode = 'sprint' | 'serie';
@@ -217,7 +218,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
 
-      <section class="tq-card">
+      <section class={'tq-card' + (current ? ' answered' : '')}>
         <div class="tq-head">
           <span class="tq-key">En {keyLabel(q.key)}</span>
           {current ? (
@@ -231,6 +232,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           {current ? <span class={'tq-qual' + (current.ok ? '' : ' bad')}>{symOf(q.answer)}</span> : null}
         </div>
         <span class="tq-roman">{current ? q.degree.roman : 'Quel accord ?'}</span>
+        {current ? <ChordKeys chord={chordOf(q.key, q.degree)} /> : null}
         {current ? (
           <div class="harmo">
             {row.map((x) => (

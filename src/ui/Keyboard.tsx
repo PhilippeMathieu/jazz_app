@@ -15,6 +15,8 @@ interface Props {
   fit?: boolean;
   /** Étiquettes plus grandes (lecture à distance, touches larges). */
   big?: boolean;
+  /** Largeur d'une touche blanche en pixels : clavier large qui défile (même jouable). */
+  keyWidth?: number;
 }
 
 const W = 22;
@@ -22,7 +24,7 @@ const H = 100;
 const BW = 14;
 const BH = 62;
 
-export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit, big }: Props) {
+export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit, big, keyWidth }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const whites: number[] = [];
   for (let m = lo; m <= hi; m++) if (!isBlackKey(m)) whites.push(m);
@@ -34,7 +36,8 @@ export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit, 
     if (!center || !center.length || !wrap.current) return;
     const xs = center.map((n) => xw.get(isBlackKey(n) ? n - 1 : n) ?? 0);
     const c = (Math.min(...xs) + Math.max(...xs)) / 2;
-    wrap.current.scrollLeft = Math.max(0, c - wrap.current.clientWidth / 2 + W / 2);
+    const k = keyWidth ? keyWidth / W : 1;
+    wrap.current.scrollLeft = Math.max(0, (c + W / 2) * k - wrap.current.clientWidth / 2);
   }, [center?.join(',')]);
 
   const down = (e: PointerEvent) => {
@@ -50,9 +53,9 @@ export function Keyboard({ lo, hi, marks = {}, labels = {}, onKey, center, fit, 
   return (
     <div class="kbwrap" ref={wrap}>
       <svg
-        class={'kbsvg' + (onKey || fit ? ' fit' : '') + (onKey ? ' inter' : '') + (big ? ' big' : '')}
+        class={'kbsvg' + ((onKey || fit) && !keyWidth ? ' fit' : '') + (onKey ? ' inter' : '') + (big ? ' big' : '')}
         viewBox={`0 0 ${width} ${H + 1}`}
-        width={onKey || fit ? undefined : width}
+        width={keyWidth ? whites.length * keyWidth : onKey || fit ? undefined : width}
         role="img"
         aria-label="Clavier de piano"
         onPointerDown={down}

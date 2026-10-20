@@ -105,7 +105,8 @@ export function Home() {
                 ? `${cours.read.length}/${LESSONS.length} leçons lues · ${cours.read.length ? 'suivante' : 'pour commencer'} : ${nextL.title}`
                 : `Les ${LESSONS.length} leçons sont lues : à revoir quand tu veux.`
             },
-            { href: '#/cours/astuces', title: 'Astuces d’enchaînement', text: `${TIPS.length} réflexes : quelle note vers quelle note, d’un accord à l’autre.` }
+            { href: '#/cours/astuces', title: 'Astuces d’enchaînement', text: `${TIPS.length} réflexes : quelle note vers quelle note, d’un accord à l’autre.` },
+            { href: '#/clavier', title: 'Clavier', text: 'Touche des notes (ou joue au piano) : l’appli nomme l’accord. Ou choisis un accord pour le voir.' }
           ]}
         />
       </section>

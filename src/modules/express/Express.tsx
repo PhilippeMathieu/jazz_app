@@ -10,6 +10,7 @@ import { StatBars } from '../../ui/StatBars';
 import { SpeakerIcon } from '../../ui/icons';
 import { Clock, fmtSec } from '../../ui/Clock';
 import { AnswerActions } from '../../ui/AnswerActions';
+import { ChordKeys } from '../../ui/ChordKeys';
 import { LEVELS, QTYPE_LABEL, QType, Question, Seq, Tally, isRight, makeRound } from './drill';
 
 type RunMode = 'sprint' | 'serie';
@@ -200,6 +201,9 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
             </div>
           ))}
         </div>
+        {current && q.focus !== undefined ? (
+          <ChordKeys chord={q.seq.chords[q.focus].chord} extra={q.extraPc} scale={q.type === 'scale' ? q.scaleId : undefined} />
+        ) : null}
       </section>
 
       <h2 class="prompt">{q.prompt}</h2>

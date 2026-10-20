@@ -239,6 +239,9 @@
 .tq-root { font-size: 96px; }
 .tq-qual { font-size: 72px; color: var(--accent); }
 .tq-qual.bad { color: var(--bad); }
+/* Après la réponse : place pour le clavier et les accords de la gamme. */
+.tq-card.answered .tq-root { font-size: 60px; }
+.tq-card.answered .tq-qual { font-size: 46px; }
 .tq-roman { font-family: var(--mono); font-size: var(--t-body); font-weight: 600; color: var(--muted); min-height: 1.5em; }
 .harmo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: var(--s2); }
 .hchip { border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--bg); padding: 6px 6px 4px; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
@@ -308,6 +311,18 @@
 .tip-line { display: flex; gap: 6px; margin-top: 4px; }
 .tip-line b { font-family: var(--mono); font-size: 15px; font-weight: 600; color: var(--accent); display: flex; flex-direction: column; align-items: flex-start; line-height: 1.1; }
 .tip-line b small { font-size: 10px; color: var(--muted); font-weight: 500; }
+
+/* ---------------------------------------------------------------- Clavier */
+.cl-card { background: var(--surface); border-radius: var(--r-lg); padding: var(--s3) var(--s4) var(--s4); display: flex; flex-direction: column; gap: var(--s2); min-height: 150px; }
+.cl-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); }
+.cl-head .btn svg, .row-actions .btn svg { width: 14px; height: 14px; }
+.cl-sym { font-family: var(--display); font-weight: 800; font-size: 56px; line-height: 1; }
+.cl-sub { color: var(--muted); font-size: var(--t-sec); }
+.cl-alt { font-size: var(--t-sec); color: var(--muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 40px; min-width: 44px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); color: var(--fg); font-family: var(--mono); font-size: 15px; font-weight: 600; }
+.chip[aria-pressed='true'] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.chips.roots .chip { flex: 1 0 calc(16.66% - 6px); padding: 0; }
 
 /* ---------------------------------------------------------------- Oreille */
 .ear-stage { display: flex; flex-direction: column; gap: var(--s3); }
