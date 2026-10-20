@@ -86,6 +86,7 @@ export function advice(): Advice[] {
   const conf: [string, string, (k: string) => string, string][] = [
     ['accord', SECTIONS.oreille.title, qual, '#/oreille/confusions'],
     ['prog', SECTIONS.oreille.title, (k) => PROGRESSIONS[k]?.name ?? k, '#/oreille/confusions'],
+    ['degre', SECTIONS.oreille.title, (k) => k, '#/oreille/confusions'],
     ['style', SECTIONS.rythme.title, (k) => GROOVES[k as StyleId]?.name ?? k, '#/rythme/style/confusions'],
     ['rythme', SECTIONS.rythme.title, (k) => rhythmById(k)?.name ?? k, '#/rythme/oreille/confusions']
   ];

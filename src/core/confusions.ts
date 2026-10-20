@@ -3,7 +3,7 @@
 // Une paire est « à travailler » tant qu'il y a plus d'erreurs que la moitié des bonnes réponses.
 import { load, save } from './storage';
 
-export type Domain = 'accord' | 'prog' | 'rythme' | 'style';
+export type Domain = 'accord' | 'prog' | 'rythme' | 'style' | 'degre';
 interface PairStat {
   err: number;
   ok: number;
