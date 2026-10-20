@@ -1,6 +1,8 @@
 // Cours : contenu des leçons (texte court, exemples à écouter, mini-quiz, lien vers l'exercice).
 import { SeqVoicing } from '../../core/audio/play';
 import { GROOVES, StyleId } from '../../core/rhythm/styles';
+import { noteName } from '../../core/theory/notes';
+import { INTERVALS, spellPair } from '../oreille/intervals';
 
 export type Block =
   | { t: 'p'; text: string }
@@ -87,8 +89,45 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/oreille', label: 'Oreille › Accords, niveau 1 : majeur ou mineur ?' },
+              { href: '#/oreille/ear', label: 'Oreille › Accords, niveau 1 : majeur ou mineur ?' },
               { href: '#/flash', label: 'Voicings, niveau 1 : accords de 3 sons' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'intervalles',
+        title: 'Intervalles et ligne de basse',
+        sub: 'L’écart entre deux notes, et ce que joue la contrebasse',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Un **intervalle** est l’écart entre deux notes, compté en demi-tons. Un accord est un empilement d’intervalles, une ligne de basse une suite d’intervalles : les entendre, c’est la base de l’oreille.'
+          },
+          {
+            t: 'table',
+            head: ['Intervalle', 'Sur C', 'Repère, en montant'],
+            rows: INTERVALS.map((iv) => {
+              const song = iv.song?.replace(' (début)', '') ?? 'l’octave moins un demi-ton';
+              return [`${iv.short} (${iv.semis})`, spellPair(0, iv).map(noteName).join('\u00a0→\u00a0'), song[0].toUpperCase() + song.slice(1)];
+            })
+          },
+          { t: 'p', text: 'Le nombre entre parenthèses : les demi-tons. Le nom compte les notes : C D E, 3 notes, c’est une **tierce** ; mineure (3 demi-tons) ou majeure (4).' },
+          { t: 'tip', text: 'Le triton (6 demi-tons) sépare la 3ce et la 7e de tout accord de dominante (E et B♭ dans C7) : c’est la tension qui veut se résoudre.' },
+          { t: 'h', text: 'La ligne de basse' },
+          {
+            t: 'p',
+            text: 'Sur le 1 de chaque mesure, la contrebasse joue presque toujours la **fondamentale** de l’accord. Reconnaître ses degrés par rapport à la tonique (I, IV, V…), c’est entendre la grille sans la voir. Les mouvements les plus courants : la quarte qui monte (V → I, II → V) et le demi-ton qui descend (SubV : ♭II → I).'
+          },
+          { t: 'chords', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'], label: 'I, IV, V, I : écoute la basse' },
+          { t: 'quiz', q: 'C → G, en montant : quel intervalle ?', choices: ['Une quarte', 'Une quinte', 'Une sixte'], answer: 1, explain: 'C D E F G : 5 notes, 7 demi-tons : une quinte juste.' },
+          { t: 'quiz', q: 'En F majeur, la basse joue F puis B♭. Quel degré ?', choices: ['II', 'IV', 'V'], answer: 1, explain: 'F G A B♭ : B♭ est la 4e note de la gamme de F, le IV.' },
+          {
+            t: 'go',
+            links: [
+              { href: '#/oreille/iv', label: 'Oreille › Intervalles, niveau 1' },
+              { href: '#/oreille/bass', label: 'Oreille › Ligne de basse, niveau 1 : I, IV, V' }
             ]
           }
         ]
@@ -227,7 +266,7 @@ export const PARTS: Part[] = [
             answer: 2,
             explain: 'Demi-diminué (m7♭5) : quinte diminuée, mais 7e mineure. Le °7 a une 7e diminuée (𝄫7).'
           },
-          { t: 'go', links: [{ href: '#/oreille', label: 'Oreille › Construire : touche les notes d’un accord' }] }
+          { t: 'go', links: [{ href: '#/oreille/build', label: 'Oreille › Construire : touche les notes d’un accord' }] }
         ]
       },
       {
@@ -273,7 +312,7 @@ export const PARTS: Part[] = [
             answer: 3,
             explain: 'C°7 = E♭°7 = G♭°7 = A°7 (mêmes notes). Il reste C°7, C♯°7 et D°7.'
           },
-          { t: 'go', links: [{ href: '#/oreille', label: 'Oreille › Accords : reconnaître maj7, m7, 7, ø7, °7' }] }
+          { t: 'go', links: [{ href: '#/oreille/ear', label: 'Oreille › Accords : reconnaître maj7, m7, 7, ø7, °7' }] }
         ]
       },
       {

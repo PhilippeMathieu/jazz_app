@@ -40,7 +40,7 @@ function nearest(pc: number, near: number, lo = BASS_LO, hi = BASS_HI) {
 }
 const chordTones = (c: Chord) => QUALITIES[c.quality].iv.filter((i) => i < 12).map((i) => mod(rootPc(c) + i, 12));
 
-function walkingLine(c: FlatChord, nextC: Chord, prevNote: number, first: boolean, rng: Rng): number[] {
+export function walkingLine(c: FlatChord, nextC: Chord, prevNote: number, first: boolean, rng: Rng): number[] {
   const tones = chordTones(c.chord);
   const third = tones[1];
   const fifth = tones[2] ?? tones[1];

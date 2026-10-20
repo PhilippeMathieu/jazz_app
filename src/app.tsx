@@ -36,7 +36,7 @@ export function App() {
   if (page === 'rythme') return <Rythme key={(a ?? '') + (b ?? '')} piano={a === 'piano'} preset={a && a !== 'piano' ? { exercise: a, level: b && b !== 'confusions' ? Number(b) - 1 : -1, confusions: b === 'confusions' } : undefined} />;
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
-  if (page === 'oreille') return <Oreille key={a ?? ''} preset={a} />;
+  if (page === 'oreille') return <Oreille key={(a ?? '') + (b ?? '')} preset={a} focus={b === 'confusions'} />;
   if (page === 'flash') return <Flash />;
   if (page === 'micro') return <Micro />;
   return <Home />;

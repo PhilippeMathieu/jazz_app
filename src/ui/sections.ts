@@ -15,7 +15,7 @@ export const SECTIONS: Record<SectionId, Section> = {
   lecture: { title: 'Notes', sub: 'Lire en clé de sol et en clé de fa', where: 'Métro · piano' },
   tonalite: { title: 'Accords', sub: 'Quel accord sur chaque note de la gamme', where: 'Métro' },
   express: { title: 'Enchaînements', sub: 'Degrés, ii–V–I : analyser vite', where: 'Métro' },
-  oreille: { title: 'Oreille', sub: 'Reconnaître accords et suites', where: 'Métro' },
+  oreille: { title: 'Oreille', sub: 'Intervalles, accords, suites, basse', where: 'Métro' },
   rythme: { title: 'Rythme', sub: 'Placement, tempo, styles', where: 'Métro · piano' },
   flash: { title: 'Voicings', sub: 'Jouer les accords, le micro valide', where: 'Piano' },
   grilles: { title: 'Morceaux', sub: 'Les standards, analysés et accompagnés', where: 'Piano' },

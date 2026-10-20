@@ -7,6 +7,7 @@ import { GROOVES, StyleId } from '../rhythm/styles';
 import { LESSONS } from '../../modules/cours/lessons';
 import { coursProgress } from '../../modules/cours/Cours';
 import { LIBRARY } from '../../library/charts';
+import { intervalById } from '../../modules/oreille/intervals';
 
 const qual = (k: string) => (k === 'maj' ? 'majeur' : k === 'min' ? 'mineur' : QUALITIES[k]?.sym ?? k);
 
@@ -26,15 +27,18 @@ export function setupGame() {
     const degre = confusions('degre')[0];
     const style = confusions('style')[0];
     const prog = confusions('prog')[0];
+    const iv = confusions('intervalle')[0];
     const duel = accord
-      ? { text: `Oreille, ${qual(accord.a)} ou ${qual(accord.b)}`, href: '#/oreille/confusions' }
+      ? { text: `Oreille, ${qual(accord.a)} ou ${qual(accord.b)}`, href: '#/oreille/ear/confusions' }
       : degre
-        ? { text: `Oreille, ${degre.a} ou ${degre.b}`, href: '#/oreille/confusions' }
-        : prog
-          ? { text: `Oreille, ${PROGRESSIONS[prog.a]?.name} ou ${PROGRESSIONS[prog.b]?.name}`, href: '#/oreille/confusions' }
-          : style
-            ? { text: `Styles, ${GROOVES[style.a as StyleId]?.name} ou ${GROOVES[style.b as StyleId]?.name}`, href: '#/rythme/style/confusions' }
-            : undefined;
+        ? { text: `Oreille, ${degre.a} ou ${degre.b}`, href: '#/oreille/full/confusions' }
+        : iv
+          ? { text: `Intervalles, ${intervalById(iv.a)?.short} ou ${intervalById(iv.b)?.short}`, href: '#/oreille/iv/confusions' }
+          : prog
+            ? { text: `Oreille, ${PROGRESSIONS[prog.a]?.name} ou ${PROGRESSIONS[prog.b]?.name}`, href: '#/oreille/prog/confusions' }
+            : style
+              ? { text: `Styles, ${GROOVES[style.a as StyleId]?.name} ou ${GROOVES[style.b as StyleId]?.name}`, href: '#/rythme/style/confusions' }
+              : undefined;
     const notAnalysed = LIBRARY.filter((c) => !g.standards[c.id]?.analyse);
     const day = new Date().getDate();
     const chart = notAnalysed.length ? notAnalysed[day % notAnalysed.length] : undefined;

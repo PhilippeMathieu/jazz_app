@@ -1,4 +1,4 @@
-// Oreille : reconnaître une qualité d'accord, une progression, construire un accord.
+// Oreille : intervalles, nature d'un accord, accord entier, progressions, ligne de basse, construire un accord.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { QUALITIES, chordNotes, chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
 import { mod, noteName, plainName } from '../../core/theory/notes';
@@ -18,6 +18,10 @@ import { HINTS, LEVEL_LABELS, PROG_LEVELS, QUALITY_LEVELS, qualityDiff } from '.
 import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, makeEarQuestion, progChords } from './questions';
 import { FULL_FREE, FULL_LEVEL_LABELS, FULL_TONAL } from './full';
 import { FullPlay } from './FullChord';
+import { IntervalPlay } from './IntervalPlay';
+import { BassPlay } from './BassPlay';
+import { IV_LEVELS, intervalById } from './intervals';
+import { BASS_LEVELS } from './bassline';
 import { Domain, Pair, clearConfusions, confusions, recordAnswer } from '../../core/confusions';
 import { report } from '../../core/game';
 import { chordOnPc } from '../../core/theory/chords';
@@ -30,33 +34,77 @@ interface Stats {
   /** Tout le niveau, ou seulement les paires confondues (duel à deux réponses). */
   focus?: 'all' | 'confusions';
 }
-/** Les exercices : ceux du générateur de questions, plus « Accord entier ». */
-type Exercise = EarMode | 'full';
-const domainOf = (m: Exercise): Domain => (m === 'prog' ? 'prog' : m === 'full' ? 'degre' : 'accord');
-const itemName = (m: Exercise, k: string) => (m === 'prog' ? PROGRESSIONS[k]?.name ?? k : m === 'full' ? k : qualSym(k));
-const DEFAULT: Stats = { mode: 'ear', lv: { ear: 0, prog: 0, build: 0 }, items: {}, recent: {} };
+/** Les exercices : ceux du générateur de questions, plus « Accord entier », « Intervalles », « Ligne de basse ». */
+type Exercise = EarMode | 'full' | 'iv' | 'bass';
+const DOMAIN: Record<Exercise, Domain> = { ear: 'accord', build: 'accord', prog: 'prog', full: 'degre', iv: 'intervalle', bass: 'basse' };
+const domainOf = (m: Exercise): Domain => DOMAIN[m];
+const itemName = (m: Exercise, k: string) => (m === 'prog' ? PROGRESSIONS[k]?.name ?? k : m === 'full' || m === 'bass' ? k : m === 'iv' ? intervalById(k)?.short ?? k : qualSym(k));
+/** Exercices où « Mes confusions » fait départager deux réponses. */
+const duelable = (m: Exercise) => m !== 'build' && m !== 'bass';
+// Toutes les clés doivent figurer ici : au chargement, seules les clés connues sont gardées.
+const DEFAULT: Stats = { mode: 'ear', lv: { iv: 0, ear: 0, full: 0, prog: 0, bass: 0, build: 0 }, items: {}, recent: {}, focus: 'all' };
+const INTRO: Record<Exercise, string> = {
+  iv: 'Avec des écouteurs : deux notes, tu dis l’écart. La base pour entendre les accords et les lignes.',
+  ear: 'Avec des écouteurs : l’appli joue, tu reconnais. Après chaque réponse, l’accord s’affiche au clavier.',
+  full: 'Avec des écouteurs : une référence, puis un accord ; tu dis sa fondamentale et sa nature.',
+  prog: 'Avec des écouteurs : une suite d’accords, tu reconnais l’enchaînement.',
+  bass: 'Avec des écouteurs (les graves passent mal sur le haut-parleur) : l’accord de la tonique, puis 4 notes de contrebasse ; tu dis leur degré.',
+  build: 'Un accord s’affiche, tu touches ses notes au clavier.'
+};
 const PROMPT: Record<EarMode, string> = { ear: 'Quel accord ?', prog: 'Quelle progression ?', build: 'Construis cet accord' };
 /** Accords de 3 sons : « majeur », « mineur » (le symbole seul serait vide pour le majeur). */
 const qualSym = (k: string) => (k === 'maj' ? 'majeur' : k === 'min' ? 'mineur' : QUALITIES[k].sym);
 const qualSub = (k: string) => (k === 'maj' ? 'ex. C' : k === 'min' ? 'ex. Cm' : QUALITIES[k].name);
 const clampLv = (n: number | undefined) => (n !== undefined && n >= 0 && n <= 4 ? n : 0);
 const EXERCISES: { value: Exercise; label: string; sub: string }[] = [
+  { value: 'iv', label: 'Intervalles', sub: 'L’écart entre deux notes' },
   { value: 'ear', label: 'Accords', sub: 'Entendre un accord, dire sa nature' },
   { value: 'full', label: 'Accord entier', sub: 'La fondamentale aussi, après une référence' },
   { value: 'prog', label: 'Progressions', sub: 'Reconnaître une suite d’accords' },
+  { value: 'bass', label: 'Ligne de basse', sub: 'Les degrés joués par la contrebasse' },
   { value: 'build', label: 'Construire', sub: 'Toucher les notes d’un accord' }
 ];
+const isExercise = (x?: string): x is Exercise => !!x && EXERCISES.some((e) => e.value === x);
 
-/** preset « confusions » : ouvert depuis l'accueil (À travailler), sur les accords confondus. */
-export function Oreille({ preset }: { preset?: string }) {
+/** preset : l'exercice à ouvrir (« iv », « bass »…), ou « confusions » (le premier qui en a) ; focus : sur les confusions. */
+export function Oreille({ preset, focus }: { preset?: string; focus?: boolean }) {
   const [stats, setStats] = useState<Stats>(() => {
     const s = load('oreille', DEFAULT);
+    if (isExercise(preset)) return { ...s, mode: preset, focus: focus && duelable(preset) ? 'confusions' : 'all' };
     if (preset !== 'confusions') return s;
-    const mode: Exercise = confusions('accord').length ? 'ear' : confusions('degre').length ? 'full' : confusions('prog').length ? 'prog' : 'ear';
+    const mode: Exercise = confusions('accord').length ? 'ear' : confusions('degre').length ? 'full' : confusions('prog').length ? 'prog' : confusions('intervalle').length ? 'iv' : 'ear';
     return { ...s, mode, focus: 'confusions' };
   });
   const [running, setRunning] = useState(false);
   useEffect(() => save('oreille', stats), [stats]);
+  /** Enregistre des réponses (élément, juste ?) dans les statistiques de l'exercice, au niveau donné. */
+  const recordMany = (rk: string, results: [string, boolean][]) =>
+    setStats((s) => {
+      const items = { ...s.items };
+      for (const [item, good] of results) {
+        const it = items[item] ?? { c: 0, t: 0 };
+        items[item] = { c: it.c + (good ? 1 : 0), t: it.t + 1 };
+      }
+      return { ...s, items, recent: { ...s.recent, [rk]: [...(s.recent[rk] ?? []), ...results.map(([, g]) => (g ? 1 : 0))].slice(-10) } };
+    });
+  /** « J'ai deviné » : les dernières bonnes réponses comptent comme des erreurs. */
+  const regrade = (rk: string, list: string[]) =>
+    setStats((s) => {
+      const items = { ...s.items };
+      for (const item of list) if (items[item]) items[item] = { ...items[item], c: Math.max(0, items[item].c - 1) };
+      const rec = [...(s.recent[rk] ?? [])];
+      for (let i = Math.max(0, rec.length - list.length); i < rec.length; i++) rec[i] = 0;
+      return { ...s, items, recent: { ...s.recent, [rk]: rec } };
+    });
+  const single = (rk: string) => (item: string, result: 'ok' | 'ko' | 'guess') => (result === 'guess' ? regrade(rk, [item]) : recordMany(rk, [[item, result === 'ok']]));
+  if (running && stats.mode === 'iv') {
+    const level = clampLv(stats.lv.iv);
+    return <IntervalPlay level={level} items={stats.items} duelMode={stats.focus === 'confusions' && confusions('intervalle').length > 0} onRecord={single('iv' + level)} onStop={() => setRunning(false)} />;
+  }
+  if (running && stats.mode === 'bass') {
+    const level = clampLv(stats.lv.bass);
+    return <BassPlay level={level} items={stats.items} onRecord={(r) => recordMany('bass' + level, r)} onGuess={(l) => regrade('bass' + level, l)} onStop={() => setRunning(false)} />;
+  }
   if (running && stats.mode === 'full') {
     const level = clampLv(stats.lv.full);
     return (
@@ -64,17 +112,7 @@ export function Oreille({ preset }: { preset?: string }) {
         level={level}
         items={stats.items}
         duelMode={stats.focus === 'confusions' && confusions('degre').length > 0}
-        onRecord={(item, result) =>
-          setStats((s) => {
-            const it = s.items[item] ?? { c: 0, t: 0 };
-            const rk = 'full' + level;
-            const rec = s.recent[rk] ?? [];
-            // « J'ai deviné » : la dernière bonne réponse compte comme une erreur.
-            if (result === 'guess') return { ...s, items: { ...s.items, [item]: { ...it, c: Math.max(0, it.c - 1) } }, recent: { ...s.recent, [rk]: [...rec.slice(0, -1), 0] } };
-            const good = result === 'ok';
-            return { ...s, items: { ...s.items, [item]: { c: it.c + (good ? 1 : 0), t: it.t + 1 } }, recent: { ...s.recent, [rk]: [...rec, good ? 1 : 0].slice(-10) } };
-          })
-        }
+        onRecord={single('full' + level)}
         onStop={() => setRunning(false)}
       />
     );
@@ -89,10 +127,21 @@ function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetSta
   const mode = stats.mode;
   const level = clampLv(stats.lv[mode]);
   const pairs = mode === 'build' ? [] : confusions(domainOf(mode));
-  const duel = stats.focus === 'confusions' && pairs.length > 0;
-  const what = mode === 'prog' ? 'progressions' : mode === 'full' ? 'degrés' : 'accords';
-  const pool = mode === 'prog' ? PROG_LEVELS[level] : mode === 'full' ? (level < FULL_TONAL.length ? FULL_TONAL[level].map((x) => x.id) : FULL_FREE[level - FULL_TONAL.length]) : QUALITY_LEVELS[level];
-  const levels = mode === 'full' ? FULL_LEVEL_LABELS : LEVEL_LABELS[mode];
+  const duel = duelable(mode) && stats.focus === 'confusions' && pairs.length > 0;
+  const what = mode === 'prog' ? 'progressions' : mode === 'full' || mode === 'bass' ? 'degrés' : mode === 'iv' ? 'intervalles' : 'accords';
+  const pool =
+    mode === 'prog'
+      ? PROG_LEVELS[level]
+      : mode === 'full'
+        ? level < FULL_TONAL.length
+          ? FULL_TONAL[level].map((x) => x.id)
+          : FULL_FREE[level - FULL_TONAL.length]
+        : mode === 'iv'
+          ? IV_LEVELS[level].ids
+          : mode === 'bass'
+            ? BASS_LEVELS[level].ids
+            : QUALITY_LEVELS[level];
+  const levels = mode === 'full' ? FULL_LEVEL_LABELS : mode === 'iv' ? IV_LEVELS.map((l) => l.desc) : mode === 'bass' ? BASS_LEVELS.map((l) => l.desc) : LEVEL_LABELS[mode];
   const rows = pool
     .map((k) => {
       const it = stats.items[mode + ':' + k] ?? { c: 0, t: 0 };
@@ -102,11 +151,11 @@ function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetSta
   return (
     <div class="screen">
       <TopBar title="Oreille" />
-      <p class="intro">Avec des écouteurs : l’appli joue, tu reconnais. Après chaque réponse, l’accord s’affiche au clavier.</p>
+      <p class="intro">{INTRO[mode]}</p>
       <Field label="Exercice">
         <Segmented cards cols={2} label="Exercice" value={mode} onChange={(m) => setStats((s) => ({ ...s, mode: m }))} options={EXERCISES} />
       </Field>
-      {mode !== 'build' && pairs.length ? (
+      {duelable(mode) && pairs.length ? (
         <Field label="Questions">
           <Segmented
             label="Questions"
@@ -138,11 +187,13 @@ function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetSta
                 </div>
               ))}
             </div>
-            <p class="muted small">Une paire disparaît quand tu as 2 bonnes réponses pour chaque erreur.</p>
+            <p class="muted small">{mode === 'bass' ? 'Ces degrés reviennent plus souvent dans les lignes. ' : ''}Une paire disparaît quand tu as 2 bonnes réponses pour chaque erreur.</p>
             <ConfirmButton label="Oublier ces confusions" confirm="Toucher encore pour confirmer" onConfirm={() => (clearConfusions(domainOf(mode)), setStats((s) => ({ ...s, focus: 'all' })))} />
           </section>
         ) : (
-          <p class="muted small">Quand tu confonds deux {what}, l’appli s’en souvient : ils reviennent plus souvent, et tu pourras t’entraîner sur eux seuls.</p>
+          <p class="muted small">
+            Quand tu confonds deux {what}, l’appli s’en souvient : ils reviennent plus souvent{duelable(mode) ? ', et tu pourras t’entraîner sur eux seuls' : ''}.
+          </p>
         )
       ) : null}
       {rows.some((r) => r.t) ? (

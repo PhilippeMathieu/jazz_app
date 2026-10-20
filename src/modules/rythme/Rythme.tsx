@@ -38,7 +38,7 @@ interface Saved {
   /** Reconnaître : tout, ou seulement les paires confondues. */
   focus?: 'all' | 'confusions';
 }
-const DEFAULT: Saved = { exercise: 'tempo', input: 'tap', level: 0, tempo: {}, variant: 0, keepTempo: 80, offsets: {}, patterns: {}, styles: {} };
+const DEFAULT: Saved = { exercise: 'tempo', input: 'tap', level: 0, tempo: {}, variant: 0, keepTempo: 80, offsets: {}, patterns: {}, styles: {}, focus: 'all' };
 const LEVEL_TEMPO = [80, 80, 90, 100, 70, 100];
 
 const EXERCISES: { value: Exercise; label: string; sub: string; how: string[] }[] = [

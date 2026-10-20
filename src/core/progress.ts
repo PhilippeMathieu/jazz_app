@@ -6,6 +6,7 @@ import { SECTIONS } from '../ui/sections';
 import { confusions } from './confusions';
 import { GROOVES, StyleId } from './rhythm/styles';
 import { rhythmById } from './rhythm/patterns';
+import { intervalById } from '../modules/oreille/intervals';
 
 export interface Advice {
   text: string;
@@ -41,10 +42,10 @@ export function advice(): Advice[] {
   for (const [k, v] of Object.entries(oreille.items)) {
     if (v.t < 4 || v.c / v.t >= 0.75) continue;
     const [mode, id] = k.split(':');
-    const name = mode === 'prog' ? PROGRESSIONS[id]?.name : QUALITIES[id]?.sym;
+    const name = mode === 'prog' ? PROGRESSIONS[id]?.name : mode === 'iv' ? intervalById(id)?.short : mode === 'bass' ? id : QUALITIES[id]?.sym;
     if (!name) continue;
-    const what = mode === 'prog' ? 'progression' : mode === 'build' ? 'construire' : 'accord';
-    weak.push({ text: `${SECTIONS.oreille.title} · ${what} ${name}`, detail: `${pct(v)} % de réussite`, href: '#/oreille', score: v.c / v.t });
+    const what = mode === 'prog' ? 'progression' : mode === 'build' ? 'construire' : mode === 'iv' ? 'intervalle' : mode === 'bass' ? 'basse, degré' : 'accord';
+    weak.push({ text: `${SECTIONS.oreille.title} · ${what} ${name}`, detail: `${pct(v)} % de réussite`, href: `#/oreille/${mode}`, score: v.c / v.t });
   }
   for (const [k, v] of Object.entries(flash.chords)) {
     if (v.t < 3) continue;
@@ -84,9 +85,11 @@ export function advice(): Advice[] {
   // Confusions : la paire la plus confondue de chaque exercice d'écoute.
   const qual = (k: string) => (k === 'maj' ? 'majeur' : k === 'min' ? 'mineur' : QUALITIES[k]?.sym ?? k);
   const conf: [string, string, (k: string) => string, string][] = [
-    ['accord', SECTIONS.oreille.title, qual, '#/oreille/confusions'],
-    ['prog', SECTIONS.oreille.title, (k) => PROGRESSIONS[k]?.name ?? k, '#/oreille/confusions'],
-    ['degre', SECTIONS.oreille.title, (k) => k, '#/oreille/confusions'],
+    ['accord', SECTIONS.oreille.title, qual, '#/oreille/ear/confusions'],
+    ['prog', SECTIONS.oreille.title, (k) => PROGRESSIONS[k]?.name ?? k, '#/oreille/prog/confusions'],
+    ['degre', SECTIONS.oreille.title, (k) => k, '#/oreille/full/confusions'],
+    ['intervalle', SECTIONS.oreille.title, (k) => intervalById(k)?.short ?? k, '#/oreille/iv/confusions'],
+    ['basse', `${SECTIONS.oreille.title} · basse`, (k) => k, '#/oreille/bass'],
     ['style', SECTIONS.rythme.title, (k) => GROOVES[k as StyleId]?.name ?? k, '#/rythme/style/confusions'],
     ['rythme', SECTIONS.rythme.title, (k) => rhythmById(k)?.name ?? k, '#/rythme/oreille/confusions']
   ];
