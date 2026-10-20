@@ -1,9 +1,9 @@
 // Voicings (« flash ») : un accord s'affiche, tu le joues, l'appli écoute (ou révèle) puis passe au suivant.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { chordSymbol, degreeLabel, rootPc, spellInChord } from '../../core/theory/chords';
-import { mod } from '../../core/theory/notes';
+import { Note, mod, noteName, pcOf, spellWith } from '../../core/theory/notes';
 import { audio, bass, now, playChord, silence } from '../../core/audio/engine';
-import { VOICING_LABEL, VoicingType, bassRoot, lhVoicing } from '../../core/audio/voicing';
+import { TWO_HANDS, UPPER_STRUCTURES, VOICING_LABEL, VoicingType, bassRoot, lhVoicing, twoHands } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
 import { report } from '../../core/game';
 import { checkChord, LIMITS } from '../../core/listen/detect';
@@ -20,8 +20,43 @@ import { notesMarks } from '../../ui/keyboardMarks';
 import { ChordStats, FlashSettings, Item, ORDER_LABEL, Order, nextBatch, statKey } from './batch';
 import { LEVEL_LABELS } from '../oreille/data';
 
-const VOICING_NAME: Record<VoicingType, string> = { triad: 'Débutant, 3 sons', shell: 'Shell', A: 'Type A', B: 'Type B' };
-const TYPES: VoicingType[] = ['triad', 'shell', 'A', 'B'];
+const VOICING_NAME: Record<VoicingType, string> = {
+  triad: 'Débutant, 3 sons',
+  shell: 'Shell',
+  A: 'Type A',
+  B: 'Type B',
+  spread: 'Deux mains',
+  quartal: 'Quartes',
+  drop2: 'Drop 2',
+  us: 'Upper structures'
+};
+const TYPES: VoicingType[] = ['triad', 'shell', 'A', 'B', 'spread', 'quartal', 'drop2', 'us'];
+/** Le voicing d'un accord ; lh : nombre de notes à la main gauche (tout, pour les voicings d'une main). */
+function shapeOf(it: Item, prev: number[] | null): { notes: number[]; lh: number } {
+  if (TWO_HANDS.includes(it.type)) return twoHands(it.chord, it.type, prev, it.us);
+  const notes = lhVoicing(it.chord, it.type, prev);
+  return { notes, lh: notes.length };
+}
+/** La triade d'une upper structure, orthographiée comme une triade (C E G, pas C F♭ G). */
+function usTriad(it: Item): Note[] {
+  const u = UPPER_STRUCTURES[it.us!];
+  const r = spellWith(it.chord.root.letter + u.letters, rootPc(it.chord) + u.semis);
+  return [r, spellWith(r.letter + 2, pcOf(r) + 4), spellWith(r.letter + 4, pcOf(r) + 7)];
+}
+const usNames = (it: Item, ms: number[]) => {
+  const t = usTriad(it);
+  return ms.map((m) => noteName(t.find((n) => pcOf(n) === mod(m, 12)) ?? t[0])).join(' ');
+};
+const typeLine = (it: Item) =>
+  it.us
+    ? `Upper structure ${UPPER_STRUCTURES[it.us].name}`
+    : it.type === 'triad'
+      ? '3 sons'
+      : it.type === 'shell'
+        ? 'Shell'
+        : it.type === 'A' || it.type === 'B'
+          ? `Sans fondamentale, type ${it.type}`
+          : VOICING_NAME[it.type];
 const DEFAULT: FlashSettings = { level: 1, type: 'shell', order: 'iiVI', delay: 4, sound: true };
 const DELAYS = [2, 4, 6, 10, 0];
 
@@ -42,7 +77,7 @@ export function Flash() {
   return (
     <div class="screen">
       <TopBar title="Voicings" actions={<MicPill />} />
-      <p class="intro">Un accord s’affiche : joue-le à la main gauche. Avec le micro, l’appli valide et passe au suivant.</p>
+      <p class="intro">Un accord s’affiche : joue-le, à la main gauche jusqu’au niveau 4, à deux mains ensuite. Avec le micro, l’appli valide et passe au suivant.</p>
       <LevelPicker
         exo="flash"
         levels={TYPES.map((t) => ({ name: VOICING_NAME[t], desc: VOICING_LABEL[t] }))}
@@ -60,7 +95,7 @@ export function Flash() {
             options={(Object.keys(ORDER_LABEL) as Order[]).map((o) => ({ value: o, label: ORDER_LABEL[o] }))}
           />
         </Field>
-        {(s.order === 'random' || s.order === 'cycle') && s.type !== 'triad' ? (
+        {(s.order === 'random' || s.order === 'cycle') && s.type !== 'triad' && s.type !== 'us' ? (
           <Field label="Types d’accords">
             <Segmented
               label="Types d’accords"
@@ -84,7 +119,15 @@ export function Flash() {
           ? 'Joue-les dans le renversement que tu veux ; l’appli montre le plus proche du précédent.'
           : s.type === 'shell'
             ? 'Fondamentale à la basse, puis 3ce et 7e. Sous la, la 3ce passe au-dessus de la 7e (1-7-10).'
-            : 'Sans fondamentale : la basse joue la fondamentale. A et B alternent pour que les voix bougent peu.'}{' '}
+            : s.type === 'A' || s.type === 'B'
+              ? 'Sans fondamentale : la basse joue la fondamentale. A et B alternent pour que les voix bougent peu.'
+              : s.type === 'spread'
+                ? 'Main gauche : fondamentale et 7e. Main droite : 3ce, puis 5te (13 sur les dominantes) et 9e.'
+                : s.type === 'quartal'
+                  ? 'So What sur les m7 : trois quartes et une tierce majeure (D G C | F A sur Dm7). Ailleurs, des quartes sur les notes de couleur.'
+                  : s.type === 'drop2'
+                    ? 'Prends l’accord serré à la main droite, descends la 2e note en partant du haut d’une octave : elle va à la main gauche.'
+                    : 'Main gauche : 3ce et 7e. Main droite : une triade majeure, II (9 ♯11 13), VI (13 ♭9 3), ♭VI (♭13 1 ♯9), ♭III (♯9 5 ♭7) ou ♭V (♯11 ♭7 ♭9).'}{' '}
         Les accords ratés ou lents reviennent plus souvent.
       </p>
     </div>
@@ -97,6 +140,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
   const [revealed, setRevealed] = useState(false);
   const [paused, setPaused] = useState(false);
   const [voicing, setVoicing] = useState<number[]>([]);
+  const [lhCount, setLhCount] = useState(0);
   const [heard, setHeard] = useState<Heard | null>(null);
   const [live, setLive] = useState<number[]>([]);
   const [score, setScore] = useState({ ok: 0, total: 0 });
@@ -138,10 +182,12 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
       setItems(L);
     }
     const it = L[k];
-    const v = lhVoicing(it.chord, it.type, prev.current);
+    const sh = shapeOf(it, prev.current);
+    const v = sh.notes;
     setIdx(k);
     setRevealed(false);
     setVoicing(v);
+    setLhCount(sh.lh);
     setHeard(null);
     setLive([]);
     cur.current = { L, k, v };
@@ -179,7 +225,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
       audio();
       silence();
       const t = now() + 0.03;
-      if (it.type !== 'shell') bass(bassRoot(it.chord, 36), t, 1.8, 0.8);
+      if (it.type !== 'shell' && it.type !== 'spread') bass(bassRoot(it.chord, 36), t, 1.8, 0.8);
       playChord(v, t, 1.8, 0.6);
     }
     if (s.delay > 0 || success) timer.current = window.setTimeout(() => show(L, k + 1), success ? 2200 : Math.max(2500, s.delay * 600));
@@ -195,7 +241,9 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
       return;
     }
     const target = [...new Set(c.v.map((m) => mod(m, 12)))];
-    const ck = checkChord(r.chroma, target);
+    // À deux mains, la quinte n'est pas exigée : le micro la confond avec l'harmonique 3 de la basse.
+    const it = c.L[c.k];
+    const ck = checkChord(r.chroma, target, TWO_HANDS.includes(it.type) ? [mod(rootPc(it.chord) + 7, 12)] : []);
     const now12 = [...Array(12).keys()].filter((p) => r.chroma[p] >= LIMITS.present);
     setLive((l) => (l.join() === now12.join() ? l : now12));
     const lowest = r.lowest !== null ? mod(r.lowest, 12) : null;
@@ -227,8 +275,15 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
   };
 
   const c = item.chord;
-  const sym = chordSymbol(c);
+  const sym = item.label ?? chordSymbol(c);
   const km = notesMarks(c, voicing);
+  const two = lhCount < voicing.length;
+  const names = (ms: number[]) => ms.map((m) => spellInChord(c, m)).join(' ');
+  const degs = (ms: number[]) => ms.map((m) => degreeLabel(c, m)).join(' ');
+  // Clavier : de l'ut sous la note la plus grave à l'ut au-dessus de la plus aiguë.
+  const kbLo = voicing.length ? 12 * Math.floor(Math.min(...voicing) / 12) : 48;
+  const kbHi = voicing.length ? Math.max(kbLo + 24, 12 * Math.ceil((Math.max(...voicing) + 1) / 12)) : 72;
+  const nextSym = upcoming ? upcoming.label ?? chordSymbol(upcoming.chord) : '';
   return (
     <div class="stand flash">
       <div class="stand-top">
@@ -249,7 +304,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
       </div>
       <div class="stand-main">
         <div class="stand-now">
-          <span class="stand-bar">{item.type === 'triad' ? '3 sons' : item.type === 'shell' ? 'Shell' : `Sans fondamentale, type ${item.type}`}</span>
+          <span class="stand-bar">{typeLine(item)}</span>
           <span class="stand-sym" style={`font-size:min(${fitSymbol(sym, 34, 150)}cqw, 26vh)`}>
             {sym}
           </span>
@@ -266,21 +321,41 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
           ) : null}
           {revealed ? (
             <span class="stand-info">
-              {voicing.map((m) => spellInChord(c, m)).join(' ')} <span class="muted">= {voicing.map((m) => degreeLabel(c, m)).join(' ')}</span>
-              {item.type === 'A' || item.type === 'B' ? <span class="stand-bass">basse (main gauche ou contrebasse) : {spellInChord(c, rootPc(c))}</span> : null}
+              {two ? (
+                <>
+                  <span class="hand">
+                    <small>MG</small> {names(voicing.slice(0, lhCount))} <span class="muted">= {degs(voicing.slice(0, lhCount))}</span>
+                  </span>
+                  <span class="hand">
+                    <small>MD</small> {item.us ? usNames(item, voicing.slice(lhCount)) : names(voicing.slice(lhCount))} <span class="muted">= {degs(voicing.slice(lhCount))}</span>
+                  </span>
+                  {item.us ? (
+                    <span class="stand-bass">
+                      triade de {noteName(usTriad(item)[0])} : {UPPER_STRUCTURES[item.us].tensions}
+                    </span>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  {names(voicing)} <span class="muted">= {degs(voicing)}</span>
+                </>
+              )}
+              {item.type === 'A' || item.type === 'B' || item.type === 'quartal' || item.type === 'drop2' || item.type === 'us' ? (
+                <span class="stand-bass">basse (contrebasse{two ? '' : ' ou main gauche'}) : {spellInChord(c, rootPc(c))}</span>
+              ) : null}
             </span>
           ) : (
             <span class="stand-info muted">{paused ? 'En pause' : 'Joue-le…'}</span>
           )}
         </div>
         <div class="stand-kb">
-          <Keyboard lo={item.type === 'shell' ? 40 : 48} hi={item.type === 'shell' ? 64 : 72} marks={revealed ? km.marks : {}} labels={revealed ? km.labels : {}} fit big />
+          <Keyboard lo={kbLo} hi={kbHi} marks={revealed ? km.marks : {}} labels={revealed ? km.labels : {}} fit big={kbHi - kbLo <= 24} />
         </div>
         {upcoming ? (
           <div class="stand-next">
             <span class="stand-bar">Ensuite</span>
-            <span class="stand-sym2" style={`font-size:min(${fitSymbol(chordSymbol(upcoming.chord), 16, 70)}cqw, 10vh)`}>
-              {chordSymbol(upcoming.chord)}
+            <span class="stand-sym2" style={`font-size:min(${fitSymbol(nextSym, 16, 70)}cqw, 10vh)`}>
+              {nextSym}
             </span>
           </div>
         ) : null}

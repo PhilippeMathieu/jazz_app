@@ -391,7 +391,7 @@ input[type='range'] { width: 100%; accent-color: var(--accent); min-height: var(
 .toast.star b, .toast.grade b { font-family: var(--display); font-size: 22px; letter-spacing: 0.04em; }
 @keyframes toastin { from { opacity: 0; transform: translateY(-12px) scale(0.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
-.seg.levels button { display: flex; flex-direction: column; align-items: center; gap: 0; padding-top: 4px; padding-bottom: 4px; }
+.seg.levels button { display: flex; flex-direction: column; align-items: center; gap: 0; padding: 4px 0; min-width: 0; }
 .lv-stars { font-size: 10px; letter-spacing: 1px; color: var(--accent); line-height: 1.2; min-height: 12px; }
 .seg button[aria-checked='true'] .lv-stars { color: var(--bg); }
 .seg.levels button.locked { color: var(--faint); }

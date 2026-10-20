@@ -3,7 +3,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { SR, chord, loadSamples, note, seeded } from './testing/piano';
 import { analyzeChordBuffer, checkChord, yin } from './detect';
-import { lhVoicing } from '../audio/voicing';
+import { US_IDS, lhVoicing, twoHands } from '../audio/voicing';
 import { chordOnPc } from '../theory/chords';
 import { mod } from '../theory/notes';
 
@@ -35,6 +35,31 @@ describe('détection', () => {
     expect(wrongOk / total).toBeLessThan(0.03);
     expect(missOk / total).toBeLessThan(0.1);
   }, 120000);
+
+  it('reconnaît les voicings à deux mains (5 notes, 2 octaves et plus)', () => {
+    const rng = seeded(11);
+    let good = 0;
+    let wrongOk = 0;
+    let total = 0;
+    for (const type of ['spread', 'quartal', 'drop2', 'us'] as const)
+      for (let pc = 0; pc < 12; pc++)
+        for (const q of type === 'us' ? ['7'] : QUALS) {
+          const all = type === 'us' ? US_IDS.map((u) => twoHands(chordOnPc(pc, q), type, null, u).notes) : [twoHands(chordOnPc(pc, q), type).notes];
+          for (const v of all) {
+            const target = [...new Set(v.map((m) => mod(m, 12)))];
+            const fifth = [mod(pc + 7, 12)];
+            const ana = (notes: number[]) => analyzeChordBuffer(chord(notes, N, rng), SR).chroma;
+            total++;
+            if (checkChord(ana(v), target, fifth).ok) good++;
+            const wrong = [...v];
+            wrong[Math.floor(rng() * wrong.length)] += rng() < 0.5 ? 1 : -1;
+            if (checkChord(ana(wrong), target, fifth).ok) wrongOk++;
+          }
+        }
+    console.log(`deux mains : ${good}/${total} reconnus, ${wrongOk} faux acceptés`);
+    expect(good / total).toBeGreaterThan(0.85);
+    expect(wrongOk / total).toBeLessThan(0.05);
+  }, 180000);
 
   it('signale la note manquante', () => {
     const v = lhVoicing(chordOnPc(0, 'maj7'), 'A'); // E G B D

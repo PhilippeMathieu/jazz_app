@@ -223,16 +223,20 @@ export interface ChordCheck {
 
 export const LIMITS = { present: 0.18, extra: 0.4 };
 
-/** Compare un chroma aux classes de hauteur attendues. */
-export function checkChord(chroma: Float32Array, target: number[]): ChordCheck {
+/**
+ * Compare un chroma aux classes de hauteur attendues.
+ * optional : notes jouées mais pas exigées (la quinte d'un voicing à deux mains se confond avec l'harmonique 3 de la basse).
+ */
+export function checkChord(chroma: Float32Array, target: number[], optional: number[] = []): ChordCheck {
+  const O = new Set(optional.map((p) => ((p % 12) + 12) % 12));
   const T = new Set(target.map((p) => ((p % 12) + 12) % 12));
-  const missing = [...T].filter((p) => chroma[p] < LIMITS.present);
+  const missing = [...T].filter((p) => !O.has(p) && chroma[p] < LIMITS.present);
   const extra: number[] = [];
   let inT = 0;
   let all = 0;
   for (let p = 0; p < 12; p++) {
     all += chroma[p];
-    if (T.has(p)) inT += chroma[p];
+    if (T.has(p) || O.has(p)) inT += chroma[p];
     else if (chroma[p] >= LIMITS.extra) extra.push(p);
   }
   return { ok: missing.length === 0 && extra.length === 0, missing, extra, score: all > 0 ? inT / all : 0 };

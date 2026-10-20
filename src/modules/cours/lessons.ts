@@ -679,6 +679,59 @@ export const PARTS: Part[] = [
         ]
       },
       {
+        id: 'deux-mains',
+        title: 'Voicings à deux mains',
+        sub: 'Écartés, So What, drop 2, upper structures',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'À deux mains, on écarte : la main gauche tient le grave (fondamentale et 7e, ou 3ce et 7e), la main droite pose les couleurs (9, 13…). Le son s’ouvre, comme une section de cuivres.'
+          },
+          { t: 'h', text: 'Écartés : MG 1-7, MD 3-5-9' },
+          { t: 'p', text: 'Sur les dominantes, la 13 remplace la 5te : MG 1-♭7, MD 3-13-9 (G F | B E A sur G7).' },
+          { t: 'chords', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'spread', gap: 1.5 },
+          { t: 'h', text: 'En quartes : So What' },
+          {
+            t: 'p',
+            text: 'L’accord de « So What » (Miles Davis, 1959) : trois quartes et une tierce majeure. Sur Dm7 : **D G C | F A**. Le morceau passe ensuite la même forme un demi-ton plus haut, sur E♭m7.'
+          },
+          { t: 'chords', label: 'So What : Dm7 puis E♭m7', chords: ['Dm7', 'E♭m7', 'Dm7'], voicing: 'quartal', gap: 1.5 },
+          { t: 'h', text: 'Drop 2' },
+          {
+            t: 'p',
+            text: 'Prends un accord serré de 4 sons (C E G B), descends d’une octave la 2e note en partant du haut (G) : **G | C E B**. Plus ample, et chaque voix reste proche de la suivante. C’est la base des block chords.'
+          },
+          { t: 'chords', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'drop2', gap: 1.5 },
+          { t: 'h', text: 'Upper structures' },
+          {
+            t: 'p',
+            text: 'Sur une dominante : 3ce et 7e à la main gauche (le triton), une **triade majeure** à la main droite. La triade choisit les tensions.'
+          },
+          {
+            t: 'table',
+            head: ['Triade (sur C7)', 'Notes', 'Tensions'],
+            rows: [
+              ['II : D', 'D F♯ A', '9 ♯11 13'],
+              ['VI : A', 'A C♯ E', '13 ♭9 3'],
+              ['♭VI : A♭', 'A♭ C E♭', '♭13 1 ♯9'],
+              ['♭III : E♭', 'E♭ G B♭', '♯9 5 ♭7'],
+              ['♭V : G♭', 'G♭ B♭ D♭', '♯11 ♭7 ♭9']
+            ]
+          },
+          { t: 'chords', label: 'ii–V–I, upper structure II sur G7', chords: ['Dm7', 'G7♯11', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: ['spread', 'us', 'spread'], gap: 1.5 },
+          { t: 'tip', text: 'Vers un accord majeur : II ou VI sur la dominante. Vers un mineur : ♭VI, ♭III ou ♭V, les tensions altérées.' },
+          {
+            t: 'quiz',
+            q: 'Upper structure II sur F7 : quelle triade à la main droite ?',
+            choices: ['F', 'G', 'A', 'B♭'],
+            answer: 1,
+            explain: 'Le II de F, c’est G : G B D = 9, ♯11, 13 de F7.'
+          },
+          { t: 'go', links: [{ href: '#/flash', label: 'Voicings, niveaux 5 à 8 : deux mains, quartes, drop 2, upper structures' }] }
+        ]
+      },
+      {
         id: 'tensions',
         title: 'Les tensions : 9, 11, 13',
         sub: 'Ce qu’on ajoute, ce qu’on évite',

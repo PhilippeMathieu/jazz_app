@@ -167,7 +167,11 @@ const SHAPE_LABEL: Record<Shape, string> = {
   triad: '3 sons',
   shell: 'Shell',
   A: 'Sans fond. A',
-  B: 'Sans fond. B'
+  B: 'Sans fond. B',
+  spread: '2 mains',
+  quartal: 'Quartes',
+  drop2: 'Drop 2',
+  us: 'Upper str. II'
 };
 const qLabel = (q: string) => (q === 'maj' ? 'majeur' : q === 'min' ? 'm' : QUALITIES[q].sym);
 
@@ -175,12 +179,13 @@ function shapesFor(q: string): Shape[] {
   const n = QUALITIES[q].iv.filter((i) => i < 12).length;
   const base: Shape[] = ['fond', 'inv1', 'inv2'];
   if (n >= 4) base.push('inv3');
-  if (n >= 4 && QUALITIES[q].iv.some((i) => i === 10 || i === 11 || i === 9)) base.push('shell', 'A', 'B');
+  if (n >= 4 && QUALITIES[q].iv.some((i) => i === 10 || i === 11 || i === 9)) base.push('shell', 'A', 'B', 'spread', 'quartal', 'drop2');
+  if (QUALITIES[q].family === 'dom' && !QUALITIES[q].sus) base.push('us');
   return base;
 }
 
 function notesOf(c: Chord, shape: Shape): number[] {
-  if (shape === 'shell' || shape === 'A' || shape === 'B') return lhVoicing(c, shape);
+  if (shape === 'shell' || shape === 'A' || shape === 'B' || shape === 'spread' || shape === 'quartal' || shape === 'drop2' || shape === 'us') return lhVoicing(c, shape);
   const r = rootPc(c);
   const iv = QUALITIES[c.quality].iv;
   const base = 48 + r; // fondamentale entre C3 et B3

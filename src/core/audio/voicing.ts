@@ -80,13 +80,19 @@ export function displayVoicing(c: Chord, scale?: string): number[] {
 
 // ---------------------------------------------------------------- Main gauche (exercice Voicings)
 
-export type VoicingType = 'triad' | 'shell' | 'A' | 'B';
+export type VoicingType = 'triad' | 'shell' | 'A' | 'B' | 'spread' | 'quartal' | 'drop2' | 'us';
 export const VOICING_LABEL: Record<VoicingType, string> = {
   triad: 'Fondamentale, 3ce, 5te, renversement libre',
   shell: 'Fondamentale, 3ce, 7e',
   A: 'Sans fondamentale, 3ce en bas',
-  B: 'Sans fondamentale, 7e en bas'
+  B: 'Sans fondamentale, 7e en bas',
+  spread: 'Deux mains : MG 1 et 7, MD 3, 5 ou 13, 9',
+  quartal: 'Deux mains, en quartes (So What sur les m7)',
+  drop2: 'Deux mains : accord serré, la 2e voix depuis le haut descendue d’une octave à la MG',
+  us: 'Deux mains, dominantes : MG 3 et 7, MD une triade majeure (upper structure)'
 };
+/** Voicings à deux mains (le reste se joue à la main gauche). */
+export const TWO_HANDS: VoicingType[] = ['spread', 'quartal', 'drop2', 'us'];
 
 /** Voicing « A » sans fondamentale, en intervalles depuis la fondamentale (3ce en bas). */
 const ROOTLESS_A: Record<string, number[]> = {
@@ -106,6 +112,7 @@ const moveCost = (v: number[], prev: number[]) => v.reduce((s, x, i) => s + Math
 
 /** Notes MIDI du voicing de main gauche. prev : voicing précédent, pour bouger le moins possible. */
 export function lhVoicing(c: Chord, type: VoicingType, prev: number[] | null = null): number[] {
+  if (TWO_HANDS.includes(type)) return twoHands(c, type, prev).notes;
   const r = rootPc(c);
   const iv = QUALITIES[c.quality].iv;
   if (type === 'triad') {
@@ -150,4 +157,133 @@ export function lhVoicing(c: Chord, type: VoicingType, prev: number[] | null = n
     if (moveCost(v, prev) < moveCost(best, prev)) best = v;
   }
   return best;
+}
+
+// ---------------------------------------------------------------- Deux mains
+
+/** Notes du voicing (graves → aiguës) ; les `lh` premières à la main gauche. */
+export interface TwoHands {
+  notes: number[];
+  lh: number;
+}
+
+export type UsId = 'II' | 'VI' | 'bVI' | 'bIII' | 'bV';
+/**
+ * Upper structures : une triade majeure à la main droite sur 3 et 7 de la dominante (main gauche).
+ * semis/letters : fondamentale de la triade au-dessus de celle de l'accord ; quality : accord écrit.
+ */
+export const UPPER_STRUCTURES: Record<UsId, { semis: number; letters: number; name: string; quality: string; suffix: string; tensions: string }> = {
+  II: { semis: 2, letters: 1, name: 'II', quality: '7#11', suffix: '13(♯11)', tensions: '9, ♯11, 13' },
+  VI: { semis: 9, letters: 5, name: 'VI', quality: '7b9', suffix: '13(♭9)', tensions: '13, ♭9, 3' },
+  bVI: { semis: 8, letters: 5, name: '♭VI', quality: '7alt', suffix: '7(♯9 ♭13)', tensions: '♭13, 1, ♯9' },
+  bIII: { semis: 3, letters: 2, name: '♭III', quality: '7#9', suffix: '7(♯9)', tensions: '♯9, 5, ♭7' },
+  bV: { semis: 6, letters: 4, name: '♭V', quality: '7b9', suffix: '7(♭9 ♯11)', tensions: '♯11, ♭7, ♭9' }
+};
+export const US_IDS = Object.keys(UPPER_STRUCTURES) as UsId[];
+
+/** Deux mains « écartées » : [main gauche, main droite], en intervalles depuis la fondamentale. */
+function spreadShape(q: string): [number[], number[]] {
+  const iv = QUALITIES[q].iv;
+  const fam = QUALITIES[q].family;
+  if (QUALITIES[q].sus) return [[0, 10], [17, 21, 26]];
+  if (fam === 'maj') {
+    const top = iv.includes(11) ? 11 : 9;
+    return q === 'maj7#11' ? [[0, 11], [16, 18, 21]] : [[0, top], [16, 19, 26]];
+  }
+  if (fam === 'min') return [[0, iv.includes(11) ? 11 : iv.includes(10) ? 10 : 9], [15, 19, 26]];
+  if (fam === 'hdim') return [[0, 10], [15, 18, 24]];
+  if (fam === 'dim') return [[0, 9], [15, 18, 26]];
+  if (fam === 'dom') {
+    const rh: Record<string, number[]> = {
+      '7b9': [16, 21, 25], '7b9b13': [16, 20, 25], '7alt': [16, 20, 27], '7#9': [16, 19, 27],
+      '7#11': [16, 18, 21, 26], '7b13': [16, 20, 26], '7#5': [16, 20, 26], '7b5': [16, 18, 26]
+    };
+    return [[0, 10], rh[q] ?? [16, 21, 26]];
+  }
+  return [[0], iv.filter((x) => x > 0).map((x) => x + 12)];
+}
+
+/** Voicing en quartes (intervalles depuis la fondamentale) et nombre de notes à la main gauche. */
+function quartalShape(q: string): [number[], number] | null {
+  const fam = QUALITIES[q].family;
+  if (QUALITIES[q].sus) return [[7, 12, 17, 22, 26], 3]; // So What depuis la quinte : 5 1 4 ♭7 9
+  if (['m7', 'm9', 'm11', 'min'].includes(q)) return [[0, 5, 10, 15, 19], 3]; // So What : 1 4 ♭7 ♭3 5
+  if (q === 'm6') return [[3, 9, 14, 19], 2];
+  if (q === '6' || q === '69') return [[4, 9, 14, 19], 2]; // 3 6 9 5
+  if (fam === 'maj') return [[11, 16, 21, 26], 2]; // 7 3 6 9
+  if (fam === 'hdim') return [[0, 5, 10, 15, 18], 3];
+  if (fam === 'dom') {
+    const m: Record<string, number[]> = { '7b9': [10, 16, 21, 25], '7b9b13': [10, 16, 20, 25], '7alt': [4, 10, 15, 20], '7#9': [4, 10, 15, 20], '7#11': [6, 10, 16, 21] };
+    return [m[q] ?? [10, 16, 21, 26], 2]; // ♭7 3 13 9
+  }
+  return null;
+}
+
+const center = (v: number[]) => avg(v);
+const closest = (cands: number[][], prev: number[] | null, target: number) =>
+  cands.reduce((best, v) => {
+    const cost = (x: number[]) => (prev ? (prev.length === x.length ? moveCost(x, prev) : Math.abs(center(x) - center(prev)) * x.length) : Math.abs(center(x) - target));
+    return !best || cost(v) < cost(best) ? v : best;
+  }, null as number[] | null)!;
+
+/** Voicing à deux mains. us : la triade du haut pour les upper structures (II par défaut). */
+export function twoHands(c: Chord, type: VoicingType, prev: number[] | null = null, us: UsId = 'II'): TwoHands {
+  const r = rootPc(c);
+  if (type === 'quartal') {
+    const qs = quartalShape(c.quality);
+    if (qs) {
+      const [shape, lh] = qs;
+      const cands: number[][] = [];
+      for (let low = 45; low <= 57; low++) if (mod(low, 12) === mod(r + shape[0], 12)) cands.push(shape.map((x) => low + x - shape[0]));
+      return { notes: closest(cands, prev, 62), lh };
+    }
+    type = 'spread';
+  }
+  if (type === 'drop2') {
+    const iv = QUALITIES[c.quality].iv.filter((x) => x < 12);
+    if (iv.length >= 4) {
+      const tones = (iv.length > 4 ? [iv[0], iv[1], iv[2], iv[3]] : iv).map((x) => mod(r + x, 12));
+      const cands: number[][] = [];
+      for (let k = 0; k < 4; k++) {
+        const rot = tones.slice(k).concat(tones.slice(0, k));
+        for (let s = 55; s <= 70; s++) {
+          if (mod(s, 12) !== rot[0]) continue;
+          const v = closeVoicing(rot, s);
+          if (v[3] < 67 || v[3] > 79) continue;
+          cands.push([v[2] - 12, v[0], v[1], v[3]]);
+        }
+      }
+      if (cands.length) return { notes: closest(cands, prev, 64), lh: 1 };
+    }
+    type = 'spread';
+  }
+  if (type === 'us' && QUALITIES[c.quality].family === 'dom' && !QUALITIES[c.quality].sus) {
+    const u = UPPER_STRUCTURES[us];
+    const triad = [0, 4, 7].map((x) => mod(r + u.semis + x, 12));
+    const cands: number[][] = [];
+    for (const lhShape of [[4, 10], [10, 16]]) {
+      for (let low = 50; low <= 61; low++) {
+        if (mod(low, 12) !== mod(r + lhShape[0], 12)) continue;
+        const lh = lhShape.map((x) => low + x - lhShape[0]);
+        for (let k = 0; k < 3; k++) {
+          const rot = triad.slice(k).concat(triad.slice(0, k));
+          let s = lh[1] + 1;
+          while (mod(s, 12) !== rot[0]) s++;
+          const rh = closeVoicing(rot, s);
+          if (rh[2] <= 81) cands.push([...lh, ...rh]);
+        }
+      }
+    }
+    return { notes: closest(cands, prev, 64), lh: 2 };
+  }
+  // Écartés (et repli des autres) : fondamentale entre C2 et E3.
+  const [lhIv, rhIv] = spreadShape(c.quality);
+  const cands: number[][] = [];
+  for (let root = 36; root <= 52; root++) if (mod(root, 12) === r) cands.push([...lhIv, ...rhIv].map((x) => root + x));
+  const v = closest(
+    cands.filter((x) => x[x.length - 1] <= 81),
+    prev,
+    60
+  );
+  return { notes: v, lh: lhIv.length };
 }

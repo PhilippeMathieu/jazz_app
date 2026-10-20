@@ -595,3 +595,5 @@
 .degpad .deg small { font-size: 11px; color: var(--muted); }
 .degpad .deg:disabled { opacity: 0.3; }
 .degpad .deg:active:not(:disabled) { background: var(--fg); color: var(--bg); }
+.stand-info .hand { display: block; }
+.stand-info .hand small { display: inline-block; min-width: 2.2em; font-family: var(--body); font-size: var(--t-cap); font-weight: 600; color: var(--muted); }
