@@ -7,6 +7,7 @@ import { chartById } from './library/charts';
 import { LESSONS, lessonById } from './modules/cours/lessons';
 import { coursProgress, nextLesson } from './modules/cours/Cours';
 import { SECTIONS, SectionId, TRAINING } from './ui/sections';
+import { Challenges, GameStrip, useGame } from './ui/GameStrip';
 
 /** Nom de l'écran où reprendre (les mêmes noms que sur l'accueil). */
 function resumeLabel(path: string): string | null {
@@ -51,6 +52,7 @@ export function Home() {
   const cours = coursProgress();
   const nextL = nextLesson(cours);
   const first = LESSONS[0];
+  const g = useGame();
   return (
     <div class="screen home">
       <h1 class="wordmark">
@@ -58,6 +60,8 @@ export function Home() {
       </h1>
 
       <InstallRow />
+
+      <GameStrip g={g} />
 
       {label ? (
         <a class="resume" href={'#' + last}>
@@ -77,6 +81,8 @@ export function Home() {
           <ChevronIcon />
         </a>
       )}
+
+      <Challenges list={g.challenges.list} />
 
       {weak.length ? (
         <section>

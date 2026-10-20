@@ -9,6 +9,7 @@ import { noteName } from '../../core/theory/notes';
 import { audio, now, playChord } from '../../core/audio/engine';
 import { displayVoicing } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
+import { report } from '../../core/game';
 import { Segmented } from '../../ui/Segmented';
 import { Field } from '../../ui/Setup';
 import { PlayIcon } from '../../ui/icons';
@@ -55,6 +56,7 @@ export function useAnalyser(chartId: string, plan: ImprovPlan, beatsPerBar: numb
     const r = correct(saved.marks, spots, plan.flat, plan.analysis);
     const q = load('quiz', { c: 0, t: 0 });
     save('quiz', { c: q.c + r.found, t: q.t + r.total });
+    report({ type: 'analyse', chart: chartId, found: r.found, total: r.total, bad: r.results.filter((x) => x.verdict === 'bad').length });
     setSaved((s) => ({ ...s, checked: true }));
     setStart(null);
   };

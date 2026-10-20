@@ -19,6 +19,7 @@ import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, 
 import { FULL_FREE, FULL_LEVEL_LABELS, FULL_TONAL } from './full';
 import { FullPlay } from './FullChord';
 import { Domain, Pair, clearConfusions, confusions, recordAnswer } from '../../core/confusions';
+import { report } from '../../core/game';
 import { chordOnPc } from '../../core/theory/chords';
 
 interface Stats {
@@ -118,7 +119,7 @@ function EarSetup({ stats, setStats, onStart }: { stats: Stats; setStats: SetSta
           />
         </Field>
       ) : null}
-      {duel ? null : <LevelPicker levels={levels.map((desc) => ({ desc }))} value={level} onChange={(l) => setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }))} />}
+      {duel ? null : <LevelPicker exo={'oreille-' + mode} levels={levels.map((desc) => ({ desc }))} value={level} onChange={(l) => setStats((s) => ({ ...s, lv: { ...s.lv, [mode]: l } }))} />}
       <StartButton onClick={onStart} />
       {mode !== 'build' ? (
         pairs.length ? (
@@ -177,6 +178,7 @@ function EarPlay({ stats, setStats, mode, onStop }: { stats: Stats; setStats: Se
   const [shown, setShown] = useState(0);
   const [session, setSession] = useState({ c: 0, t: 0, streak: 0 });
   const timers = useRef<number[]>([]);
+  const qStart = useRef(performance.now());
   useEffect(() => {
     if (q.mode !== 'build') play(q);
     return () => stop();
@@ -207,6 +209,7 @@ function EarPlay({ stats, setStats, mode, onStop }: { stats: Stats; setStats: Se
   const fresh = (m: EarMode, l: number, autoplay: boolean) => {
     stop();
     const nq = nextQuestion(stats, m, l, last.current);
+    qStart.current = performance.now();
     last.current = nq.mode === 'prog' ? nq.id : nq.q;
     setQ(nq);
     setAnswer(null);
@@ -474,8 +477,12 @@ function EarPlay({ stats, setStats, mode, onStop }: { stats: Stats; setStats: Se
         {answered ? (
           <AnswerActions
             ok={!!ok}
-            onNext={() => fresh(mode, level, q.mode !== 'build')}
+            onNext={() => {
+              report({ type: 'answer', exo: 'oreille-' + mode, level, ok: !!ok, ms: performance.now() - qStart.current, duel });
+              fresh(mode, level, q.mode !== 'build');
+            }}
             onGuess={() => {
+              report({ type: 'answer', exo: 'oreille-' + mode, level, ok: false, ms: performance.now() - qStart.current, duel });
               regradeLast();
               fresh(mode, level, q.mode !== 'build');
             }}

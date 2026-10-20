@@ -522,3 +522,56 @@
 .pair b { font-family: var(--mono); font-size: 15px; }
 .compare { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
 .compare .label { margin: 0; }
+
+/* Jeu : bandeau d'accueil, défis */
+.game-strip { display: flex; align-items: center; gap: var(--s3); padding: var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.game-strip > svg:last-child { color: var(--faint); flex: none; }
+.gs-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.gs-grade { font-size: var(--t-sec); color: var(--muted); }
+.gs-grade b { color: var(--fg); font-size: var(--t-body); }
+.gs-bar, .ch-bar { display: block; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.gs-bar i, .ch-bar i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.gs-sub { font-size: var(--t-cap); color: var(--muted); }
+.ring { flex: none; }
+.ring circle { fill: none; stroke-width: 5; }
+.ring-bg { stroke: var(--line); }
+.ring-fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray 400ms; }
+.ring-fg.full { stroke: var(--ok); }
+.ring text { font-family: var(--mono); font-size: 14px; font-weight: 600; fill: var(--fg); }
+.challenge { gap: var(--s3); }
+.challenge .row-main { gap: 6px; }
+.ch-check { width: 22px; height: 22px; flex: none; border-radius: 50%; border: 2px solid var(--line-strong); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--on-accent); }
+.challenge.done .ch-check { background: var(--ok); border-color: var(--ok); }
+.challenge.done .row-title { color: var(--muted); text-decoration: line-through; }
+.challenge.done .ch-bar i { background: var(--ok); }
+.ch-count { font-family: var(--mono); font-size: var(--t-cap); color: var(--muted); flex: none; }
+
+/* Progression */
+.pg-grade { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.pg-grade .label { margin: 0; }
+.pg-grade-name { font-family: var(--display); font-size: 34px; font-weight: 800; line-height: 1; color: var(--accent); }
+.pg-grades { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: var(--t-cap); color: var(--faint); }
+.pg-grades span { display: inline-flex; gap: 4px; align-items: baseline; }
+.pg-grades span.on { color: var(--fg); }
+.pg-grades small { font-family: var(--mono); font-size: 10px; color: var(--faint); }
+.pg-goal { display: flex; gap: var(--s3); align-items: center; margin-bottom: var(--s2); }
+.pg-days { display: grid; grid-template-columns: repeat(21, 1fr); gap: 3px; margin: var(--s2) 0 var(--s3); }
+.pg-days i { aspect-ratio: 1; border-radius: 3px; background: var(--line); }
+.pg-days i.some { background: var(--accent-soft); outline: 1px solid rgba(232, 173, 53, 0.5); }
+.pg-days i.full { background: var(--ok); }
+.pg-stars { display: flex; flex-direction: column; gap: 4px; margin-top: var(--s2); }
+.pg-star-row { display: flex; flex-direction: column; gap: 4px; padding: 8px var(--s3); border-radius: var(--r-sm); background: var(--surface); font-size: var(--t-sec); }
+.pg-levels { display: flex; gap: 10px; flex-wrap: wrap; }
+.pg-lv { display: inline-flex; gap: 2px; align-items: baseline; font-size: 12px; letter-spacing: 0.5px; }
+.pg-lv small { font-family: var(--mono); color: var(--muted); margin-right: 1px; }
+.pg-lv.locked { opacity: 0.4; }
+.pg-badges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+.pg-badge { display: flex; flex-direction: column; gap: 2px; padding: var(--s2) var(--s3); border-radius: var(--r-md); border: 1px dashed var(--line-strong); color: var(--faint); font-size: var(--t-cap); }
+.pg-badge b { font-size: var(--t-sec); }
+.pg-badge.on { border: 1px solid var(--accent); background: var(--accent-soft); color: var(--muted); }
+.pg-badge.on b { color: var(--accent); }
+.pg-badge small { font-family: var(--mono); font-size: 10px; }
+.pg-marks { display: flex; gap: 4px; flex: none; }
+.pg-marks i { font-style: normal; font-size: 10px; padding: 2px 6px; border-radius: 10px; border: 1px solid var(--line-strong); color: var(--faint); }
+.pg-marks i.on { border-color: var(--ok); color: var(--ok); }
+.pg-std.valid .row-title { color: var(--ok); }

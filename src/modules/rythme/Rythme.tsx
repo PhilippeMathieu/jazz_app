@@ -19,6 +19,7 @@ import { PlayIcon } from '../../ui/icons';
 import { Input, useHits } from './input';
 import { Domain, Pair, clearConfusions, confusionWeight, confusions, recordAnswer, rivalsOf } from '../../core/confusions';
 import { ConfirmButton } from '../../ui/ConfirmButton';
+import { report } from '../../core/game';
 
 type Exercise = 'tempo' | 'taper' | 'oreille' | 'style';
 type Tally = Record<string, { c: number; t: number }>;
@@ -197,7 +198,7 @@ function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: SetSav
           <li key={h}>{h}</li>
         ))}
       </ol>
-      {saved.exercise === 'tempo' ? <LevelPicker levels={VARIANTS.map((v) => ({ name: v.name, desc: v.hint }))} value={saved.variant} onChange={(variant) => set({ variant })} /> : null}
+      {saved.exercise === 'tempo' ? <LevelPicker exo="rythme-tempo" levels={VARIANTS.map((v) => ({ name: v.name, desc: v.hint }))} value={saved.variant} onChange={(variant) => set({ variant })} /> : null}
       {earDomain && pairs.length ? (
         <Field label="Questions">
           <Segmented
@@ -212,7 +213,7 @@ function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: SetSav
         </Field>
       ) : null}
       {(saved.exercise === 'taper' || saved.exercise === 'oreille') && !duel ? (
-        <LevelPicker levels={RHYTHM_LEVELS.map((l) => ({ name: l.label, desc: l.desc }))} value={saved.level} onChange={(level) => set({ level })} />
+        <LevelPicker exo={saved.exercise === 'taper' ? 'rythme-taper' : 'rythme-oreille'} levels={RHYTHM_LEVELS.map((l) => ({ name: l.label, desc: l.desc }))} value={saved.level} onChange={(level) => set({ level })} />
       ) : null}
       {timed ? (
         <Field label="Répondre">
@@ -543,6 +544,7 @@ function TapRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
         const m = marksOf(p, r, tol);
         const ok = r.good === t.targets.length && r.extra <= 1;
         setResult({ r, ...m, ok, bleed: saved.input === 'mic' && countInHits(hits.hits.current, t.start, 60 / tempo) >= 2 });
+        report({ type: 'answer', exo: 'rythme-taper', level, ok, ms: (t.end - t.start) * 1000 });
         setPhase('done');
         const it = saved.patterns[p.id] ?? { c: 0, t: 0 };
         set({ patterns: { ...saved.patterns, [p.id]: { c: it.c + (ok ? 1 : 0), t: it.t + 1 } } });
@@ -710,6 +712,9 @@ function KeepTime({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
       () => {
         const r = scoreTiming(targets, hits.hits.current, tol, saved.offsets[saved.input] ?? 0);
         setResult({ r, drift: drift(r.matches, (spb * 4) / v.taps.length), bleed: saved.input === 'mic' && countInHits(hits.hits.current, start, spb) >= 2 });
+        const ratio = r.matches.length ? r.good / r.matches.length : 0;
+        report({ type: 'answer', exo: 'rythme-tempo', level: saved.variant, ok: ratio >= 0.9 && r.extra <= 2, ms: BARS * 4 * spb * 1000 });
+        report({ type: 'tempo', level: saved.variant, ratio });
         setPhase('done');
       },
       (start - now() + BARS * 4 * spb + 0.4) * 1000
@@ -842,7 +847,10 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
     const it = saved.patterns['ear:' + q.answer.id] ?? { c: 0, t: 0 };
     set({ patterns: { ...saved.patterns, ['ear:' + q.answer.id]: { c: it.c + (ok ? 1 : 0), t: it.t + 1 } } });
   };
-  const next = () => {
+  const qStart = useRef(performance.now());
+  const next = (guessed = false) => {
+    if (picked) report({ type: 'answer', exo: 'rythme-oreille', level, ok: picked === q.answer.id && !guessed, ms: performance.now() - qStart.current, duel: q.duel });
+    qStart.current = performance.now();
     setPicked(null);
     setQ(makeQ());
   };
@@ -851,7 +859,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
     setScore((s) => ({ ...s, c: s.c - 1 }));
     const it = saved.patterns['ear:' + q.answer.id];
     if (it) set({ patterns: { ...saved.patterns, ['ear:' + q.answer.id]: { c: Math.max(0, it.c - 1), t: it.t } } });
-    next();
+    next(true);
   };
   const ok = picked === q.answer.id;
   const playing = clock.count !== null || clock.beat !== null;
@@ -898,7 +906,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
           })}
         </div>
         {picked ? (
-          <AnswerActions ok={ok} onNext={next} onGuess={guess} />
+          <AnswerActions ok={ok} onNext={() => next()} onGuess={guess} />
         ) : (
           <button class="btn" disabled={playing} onClick={() => listen()}>
             <PlayIcon /> Réécouter
@@ -966,7 +974,10 @@ function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
     const it = saved.styles[q.answer] ?? { c: 0, t: 0 };
     set({ styles: { ...saved.styles, [q.answer]: { c: it.c + (ok ? 1 : 0), t: it.t + 1 } } });
   };
-  const next = () => {
+  const qStart = useRef(performance.now());
+  const next = (guessed = false) => {
+    if (picked) report({ type: 'answer', exo: 'rythme-style', level: 0, ok: picked === q.answer && !guessed, ms: performance.now() - qStart.current, duel: q.duel });
+    qStart.current = performance.now();
     setPicked(null);
     setQ(makeQ());
   };
@@ -974,7 +985,7 @@ function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
     setScore((s) => ({ ...s, c: s.c - 1 }));
     const it = saved.styles[q.answer];
     if (it) set({ styles: { ...saved.styles, [q.answer]: { c: Math.max(0, it.c - 1), t: it.t } } });
-    next();
+    next(true);
   };
   const g = GROOVES[q.answer];
   const ok = picked === q.answer;
@@ -1026,7 +1037,7 @@ function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
           })}
         </div>
         {picked ? (
-          <AnswerActions ok={ok} onNext={next} onGuess={guess} />
+          <AnswerActions ok={ok} onNext={() => next()} onGuess={guess} />
         ) : (
           <button class="btn" disabled={!!playing} onClick={() => listen(q.answer)}>
             <PlayIcon /> Réécouter

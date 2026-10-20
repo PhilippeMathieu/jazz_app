@@ -8,6 +8,8 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 
 L'accueil a quatre blocs : **Continuer** (ou « Pour commencer » : leçon 1), **Apprendre** (Cours, Clavier), **S'entraîner** (six exercices, un par compétence, chacun marqué Métro, Piano ou les deux), **Jouer** (Morceaux). Les deux points les plus faibles apparaissent sous « À travailler ».
 
+**Côté ludique** : points (2 par bonne réponse, plus au niveau supérieur) et 6 grades (Auditeur → Leader) ; étoiles par niveau (★ 80 %, ★★ 90 %, ★★★ 97 % sur les 20 dernières réponses), la première ouvre le niveau suivant (« Ouvrir quand même » possible) ; objectif du jour (5, 10 ou 20 min actives) et série de jours avec un joker par semaine ; 3 défis par jour tirés des points faibles et des confusions ; 21 badges ; collection de standards (validé = analysé à 100 %, guide tones et comping au micro). Écran Progression, bandeau et défis sur l'accueil, petits toasts avec carillon (désactivable).
+
 Chaque exercice démarre sur le même écran : le but en une ligne, l'exercice s'il y en a plusieurs, le **niveau** (1 à 4, 5 ou 6, avec ce qu'il contient ; le niveau 1 est toujours le plus simple, en accords de 3 sons pour l'harmonie), la façon de répondre si on a le choix (écran ou piano), des **options** repliées (format sprint ou série, enchaînement, temps, tempo, calibration) et **Commencer**. En jeu : « Arrêter » à gauche, « Niv. n » et le score au centre.
 
 Apprendre

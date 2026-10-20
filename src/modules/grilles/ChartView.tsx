@@ -9,6 +9,7 @@ import { SCALES } from '../../core/theory/scales';
 import { audio, now, playChord } from '../../core/audio/engine';
 import { displayVoicing } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
+import { report } from '../../core/game';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
@@ -56,6 +57,18 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
   const cur = pos ? pos.chord : (sel ?? 0);
   const showRomans = mode === 'analyse';
   const liveRef = useRef<HTMLDivElement>(null);
+
+  // Fin d'une lecture écoutée au micro : on compte pour la collection de standards.
+  const wasPlaying = useRef(false);
+  useEffect(() => {
+    if (player.playing) wasPlaying.current = true;
+    else if (wasPlaying.current && listen.listening) {
+      wasPlaying.current = false;
+      const sm = listen.summary;
+      if (listenMode === 'analyse' && sm.compChords) report({ type: 'listen', chart: original.id, mode: 'analyse', ratio: sm.compOk / sm.compChords, chords: sm.compChords });
+      else if (listenMode !== 'analyse' && sm.chords) report({ type: 'listen', chart: original.id, mode: listenMode, ratio: sm.targets / sm.chords, chords: sm.chords });
+    }
+  }, [player.playing]);
 
   // Au micro, le piano de l'appli gênerait l'écoute : on le coupe.
   const onMic = (on: boolean) => {

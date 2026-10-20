@@ -6,6 +6,7 @@ import { audio, now, piano } from '../../core/audio/engine';
 import { MIC_MESSAGES, micSettings, readNote, startMic, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { NoteTracker } from '../../core/listen/tracker';
 import { load, save } from '../../core/storage';
+import { report } from '../../core/game';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
 import { Field, LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
@@ -123,7 +124,7 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
     <div class="screen">
       <TopBar title="Notes" actions={answer === 'piano' ? <MicPill /> : undefined} />
       <p class="intro">Une note s’affiche sur la portée : trouve-la le plus vite possible.</p>
-      <LevelPicker levels={LEVELS} base={1} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
+      <LevelPicker exo="lecture" levels={LEVELS} base={1} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
       <Field label="Répondre">
         <Segmented
           label="Répondre"
@@ -219,6 +220,8 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     if (answer === 'piano') timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), 1800);
   };
   const proceed = (guessed: boolean) => {
+    const lastA = answers[answers.length - 1];
+    if (lastA) report({ type: 'answer', exo: 'lecture', level: level - 1, ok: lastA.ok && !guessed, ms: lastA.ms });
     let list = answers;
     if (guessed) {
       list = answers.map((a, i) => (i === answers.length - 1 ? { ...a, guessed: true } : a));

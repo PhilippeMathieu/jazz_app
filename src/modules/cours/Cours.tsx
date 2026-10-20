@@ -5,6 +5,7 @@ import { Chord, chordSymbol, degreeLabel, parseChord } from '../../core/theory/c
 import { mod } from '../../core/theory/notes';
 import { SeqVoicing, playSequence, sequenceVoicings } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
+import { report } from '../../core/game';
 import { TopBar } from '../../ui/Screen';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { ChevronIcon, PlayIcon, StopIcon } from '../../ui/icons';
@@ -83,7 +84,11 @@ export function LessonView({ id }: { id: string }) {
   const next = LESSONS[idx + 1] as Lesson | undefined;
   const done = () => {
     const p = coursProgress();
-    if (!p.read.includes(lesson.id)) save('cours', { read: [...p.read, lesson.id] });
+    if (!p.read.includes(lesson.id)) {
+      const read = [...p.read, lesson.id];
+      save('cours', { read });
+      report({ type: 'lesson', id: lesson.id, all: LESSONS.every((l) => read.includes(l.id)) });
+    }
     go(next ? `/cours/${next.id}` : '/cours');
   };
   return (

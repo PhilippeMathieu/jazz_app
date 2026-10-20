@@ -5,6 +5,7 @@ import { mod, pcOf } from '../../core/theory/notes';
 import { keyLabel } from '../../core/chart/model';
 import { audio, now, piano, playChord, silence } from '../../core/audio/engine';
 import { confusions, recordAnswer } from '../../core/confusions';
+import { report } from '../../core/game';
 import { Keyboard } from '../../ui/Keyboard';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
@@ -43,6 +44,7 @@ export function FullPlay({
   const [quality, setQuality] = useState<string | null>(null);
   const [answer, setAnswer] = useState<FullAnswer | null>(null);
   const [session, setSession] = useState({ c: 0, t: 0 });
+  const qStart = useRef(performance.now());
   const timers = useRef<number[]>([]);
 
   const stop = () => {
@@ -95,7 +97,9 @@ export function FullPlay({
     setQuality(k);
     if (root !== null) submit({ root, quality: k });
   };
-  const next = () => {
+  const next = (guessed = false) => {
+    if (answer) report({ type: 'answer', exo: 'oreille-full', level, ok: !!judgeFull(q, answer).ok && !guessed, ms: performance.now() - qStart.current, duel: !!q.duel });
+    qStart.current = performance.now();
     const nq = make();
     last.current = nq.item?.id;
     setQ(nq);
@@ -171,11 +175,11 @@ export function FullPlay({
         {answer ? (
           <AnswerActions
             ok={!!j?.ok}
-            onNext={next}
+            onNext={() => next()}
             onGuess={() => {
               onRecord('full:' + (q.item ? q.item.id : q.chord.quality), 'guess');
               setSession((s) => ({ ...s, c: Math.max(0, s.c - 1) }));
-              next();
+              next(true);
             }}
           />
         ) : q.duel ? (

@@ -5,6 +5,7 @@ import { QUALITIES } from '../../core/theory/chords';
 import { noteName } from '../../core/theory/notes';
 import { playOne } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
+import { report } from '../../core/game';
 import { TopBar } from '../../ui/Screen';
 import { LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
 import { StatBars } from '../../ui/StatBars';
@@ -106,7 +107,7 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
     <div class="screen">
       <TopBar title="Accords" />
       <p class="intro">Une tonalité et une note : quel accord ? En D majeur, F♯ → {level === 0 ? 'mineur (F♯m)' : 'm7 (F♯m7)'}.</p>
-      <LevelPicker levels={LEVELS} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
+      <LevelPicker exo="tonalite" levels={LEVELS} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
       <SprintOptions mode={mode} n={SERIE_N} what="questions" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
       <StartButton onClick={onStart} />
       <p class="muted small">
@@ -178,6 +179,8 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   };
   // Explication après chaque réponse (chrono arrêté). « J'ai deviné » : la question reviendra.
   const proceed = (guessed: boolean) => {
+    const lastA = answers[answers.length - 1];
+    if (lastA) report({ type: 'answer', exo: 'tonalite', level: level, ok: lastA.ok && !guessed, ms: lastA.ms });
     let list = answers;
     if (guessed) {
       list = answers.map((a, i) => (i === answers.length - 1 ? { ...a, guessed: true } : a));

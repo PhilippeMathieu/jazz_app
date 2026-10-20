@@ -5,6 +5,7 @@ import { mod } from '../../core/theory/notes';
 import { audio, bass, now, playChord, silence } from '../../core/audio/engine';
 import { VOICING_LABEL, VoicingType, bassRoot, lhVoicing } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
+import { report } from '../../core/game';
 import { checkChord, LIMITS } from '../../core/listen/detect';
 import { micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { Keyboard } from '../../ui/Keyboard';
@@ -43,6 +44,7 @@ export function Flash() {
       <TopBar title="Voicings" actions={<MicPill />} />
       <p class="intro">Un accord s’affiche : joue-le à la main gauche. Avec le micro, l’appli valide et passe au suivant.</p>
       <LevelPicker
+        exo="flash"
         levels={TYPES.map((t) => ({ name: VOICING_NAME[t], desc: VOICING_LABEL[t] }))}
         value={TYPES.indexOf(s.type)}
         onChange={(i) => setS({ ...s, type: TYPES[i] })}
@@ -170,6 +172,8 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
       const st = stats.current[key] ?? { c: 0, t: 0, ms: 0 };
       stats.current = { ...stats.current, [key]: { c: st.c + (success ? 1 : 0), t: st.t + 1, ms: st.ms + (success ? ms : 0) } };
       save('flash-stats', { chords: stats.current });
+      // Au micro seulement : sans écoute, rien ne dit si l'accord était juste.
+      report({ type: 'answer', exo: 'flash', level: Math.max(0, TYPES.indexOf(s.type)), ok: success, ms });
     } else setScore((x) => ({ ...x, total: x.total + 1 }));
     if (s.sound) {
       audio();

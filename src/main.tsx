@@ -11,8 +11,17 @@ import './styles/components.css';
 import './styles/screens.css';
 import { App } from './app';
 import { setupInstall, setupUpdates } from './core/app/pwa';
+import { setupGame } from './core/app/gameWiring';
+import { RewardToasts } from './ui/Rewards';
 
 setupInstall();
 setupUpdates();
+setupGame();
 
-render(<App />, document.getElementById('app')!);
+render(
+  <>
+    <App />
+    <RewardToasts />
+  </>,
+  document.getElementById('app')!
+);

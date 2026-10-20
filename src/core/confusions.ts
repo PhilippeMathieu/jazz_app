@@ -33,13 +33,24 @@ export function recordAnswer(domain: Domain, truth: string, answer: string, opti
     for (const o of options) {
       if (o === truth) continue;
       const k = pairKey(truth, o);
-      if (d[k]) d[k] = { ...d[k], ok: d[k].ok + 1 };
+      if (!d[k]) continue;
+      const before = active(d[k]);
+      d[k] = { ...d[k], ok: d[k].ok + 1 };
+      if (before && !active(d[k])) onGone.forEach((f) => f());
     }
   }
   const next = { ...store, [domain]: d };
   save(KEY, next);
   return next;
 }
+
+const active = (p: PairStat) => p.err >= 2 && p.err - p.ok / 2 > 0;
+const onGone = new Set<() => void>();
+/** Prévenu quand une paire confondue est vaincue (pour le badge). */
+export const onConfusionGone = (f: () => void) => {
+  onGone.add(f);
+  return () => onGone.delete(f);
+};
 
 /** Paires à travailler, de la plus confondue à la moins. */
 export function confusions(domain: Domain, store: Store = load<Store>(KEY, {})): Pair[] {
@@ -48,7 +59,7 @@ export function confusions(domain: Domain, store: Store = load<Store>(KEY, {})):
       const [a, b] = k.split('|');
       return { a, b, err: p.err, ok: p.ok, score: p.err - p.ok / 2 };
     })
-    .filter((p) => p.err >= 2 && p.score > 0)
+    .filter((p) => active(p))
     .sort((x, y) => y.score - x.score);
 }
 
