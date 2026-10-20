@@ -5,6 +5,7 @@ import { mod, plainName } from '../../core/theory/notes';
 import { identify, intervalName } from '../../core/theory/identify';
 import { VoicingType, lhVoicing } from '../../core/audio/voicing';
 import { audio, now, piano, playChord } from '../../core/audio/engine';
+import { ListenButtons, useListen, withActive } from '../../ui/Listen';
 import { LIMITS } from '../../core/listen/detect';
 import { micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { load, save } from '../../core/storage';
@@ -12,7 +13,6 @@ import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { MicPill } from '../../ui/MicPill';
-import { PlayIcon } from '../../ui/icons';
 
 type Tab = 'nommer' | 'voir';
 const LO = 36; // C2
@@ -51,6 +51,7 @@ function playNotes(notes: number[]) {
 // ---------------------------------------------------------------- Nommer
 
 function NameIt() {
+  const l = useListen();
   const [sel, setSel] = useState<number[]>([]);
   const [heard, setHeard] = useState<number[]>([]);
   const mic = useMicState();
@@ -137,14 +138,12 @@ function NameIt() {
           </p>
         ) : null}
       </section>
-      <Keyboard lo={LO} hi={HI} keyWidth={KEY_W} marks={marks} labels={labels} onKey={tap} center={notes.length ? notes : [60, 72]} />
+      <Keyboard lo={LO} hi={HI} keyWidth={KEY_W} marks={withActive(marks, l.active)} labels={labels} onKey={tap} center={notes.length ? notes : [60, 72]} />
       <div class="row-actions">
         <button class="btn" disabled={!notes.length} onClick={() => setSel([])}>
           Effacer
         </button>
-        <button class="btn primary" disabled={!notes.length} onClick={() => playNotes(notes)}>
-          <PlayIcon /> Écouter
-        </button>
+        <ListenButtons notes={notes} l={l} />
       </div>
       <p class="muted small">Le clavier défile. Avec le micro, joue sur ton piano : les notes entendues s’affichent et l’accord est nommé.</p>
     </>
@@ -193,6 +192,7 @@ function notesOf(c: Chord, shape: Shape): number[] {
 }
 
 function ShowChord() {
+  const l = useListen();
   const saved = load('clavier-voir', { root: 0, q: 'maj7', shape: 'fond' as Shape });
   const [root, setRoot] = useState(saved.root);
   const [q, setQ] = useState(saved.q in QUALITIES ? saved.q : 'maj7');
@@ -221,9 +221,7 @@ function ShowChord() {
       <section class="cl-card">
         <div class="cl-head">
           <span class="cl-sym">{chordSymbol(c)}</span>
-          <button class="btn sm" onClick={() => playNotes(notes)}>
-            <PlayIcon /> Écouter
-          </button>
+          <ListenButtons small notes={notes} l={l} />
         </div>
         <span class="cl-sub">
           {QUALITIES[q].name} · {SHAPE_LABEL[sh].toLowerCase()}
@@ -240,7 +238,7 @@ function ShowChord() {
           Formule : <span class="mono">{iv.map((i) => degreeLabel(c, mod(rootPc(c) + i, 12))).join(' ')}</span> · {iv.map((i) => spellInChord(c, rootPc(c) + i)).join(' ')}
         </p>
       </section>
-      <Keyboard lo={LO} hi={HI} keyWidth={KEY_W} marks={marks} labels={labels} center={notes} />
+      <Keyboard lo={LO} hi={HI} keyWidth={KEY_W} marks={withActive(marks, l.active)} labels={labels} center={notes} />
 
       <h2 class="label">Fondamentale</h2>
       <div class="chips roots">

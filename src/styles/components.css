@@ -33,6 +33,7 @@
 }
 .icon-btn:active { background: var(--surface-2); }
 .icon-btn svg { width: 22px; height: 22px; }
+.btn > svg { width: 16px; height: 16px; flex: none; }
 
 .btn {
   min-height: var(--tap);
@@ -377,3 +378,7 @@ input[type='range'] { width: 100%; accent-color: var(--accent); min-height: var(
 .opts-title { font-weight: 600; font-size: var(--t-sec); }
 .opts-sum { flex: 1; min-width: 0; color: var(--muted); font-size: var(--t-sec); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .opts-body { display: flex; flex-direction: column; gap: var(--s4); padding: var(--s3) var(--s3) var(--s4); border-top: 1px solid var(--line); }
+.listen-btns { display: inline-flex; gap: var(--s2); flex-wrap: wrap; }
+.row-actions .listen-btns { flex: 2; }
+.row-actions .listen-btns .btn { flex: 1; }
+.chord-keys .listen-btns { margin-top: var(--s2); }

@@ -12,19 +12,20 @@ Chaque exercice démarre sur le même écran : le but en une ligne, l'exercice s
 
 Apprendre
 - **Cours** : 20 leçons de 3 à 5 minutes (débuter en 3 sons, les accords, les enchaînements, au clavier, le rythme), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice. Dedans, les **astuces d'enchaînement** : 15 réflexes de conduite des voix, à écouter et à transposer.
-- **Clavier** : 5 octaves qui défilent. Nommer ce que je joue (au toucher ou au micro) ; voir n'importe quel accord (type, renversements, shell, A, B) et l'entendre.
+- **Clavier** : 5 octaves qui défilent. Nommer ce que je joue (au toucher ou au micro) ; voir n'importe quel accord (type, renversements, shell, A, B) et l'entendre plaqué ou en arpège (la note jouée s'allume). Même écoute « Accord / Arpège » sur les fiches d'accord des morceaux et après chaque réponse des quiz.
 
 S'entraîner
 - **Notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux.
 - **Accords** (métro) : une tonalité et une note (en D majeur, F♯) ; trouver l'accord (majeur/mineur, puis maj7, m7, 7, ø7, °7). 5 niveaux, jusqu'au mineur et aux 12 tonalités.
 - **Enchaînements** (métro) : une suite d'accords, trois questions dessus (degré, schéma, tonalité, 9 ou ♭9, 3ce/7e, gamme), l'accord affiché au clavier après chaque réponse. 4 niveaux.
 - **Oreille** (métro, écouteurs) : reconnaître un accord ou une progression, construire un accord au clavier. 5 niveaux.
-- **Rythme** (métro au casque, ou piano au micro) : taper un rythme (6 niveaux : noires, croches swing, contretemps, comping avec anticipations, triolets, claves ; écart en ms par attaque), garder le tempo (4 niveaux, dérive en BPM), quel rythme ?, quel style ? (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Calibration de la latence ; au micro, détection des attaques et alerte si le micro entend le métronome.
+- **Rythme** (métro au casque, ou piano au micro) : *Tenir le tempo* (5 niveaux : avec le clic, sur 2 et 4, clic sur 2 et 4, une mesure sur deux, seul ; on voit où sonne le clic et où taper, et si on accélère), *Lire et taper* (6 niveaux : noires, croches swing, contretemps, comping avec anticipations, triolets, claves), *Reconnaître un rythme*, *Reconnaître un style* (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Mode d'emploi en 3 étapes, consigne à chaque étape, décompte affiché, temps en cours allumé, résultat en mots (détail en ms replié). Réglage du décalage (10 s) au premier lancement ; au micro, détection des attaques et alerte si le micro entend le métronome.
 - **Voicings** (piano) : un accord s'affiche, tu le joues (niveaux : 3 sons, shell, A, B), le micro valide et passe au suivant.
 
 Jouer
-- **Morceaux** : 10 standards + grilles d'exercice, import Ultimate Guitar / ChordPro. Trois vues :
-  - *Degrés* : analyse (ii–V, centres tonaux, dominantes secondaires, SubV, backdoor), quiz à degrés masqués ; avec le micro, vérifie que ton comping contient la 3ce et la 7e.
+- **Morceaux** : 10 standards + grilles d'exercice, import Ultimate Guitar / ChordPro. Quatre vues :
+  - *Degrés* : analyse (ii–V, centres tonaux, dominantes secondaires, SubV, backdoor) ; avec le micro, vérifie que ton comping contient la 3ce et la 7e.
+  - *Analyser* : à toi. Touche le premier puis le dernier accord d'un enchaînement, dis ce que c'est (ii–V–I, ii–V–i mineur, ii–V, V–I, dominante secondaire, SubV, backdoor, turnaround) et vers quelle tonalité. « Vérifier » : juste / presque / faux avec l'explication, ce que tu as manqué, et à voir aussi (turnarounds, changements de tonalité, diminués de passage). Repérages gardés par grille.
   - *Gammes* : gamme de chaque accord ; avec le micro, classe chaque note jouée et compte les notes de l'accord jouées sur le 1er temps.
   - *Guide tones* : deux lignes 3ce/7e conduites par demi-ton ; le micro vérifie le guide tone au 1er temps.
   - Play-along (piano, contrebasse, batterie) dans 7 styles, transposition, mode pupitre plein écran.

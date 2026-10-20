@@ -31,7 +31,7 @@ export function App() {
   if (page === 'express') return <Express />;
   if (page === 'cours') return a === 'astuces' ? <TipsView /> : a ? <LessonView key={a} id={a} /> : <CoursList />;
   if (page === 'clavier') return <Clavier />;
-  if (page === 'rythme') return <Rythme key={a} piano={a === 'piano'} />;
+  if (page === 'rythme') return <Rythme key={(a ?? '') + (b ?? '')} piano={a === 'piano'} preset={a && a !== 'piano' ? { exercise: a, level: b ? Number(b) - 1 : -1 } : undefined} />;
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
   if (page === 'oreille') return <Oreille />;

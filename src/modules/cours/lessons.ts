@@ -766,7 +766,7 @@ export const PARTS: Part[] = [
             answer: 1,
             explain: '2 clics par mesure de 4 temps : la moitié du tempo, 80.'
           },
-          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme › Garder le tempo, niveau 1 (2 et 4)' }] }
+          { t: 'go', links: [{ href: '#/rythme/tempo/2', label: 'Rythme › Tenir le tempo, niveau 2 (sur 2 et 4)' }] }
         ]
       },
       {
@@ -807,7 +807,7 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/rythme', label: 'Rythme › Taper un rythme, niveaux 3 et 4' },
+              { href: '#/rythme/taper/3', label: 'Rythme › Lire et taper, niveaux 3 et 4' },
               { href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves, comper en Charleston' }
             ]
           }
@@ -859,7 +859,7 @@ export const PARTS: Part[] = [
           {
             t: 'go',
             links: [
-              { href: '#/rythme', label: 'Rythme › Quel style ?' },
+              { href: '#/rythme/style', label: 'Rythme › Reconnaître un style' },
               { href: '#/grilles', label: 'Morceaux : change le style dans les réglages du play-along' }
             ]
           }
@@ -900,7 +900,7 @@ export const PARTS: Part[] = [
             answer: 0,
             explain: 'Même motif, mais le 3e coup recule d’une croche, du 4 au « et » de 4.'
           },
-          { t: 'go', links: [{ href: '#/rythme', label: 'Rythme › Taper un rythme, niveau 6 (claves)' }] }
+          { t: 'go', links: [{ href: '#/rythme/taper/6', label: 'Rythme › Lire et taper, niveau 6 (claves)' }] }
         ]
       }
     ]

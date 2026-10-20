@@ -4,8 +4,10 @@ import { Chord, QUALITIES, degreeLabel, rootPc, spellInChord } from '../core/the
 import { mod } from '../core/theory/notes';
 import { Keyboard, Mark } from './Keyboard';
 import { scaleMarks } from './keyboardMarks';
+import { ListenButtons, useListen, withActive } from './Listen';
 
 export function ChordKeys({ chord, extra, scale }: { chord: Chord; extra?: number; scale?: string }) {
+  const l = useListen();
   const r = rootPc(chord);
   const base = 48 + r; // fondamentale entre C3 et B3, état fondamental
   const notes = QUALITIES[chord.quality].iv.map((i) => base + i);
@@ -28,7 +30,8 @@ export function ChordKeys({ chord, extra, scale }: { chord: Chord; extra?: numbe
   const shown = scale ? [] : [...notes, ...(extraMidi !== undefined ? [extraMidi] : [])];
   return (
     <div class="chord-keys">
-      <Keyboard lo={lo} hi={hi} fit marks={marks} labels={labels} />
+      <Keyboard lo={lo} hi={hi} fit marks={withActive(marks, l.active)} labels={labels} />
+      <ListenButtons small notes={[...notes, ...(extraMidi !== undefined ? [extraMidi] : [])]} l={l} />
       {shown.length ? (
         <p class="chord-keys-line">
           {shown.map((m) => (

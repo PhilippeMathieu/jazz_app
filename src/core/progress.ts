@@ -77,7 +77,7 @@ export function advice(): Advice[] {
         score: acc * 0.95
       });
   }
-  if (quiz.t >= 8 && quiz.c / quiz.t < 0.8) weak.push({ text: `${SECTIONS.grilles.title} · quiz d’analyse`, detail: `${pct(quiz)} % de réussite`, href: '#/grilles', score: quiz.c / quiz.t });
+  if (quiz.t >= 8 && quiz.c / quiz.t < 0.8) weak.push({ text: `${SECTIONS.grilles.title} · Analyser`, detail: `${pct(quiz)} % de réussite`, href: '#/grilles', score: quiz.c / quiz.t });
   weak.sort((a, b) => a.score - b.score);
 
   return weak.slice(0, 2);

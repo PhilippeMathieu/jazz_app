@@ -3,7 +3,6 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Chart, keyLabel, keyName, transposeChart } from '../../core/chart/model';
 import { barRows, chordsByBar } from '../../core/chart/layout';
 import { ImprovPlan, improvPlan } from '../../core/analysis/improv';
-import { romanChoices } from '../../core/analysis/quiz';
 import { chordNotes, chordSymbol } from '../../core/theory/chords';
 import { noteName } from '../../core/theory/notes';
 import { SCALES } from '../../core/theory/scales';
@@ -22,12 +21,14 @@ import { Stand } from '../../ui/Stand';
 import { StandIcon } from '../../ui/icons';
 import { notesMarks, scaleMarks } from '../../ui/keyboardMarks';
 import { ListenMode, useListening } from './useListening';
+import { ListenButtons, useListen, withActive } from '../../ui/Listen';
+import { AnalyserForm, AnalyserHint, AnalyserPanel, useAnalyser } from './Analyser';
 
-type Mode = ListenMode;
+type Mode = ListenMode | 'analyser';
 type Listen = ReturnType<typeof useListening>;
 const LIVE_LO = 55;
 const LIVE_HI = 79;
-const MODES: Mode[] = ['analyse', 'gammes', 'guide'];
+const MODES: Mode[] = ['analyse', 'analyser', 'gammes', 'guide'];
 
 export function ChartView({ chart: original, initialMode }: { chart: Chart; initialMode?: Mode }) {
   const [view, setView] = useState(() => {
@@ -39,7 +40,6 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
   const [selected, setSelected] = useState<number | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [stand, setStand] = useState(false);
-  const [quiz, setQuiz] = useState<Record<number, { choice: string; ok: boolean }>>({});
   useEffect(() => save('grille-view', view), [view]);
 
   const chart = useMemo(() => transposeChart(original, shift), [original, shift]);
@@ -47,16 +47,15 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
   const rows = useMemo(() => barRows(chart), [chart]);
   const byBar = useMemo(() => chordsByBar(plan.flat), [plan]);
   const player = usePlayer(chart, original.id, original.tempo);
-  const listen = useListening(mode, plan, player.pos, chart.beatsPerBar);
+  const listenMode: ListenMode = mode === 'analyser' ? 'analyse' : mode;
+  const listen = useListening(listenMode, plan, player.pos, chart.beatsPerBar);
+  const an = useAnalyser(original.id, plan, chart.beatsPerBar, shift);
   const pos = player.pos;
   const n = plan.flat.length;
   const sel = selected !== null && selected < n ? selected : null;
   const cur = pos ? pos.chord : (sel ?? 0);
-  const showRomans = view.showRomans;
+  const showRomans = mode === 'analyse';
   const liveRef = useRef<HTMLDivElement>(null);
-
-  // Transposer change les réponses du quiz : on repart de zéro.
-  useEffect(() => setQuiz({}), [shift]);
 
   // Au micro, le piano de l'appli gênerait l'écoute : on le coupe.
   const onMic = (on: boolean) => {
@@ -92,13 +91,12 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
   const tapChord = (ci: number) => {
     setSelected(ci);
     if (mode === 'analyse') setDrawer(true);
+    if (mode === 'analyser') an.tap(ci);
     if (!player.playing) {
       audio();
       playChord(displayVoicing(plan.flat[ci].chord, plan.scales[ci].scale), now() + 0.02, 1.3, 0.55);
     }
   };
-
-  const answers = Object.values(quiz);
 
   return (
     <>
@@ -121,24 +119,17 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
           onChange={(m) => setView({ ...view, mode: m })}
           options={[
             { value: 'analyse', label: 'Degrés' },
+            { value: 'analyser', label: 'Analyser' },
             { value: 'gammes', label: 'Gammes' },
             { value: 'guide', label: 'Guide tones' }
           ]}
         />
         <div class="subbar">
           <TransposeStepper chartKey={chart.key} shift={shift} onShift={setShift} />
-          {mode === 'analyse' ? (
-            <label class="toggle">
-              <input type="checkbox" checked={!showRomans} onChange={() => setView({ ...view, showRomans: !showRomans })} />
-              <span>
-                Quiz{showRomans ? '' : <span class="muted"> · {answers.filter((a) => a.ok).length}/{answers.length}</span>}
-              </span>
-            </label>
-          ) : null}
         </div>
-        {mode === 'analyse' && !showRomans && !answers.length ? <p class="intro">Degrés masqués : touche un accord et retrouve son degré.</p> : null}
+        {mode === 'analyser' ? <AnalyserHint an={an} plan={plan} /> : null}
 
-        {mode !== 'analyse' && n ? <LivePanel refEl={liveRef} mode={mode} plan={plan} cur={cur} listen={listen} /> : null}
+        {(mode === 'gammes' || mode === 'guide') && n ? <LivePanel refEl={liveRef} mode={mode} plan={plan} cur={cur} listen={listen} /> : null}
 
         {listen.listening ? <ListenSummary mode={mode} listen={listen} playing={player.playing} /> : null}
 
@@ -152,31 +143,29 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
                   return (
                     <div key={bi} class={'bar' + (pos?.bar === bi ? ' now' : '')}>
                       <span class="barnum">{bi + 1}</span>
-                      {mode === 'analyse' && showRomans && keyTags.has(bi) ? <span class="keytag">{keyTags.get(bi)}</span> : null}
+                      {(showRomans || (mode === 'analyser' && an.result)) && keyTags.has(bi) ? <span class="keytag">{keyTags.get(bi)}</span> : null}
                       <div class={'chords' + (idxs.length > 1 ? ' two' : '')}>
                         {idxs.map((ci) => {
                           const a = plan.analysis.chords[ci];
                           const st = listen.statusOf(pos?.chorus ?? 0, ci);
-                          const qa = quiz[ci];
+                          const dec = mode === 'analyser' ? an.decor(ci) : null;
                           let sub = '';
                           let subCls = 'rn';
-                          if (mode === 'analyse') {
-                            if (showRomans) {
-                              const arrow = a.resolution && a.resolvesTo === (ci + 1) % n ? (a.resolution === 'sub' ? ' ⇣' : ' ↗') : '';
-                              sub = a.roman + arrow;
-                              if (!a.diatonic) subCls += ' out';
-                            } else if (qa) {
-                              sub = a.roman;
-                              subCls += qa.ok ? ' good' : ' bad';
-                            }
+                          if (dec) {
+                            sub = dec.sub;
+                            subCls = dec.subCls;
+                          } else if (mode === 'analyse') {
+                            const arrow = a.resolution && a.resolvesTo === (ci + 1) % n ? (a.resolution === 'sub' ? ' ⇣' : ' ↗') : '';
+                            sub = a.roman + arrow;
+                            if (!a.diatonic) subCls += ' out';
                           } else if (mode === 'gammes') sub = SCALES[plan.scales[ci].scale].short;
                           else sub = `${plan.guideA[ci].name} · ${plan.guideB[ci].name}`;
                           const lCls = st?.done ? (st.ok ? ' l-ok' : ' l-miss') : '';
                           return (
-                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci && (pos || sel !== null) ? ' now' : '') + lCls} onClick={() => tapChord(ci)}>
+                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci && (pos || (sel !== null && mode !== 'analyser')) ? ' now' : '') + lCls + (dec?.cls ?? '')} onClick={() => tapChord(ci)}>
                               <span class="sym">{chordSymbol(plan.flat[ci].chord)}</span>
                               <span class={subCls}>{sub || ' '}</span>
-                              {mode === 'analyse' && showRomans ? <i class={'bk' + bracketPart(ci)} /> : null}
+                              {mode === 'analyse' ? <i class={'bk' + bracketPart(ci)} /> : dec ? <i class={'bk' + dec.bk} /> : null}
                               {st && st.hits.length ? (
                                 <span class="hits">
                                   {st.hits.slice(-8).map((h, i) => (
@@ -196,7 +185,8 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
           ))}
         </div>
 
-        {mode === 'analyse' && showRomans ? (
+        {mode === 'analyser' ? <AnalyserPanel an={an} plan={plan} onShowDegrees={() => setView({ ...view, mode: 'analyse' })} /> : null}
+        {mode === 'analyse' ? (
           <p class="legend">
             <span><i class="lg-bk" />ii–V</span>
             <span><i class="lg-bk sub" />ii–SubV</span>
@@ -205,39 +195,29 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
             <span class="lg-out">bleu : hors tonalité</span>
           </p>
         ) : null}
-        {mode === 'analyse' && showRomans && chart.notes ? <p class="chart-notes">{chart.notes}</p> : null}
+        {mode === 'analyse' && chart.notes ? <p class="chart-notes">{chart.notes}</p> : null}
       </div>
 
       <PlayerBar p={player} fromBar={sel !== null ? plan.flat[sel].bar : 0} />
 
-      <Drawer open={drawer && sel !== null} onClose={() => setDrawer(false)} label="Accord">
+      <Drawer open={drawer && sel !== null && mode === 'analyse'} onClose={() => setDrawer(false)} label="Accord">
         {sel !== null ? (
-          showRomans ? (
-            <ChordCard
-              plan={plan}
-              i={sel}
-              onPlayFrom={(bar) => {
-                setDrawer(false);
-                player.start(bar);
-              }}
-            />
-          ) : (
-            <QuizCard
-              plan={plan}
-              chartKey={chart.key}
-              i={sel}
-              answer={quiz[sel]}
-              onAnswer={(choice, ok) => {
-                setQuiz((q) => ({ ...q, [sel]: { choice, ok } }));
-                const s = load('quiz', { c: 0, t: 0 });
-                save('quiz', { c: s.c + (ok ? 1 : 0), t: s.t + 1 });
-              }}
-            />
-          )
+          <ChordCard
+            plan={plan}
+            i={sel}
+            onPlayFrom={(bar) => {
+              setDrawer(false);
+              player.start(bar);
+            }}
+          />
         ) : null}
       </Drawer>
 
-      {stand ? <Stand chart={chart} plan={plan} player={player} initial={mode} startIndex={cur} onClose={() => setStand(false)} /> : null}
+      <Drawer open={mode === 'analyser' && !!an.form} onClose={() => an.setForm(null)} label="Enchaînement">
+        <AnalyserForm an={an} plan={plan} />
+      </Drawer>
+
+      {stand ? <Stand chart={chart} plan={plan} player={player} initial={listenMode} startIndex={cur} onClose={() => setStand(false)} /> : null}
     </>
   );
 }
@@ -340,6 +320,7 @@ function ChordCard({ plan, i, onPlayFrom }: { plan: ImprovPlan; i: number; onPla
   const a = plan.analysis.chords[i];
   const voicing = displayVoicing(f.chord, plan.scales[i].scale);
   const km = notesMarks(f.chord, voicing);
+  const l = useListen();
   return (
     <div class="chord-card">
       <div class="cc-head">
@@ -352,51 +333,13 @@ function ChordCard({ plan, i, onPlayFrom }: { plan: ImprovPlan; i: number; onPla
       <p class="muted small">
         Notes <span class="mono">{chordNotes(f.chord).map(noteName).join(' ')}</span> · gamme {SCALES[plan.scales[i].scale].name}
       </p>
-      <Keyboard lo={36} hi={84} marks={km.marks} labels={km.labels} center={voicing} />
+      <Keyboard lo={36} hi={84} marks={withActive(km.marks, l.active)} labels={km.labels} center={voicing} />
       <div class="actions">
-        <button
-          class="btn"
-          onClick={() => {
-            audio();
-            playChord(voicing, now() + 0.02, 1.6, 0.55);
-          }}
-        >
-          Écouter
-        </button>
+        <ListenButtons notes={voicing} l={l} />
         <button class="btn" onClick={() => onPlayFrom(f.bar)}>
           Jouer depuis la mesure {f.bar + 1}
         </button>
       </div>
-    </div>
-  );
-}
-
-function QuizCard({ plan, chartKey, i, answer, onAnswer }: { plan: ImprovPlan; chartKey: Chart['key']; i: number; answer?: { choice: string; ok: boolean }; onAnswer: (choice: string, ok: boolean) => void }) {
-  const f = plan.flat[i];
-  const a = plan.analysis.chords[i];
-  const choices = useMemo(() => romanChoices(f.chord, a.roman, chartKey), [i, a.roman]);
-  return (
-    <div class="chord-card">
-      <div class="cc-head">
-        <span class="cc-sym">{chordSymbol(f.chord)}</span>
-        <span class="muted">Quel degré ?</span>
-      </div>
-      <div class="choices">
-        {choices.map((c) => {
-          const state = answer ? (c === a.roman ? ' is-ok' : c === answer.choice ? ' is-bad' : '') : '';
-          return (
-            <button key={c} class={'choice' + state} disabled={!!answer} onClick={() => onAnswer(c, c === a.roman)}>
-              {c}
-            </button>
-          );
-        })}
-      </div>
-      {answer ? (
-        <>
-          <p class={'verdict ' + (answer.ok ? 'ok' : 'bad')}>{answer.ok ? 'Juste.' : `Non : ${a.roman} en ${keyLabel(a.key)}.`}</p>
-          <p class="muted">{a.explain}</p>
-        </>
-      ) : null}
     </div>
   );
 }
