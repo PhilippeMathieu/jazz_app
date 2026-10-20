@@ -37,6 +37,7 @@ export function scaleFor(flat: FlatChord[], an: Analysis, i: number, style: Char
   if (q === '7b5') return { scale: 'lydienb7', why: 'La ♭5 sonne comme une ♯11 : lydien ♭7 (ou gamme par tons).', alt: 'tons' };
   if (q === 'aug') return { scale: 'tons', why: 'Accord augmenté : gamme par tons.' };
   if (q === '7sus4' || q === '9sus4') return { scale: 'mixolydien', why: 'Accord sus : mixolydien, en évitant la tierce.' };
+  if (q === 'dim' && !minorKey && deg === 11) return { scale: 'locrien', why: 'VII° de la gamme majeure : locrien, les notes de la tonalité.' };
   if (q === 'dim7' || q === 'dim') return { scale: 'dimWH', why: 'Accord diminué : diminuée ton/demi-ton (notes de l’accord + une note un ton au-dessus de chacune).' };
   if (q === 'm6' || q === 'mM7') return { scale: 'melodique', why: 'Tonique mineure avec 6te majeure ou 7e majeure : mineur mélodique.', alt: 'dorien' };
   if (q === 'maj7#11') return { scale: 'lydien', why: 'La ♯11 est dans l’accord : lydien.' };
@@ -50,6 +51,10 @@ export function scaleFor(flat: FlatChord[], an: Analysis, i: number, style: Char
     return { scale: 'locrien', why: 'Demi-diminué : locrien.', alt: 'locrien9' };
   }
 
+  // Accords de 3 sons : la gamme de la tonalité, appuyée sur l'accord.
+  if (q === 'maj' && minorKey && deg === 7) return { scale: 'mixob9b13', why: 'V du mineur (sensible du mineur harmonique) : mixolydien ♭9 ♭13.' };
+  if (q === 'maj' && (deg === 7 || a.resolution === 'V' || (minorKey && deg === 10)))
+    return { scale: 'mixolydien', why: 'Accord majeur qui joue le V : mixolydien (la 7e mineure n’est pas jouée, mais elle est dans la gamme).' };
   if (fam === 'maj') {
     if ((!minorKey && deg === 0) || (minorKey && deg === 3)) return { scale: 'ionien', why: 'Tonique majeure : ionien. Évite d’appuyer la 4te (la ♯11 du lydien marche aussi).', alt: 'lydien' };
     return { scale: 'lydien', why: deg === 5 && !minorKey ? 'IVΔ7 : lydien, la ♯4 est diatonique.' : 'Accord majeur hors tonique : lydien.', alt: 'ionien' };
@@ -81,12 +86,15 @@ export function guideTones(c: Chord): { third: number; seventh: number; thirdLab
   const iv = QUALITIES[c.quality].iv;
   const r = rootPc(c);
   const third = iv.includes(4) ? 4 : iv.includes(3) ? 3 : 5;
-  const seventh = iv.includes(10) ? 10 : iv.includes(11) ? 11 : iv.includes(9) ? 9 : 10;
+  // Accord de 3 sons : pas de 7e, la 2e note caractéristique est la quinte.
+  const triad = !iv.some((x) => x === 9 || x === 10 || x === 11);
+  const fifth = iv.includes(6) ? 6 : iv.includes(8) ? 8 : 7;
+  const seventh = triad ? fifth : iv.includes(10) ? 10 : iv.includes(11) ? 11 : 9;
   return {
     third: mod(r + third, 12),
     seventh: mod(r + seventh, 12),
     thirdLabel: third === 5 ? '4' : '3',
-    seventhLabel: seventh === 9 ? (QUALITIES[c.quality].family === 'dim' ? '°7' : '6') : '7'
+    seventhLabel: triad ? (fifth === 6 ? '♭5' : fifth === 8 ? '♯5' : '5') : seventh === 9 ? (QUALITIES[c.quality].family === 'dim' ? '°7' : '6') : '7'
   };
 }
 

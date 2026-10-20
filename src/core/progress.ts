@@ -55,7 +55,7 @@ export function advice(): Advice[] {
     const [mode, roman] = k.split(':');
     if (acc < 0.8 || avg > 3000)
       weak.push({
-        text: `Accords de la tonalité · ${roman}${mode === 'm' ? ' en mineur' : ''}`,
+        text: `Accords de la tonalité · ${roman}${mode === 'm' ? ' en mineur' : mode === 'T' ? ' (3 sons)' : ''}`,
         detail: acc < 0.8 ? `${pct(v)} % de réussite` : `${(avg / 1000).toFixed(1).replace('.', ',')} s en moyenne`,
         href: '#/tonalite',
         score: acc * 0.95
@@ -82,8 +82,8 @@ export function advice(): Advice[] {
   const out: Advice[] = weak.slice(0, 3);
   // Pas encore abordé
   const todo: Advice[] = [];
-  if (!Object.keys(tonalite.byDeg).length) todo.push({ text: 'Accords de la tonalité, niveau 1', detail: 'Retrouver maj7, m7, 7, ø7 en sprint de 60 s', href: '#/tonalite' });
-  if (!Object.keys(express.byType).length) todo.push({ text: 'Analyse express, niveau 1', detail: 'Degrés et ii–V–I, en sprint de 60 s', href: '#/express' });
+  if (!Object.keys(tonalite.byDeg).length) todo.push({ text: 'Accords de la tonalité', detail: 'Commence au niveau Débutant : accords de 3 sons', href: '#/tonalite' });
+  if (!Object.keys(express.byType).length) todo.push({ text: 'Analyse express', detail: 'Degrés et enchaînements, du niveau Débutant (3 sons) au jazz', href: '#/express' });
   if (!quiz.t) todo.push({ text: 'Quiz d’analyse sur Autumn Leaves', detail: 'Masque les degrés et retrouve-les', href: '#/grille/autumn-leaves' });
   if (!Object.keys(flash.chords).length) todo.push({ text: 'Flash voicings au piano', detail: 'Shells en ii–V–I, avec le micro', href: '#/flash' });
   if (!Object.keys(oreille.items).length) todo.push({ text: 'Oreille : reconnaître maj7, m7, 7', detail: 'Avec écouteurs', href: '#/oreille' });

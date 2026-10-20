@@ -43,4 +43,16 @@ describe('oreille', () => {
         for (const c of q.choices) expect(PROGRESSIONS[c].steps.length).toBe(q.chords.length);
       }
   });
+  it('débutant : majeur ou mineur, 3 sons, et progressions simples', () => {
+    const rng = seeded(12);
+    for (let i = 0; i < 50; i++) {
+      const q = makeEarQuestion('ear', 0, {}, undefined, rng);
+      if (q.mode !== 'ear') throw new Error();
+      expect(['maj', 'min']).toContain(q.q);
+      expect(q.c.notes).toHaveLength(4); // basse + 3 sons
+      const p = makeEarQuestion('prog', 0, {}, undefined, rng);
+      if (p.mode !== 'prog') throw new Error();
+      for (const c of p.chords) expect(['maj', 'min', 'dim']).toContain(c.chord.quality);
+    }
+  });
 });

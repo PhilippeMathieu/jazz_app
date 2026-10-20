@@ -6,8 +6,10 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 
 ## Écrans
 
+Chaque exercice d'harmonie commence par un niveau **Débutant** : accords de 3 sons (majeur, mineur), sans 7e — Accords de la tonalité, Analyse express, Oreille (accords, construire, progressions I–IV–V, I–VI–IV–V, II–V–I) et Flash voicings (« 3 sons », renversement libre). Trois leçons et trois grilles en 3 sons pour démarrer.
+
 - **Astuces d'enchaînement** : 15 réflexes de conduite des voix (7e du II → 3ce du V, 5te du II → ♭9 du V, encadrements, SubV, backdoor…), chacun avec un exemple écrit (accords, ligne, degrés), à écouter et à transposer.
-- **Cours** : 13 leçons courtes (construire un accord, caractère des accords, accords de la tonalité, ii–V–I majeur et mineur, turnarounds, dominantes secondaires, SubV, backdoor, blues, voicings, tensions, gammes), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice.
+- **Cours** : 16 leçons, dont 3 pour débuter (accords de 3 sons, accords de la gamme, premiers enchaînements) courtes (construire un accord, caractère des accords, accords de la tonalité, ii–V–I majeur et mineur, turnarounds, dominantes secondaires, SubV, backdoor, blues, voicings, tensions, gammes), avec exemples à écouter et à voir au clavier, mini-quiz et lien vers l'exercice.
 - **Accueil** : reprendre le dernier exercice, trois suggestions « À travailler » tirées de tes erreurs.
 - **Lecture de notes** (métro ou piano) : une note en clé de sol ou de fa ; la toucher sur un clavier, la nommer, ou la jouer au piano (le micro vérifie l'octave). 4 niveaux jusqu'aux lignes supplémentaires et aux altérations.
 - **Accords de la tonalité** (métro) : une tonalité et une fondamentale (en D majeur, F♯), trouver le type d'accord (maj7, m7, 7, ø7, °7). 4 niveaux jusqu'au mineur et aux 12 tonalités ; les couples tonalité-degré ratés reviennent plus souvent ; réussite et temps par degré.

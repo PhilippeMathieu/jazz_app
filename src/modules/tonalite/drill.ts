@@ -1,10 +1,10 @@
 // Accords de la tonalité : une tonalité, une fondamentale, retrouver le type d'accord.
 import { Key, Mode, keyLabel } from '../../core/chart/model';
-import { Chord, chordSymbol } from '../../core/theory/chords';
+import { Chord, chordNotes, chordSymbol } from '../../core/theory/chords';
 import { Note, noteName, parseNote, pcOf, spellWith } from '../../core/theory/notes';
 import { Rng, weightedPick } from '../../core/random';
 
-export type DegQuality = 'maj7' | 'm7' | '7' | 'm7b5' | 'dim7';
+export type DegQuality = 'maj' | 'min' | 'dim' | 'maj7' | 'm7' | '7' | 'm7b5' | 'dim7';
 export interface Degree {
   /** Demi-tons au-dessus de la tonique. */
   semis: number;
@@ -12,7 +12,20 @@ export interface Degree {
   step: number;
   quality: DegQuality;
   roman: string;
+  /** Accord de 3 sons (niveau débutant). */
+  triad?: boolean;
 }
+
+/** Débutant : accords de 3 sons de la gamme majeure. */
+export const MAJOR_TRIADS: Degree[] = [
+  { semis: 0, step: 0, quality: 'maj', roman: 'I', triad: true },
+  { semis: 2, step: 1, quality: 'min', roman: 'IIm', triad: true },
+  { semis: 4, step: 2, quality: 'min', roman: 'IIIm', triad: true },
+  { semis: 5, step: 3, quality: 'maj', roman: 'IV', triad: true },
+  { semis: 7, step: 4, quality: 'maj', roman: 'V', triad: true },
+  { semis: 9, step: 5, quality: 'min', roman: 'VIm', triad: true },
+  { semis: 11, step: 6, quality: 'dim', roman: 'VII°', triad: true }
+];
 
 /** Accords à quatre sons de la gamme majeure. */
 export const MAJOR: Degree[] = [
@@ -40,9 +53,14 @@ export const MINOR: Degree[] = [
   { semis: 11, step: 6, quality: 'dim7', roman: 'VII°7' }
 ];
 
-export const degreesOf = (mode: Mode) => (mode === 'major' ? MAJOR : MINOR);
+export const degreesOf = (mode: Mode, level = 1) => (level === 0 ? MAJOR_TRIADS : mode === 'major' ? MAJOR : MINOR);
 
 /** Réponses proposées, toujours dans le même ordre pour aller vite. */
+export const TRIAD_CHOICES: { q: DegQuality; sym: string; name: string }[] = [
+  { q: 'maj', sym: 'majeur', name: 'C' },
+  { q: 'min', sym: 'mineur', name: 'Cm' },
+  { q: 'dim', sym: 'diminué', name: 'C°' }
+];
 export const CHOICES: { q: DegQuality; sym: string; name: string }[] = [
   { q: 'maj7', sym: 'maj7', name: 'majeur 7' },
   { q: 'm7', sym: 'm7', name: 'mineur 7' },
@@ -56,7 +74,9 @@ const ALL_MAJOR = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A',
 const ALL_MINOR = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'B♭', 'B'];
 const key = (name: string, mode: Mode): Key => ({ tonic: parseNote(name)!.note, mode });
 
+/** Niveaux 0 (débutant) à 4. */
 export const LEVELS = [
+  { label: 'Débutant', desc: 'Accords de 3 sons : majeur, mineur (et un diminué), 7 tonalités courantes' },
   { label: 'N1', desc: 'Majeur, 7 tonalités courantes (jusqu’à 3 altérations)' },
   { label: 'N2', desc: 'Majeur, les 12 tonalités' },
   { label: 'N3', desc: 'Mineur, les 12 tonalités (V7 et VII°7 de l’harmonique)' },
@@ -70,7 +90,7 @@ export function keysFor(level: number): Key[] {
   return [...ALL_MAJOR.map((k) => key(k, 'major')), ...ALL_MINOR.map((k) => key(k, 'minor'))];
 }
 /** Le °7 n'apparaît dans les réponses qu'à partir du mineur. */
-export const choicesFor = (level: number) => (level >= 3 ? CHOICES : CHOICES.filter((c) => c.q !== 'dim7'));
+export const choicesFor = (level: number) => (level === 0 ? TRIAD_CHOICES : level >= 3 ? CHOICES : CHOICES.filter((c) => c.q !== 'dim7'));
 
 /** Fondamentale du degré, bien orthographiée (F♯ en D, pas G♭). */
 export function rootOf(k: Key, d: Degree): Note {
@@ -79,7 +99,8 @@ export function rootOf(k: Key, d: Degree): Note {
 export const chordOf = (k: Key, d: Degree): Chord => ({ root: rootOf(k, d), quality: d.quality });
 
 /** Les accords de la tonalité, dans l'ordre des degrés. */
-export const harmonize = (k: Key) => degreesOf(k.mode).map((d) => ({ degree: d, chord: chordOf(k, d), symbol: chordSymbol(chordOf(k, d)) }));
+export const harmonize = (k: Key, triads = false) =>
+  degreesOf(k.mode, triads ? 0 : 1).map((d) => ({ degree: d, chord: chordOf(k, d), symbol: chordSymbol(chordOf(k, d)) }));
 
 export interface Question {
   id: string;
@@ -90,11 +111,18 @@ export interface Question {
   explain: string;
 }
 
-export const itemId = (k: Key, d: Degree) => `${k.mode === 'major' ? 'M' : 'm'}:${noteName(k.tonic)}:${d.roman}`;
+export const itemId = (k: Key, d: Degree) => `${d.triad ? 'T' : k.mode === 'major' ? 'M' : 'm'}:${noteName(k.tonic)}:${d.roman}`;
+/** Le degré sans la qualité : « IIIm7 » → « III ». */
+export const numeralOf = (d: Degree) => d.roman.replace(/(Δ7|m7|ø7|°7|7|m|°)$/, '');
 
 function explain(k: Key, d: Degree): string {
   const sym = chordSymbol(chordOf(k, d));
-  const base = `${noteName(rootOf(k, d))} = degré ${d.roman.replace(/(Δ7|m7|7|ø7|°7)$/, '')} de ${keyLabel(k)} → ${sym}.`;
+  const base = `${noteName(rootOf(k, d))} = degré ${numeralOf(d)} de ${keyLabel(k)} → ${sym}.`;
+  if (d.triad) {
+    const notes = chordNotes(chordOf(k, d)).map(noteName).join(' ');
+    if (d.quality === 'dim') return `${base} Notes : ${notes}, deux tierces mineures.`;
+    return `${base} Notes : ${notes}. En 3 sons : majeur sur I, IV, V ; mineur sur II, III, VI ; diminué sur VII.`;
+  }
   if (k.mode === 'major') return base;
   if (d.roman === 'Im7') return `${base} En jazz, la tonique mineure se joue souvent m6 ou m(maj7).`;
   if (d.roman === 'V7') return `${base} En mineur, le V prend la sensible (mineur harmonique) : 7, pas m7.`;
@@ -113,7 +141,7 @@ const weightOf = (tally: Tally, id: string) => {
 /** Une question ; les couples tonalité-degré ratés reviennent plus souvent, jamais deux fois de suite. */
 export function makeQuestion(level: number, tally: Tally = {}, rng: Rng = Math.random, prev?: string): Question {
   const items = keysFor(level)
-    .flatMap((k) => degreesOf(k.mode).map((d) => ({ k, d, id: itemId(k, d) })))
+    .flatMap((k) => degreesOf(k.mode, level).map((d) => ({ k, d, id: itemId(k, d) })))
     // pas de double altération (F𝄪 en G♯ mineur)
     .filter((x) => Math.abs(rootOf(x.k, x.d).acc) < 2 && x.id !== prev);
   const { k, d, id } = weightedPick(items, (x) => weightOf(tally, x.id), rng);

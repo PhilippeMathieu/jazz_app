@@ -1,6 +1,6 @@
 // Analyse express : génération de séquences et de questions à réponse rapide.
 import { Chart, Key, flatten, keyLabel, keyOnPc } from '../../core/chart/model';
-import { Chord, QUALITIES, chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
+import { Chord, QUALITIES, chordNotes, chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
 import { noteName, pcOf, spellWith } from '../../core/theory/notes';
 import { SCALES } from '../../core/theory/scales';
 import { PROGRESSIONS, Progression, spellProgression } from '../../core/theory/progressions';
@@ -21,16 +21,19 @@ export const QTYPE_LABEL: Record<QType, string> = {
 
 /** Enchaînements par niveau (cumulatif). */
 const LEVEL_OF: Record<string, number> = {
+  'I-IV-V': 0, 'I-vi-IV-V': 0, 'I-V-vi-IV': 0, 'I-vi-ii-V': 0, iiVItri: 0,
   iiVI: 1, iiV: 1, turn1: 1, turn3: 1,
   iiVim: 2, iiVm: 2, minTurn: 2,
   sec: 3, subV: 3, back: 3, casc: 3, subVm: 3, I7IV: 3
 };
+/** Niveaux 0 (débutant, accords de 3 sons) à 3. */
 export const LEVELS = [
+  { label: 'Débutant', desc: 'Accords de 3 sons (C, Am, F, G…), tonalité affichée' },
   { label: 'N1', desc: 'Majeur, tonalité affichée' },
   { label: 'N2', desc: '+ mineur, 9 ou ♭9' },
   { label: 'N3', desc: '+ substitutions, gammes' }
 ];
-const idsFor = (level: number) => Object.keys(LEVEL_OF).filter((id) => LEVEL_OF[id] <= level);
+const idsFor = (level: number) => Object.keys(LEVEL_OF).filter((id) => (level === 0 ? LEVEL_OF[id] === 0 : LEVEL_OF[id] >= 1 && LEVEL_OF[id] <= level));
 
 export interface SeqChord {
   chord: Chord;
@@ -77,7 +80,7 @@ export function makeSeq(level: number, rng: Rng = Math.random, templateId?: stri
   const chords = spellProgression(key, id).map(({ chord, roman }) =>
     chord.quality === '7b9' ? { chord: { ...chord, quality: '7' }, roman: roman.replace('♭9', '') } : { chord, roman }
   );
-  return { template: t, key, chords, showKey: level === 1 };
+  return { template: t, key, chords, showKey: level <= 1 };
 }
 
 const isMinor = (c: Chord) => ['min', 'hdim', 'dim'].includes(QUALITIES[c.quality].family);
@@ -92,6 +95,12 @@ const ROMAN_POOL: Record<string, string[]> = {
   maj: ['IΔ7', 'IVΔ7', '♭VIΔ7', '♭IIIΔ7', 'VΔ7'],
   hdim: ['IIø7', 'VIIø7', 'VIø7', '♯IVø7'],
   m6: ['Im6', 'IVm6', 'IIm6', 'Vm6']
+};
+/** Débutant : degrés des accords de 3 sons. */
+const TRIAD_POOL: Record<string, string[]> = {
+  maj: ['I', 'IV', 'V', '♭VII', '♭III', '♭VI', 'II'],
+  min: ['IIm', 'IIIm', 'VIm', 'IVm', 'Im', 'Vm'],
+  dim: ['VII°', '♯IV°', 'II°', '♯I°']
 };
 const SCALE_POOL: Record<string, string[]> = {
   dom: ['mixolydien', 'mixob9b13', 'alteree', 'lydienb7', 'dimHW'],
@@ -110,7 +119,7 @@ function degreeQ(seq: Seq, rng: Rng): Question {
     seq,
     focus: i,
     prompt: `Degré de ${sym} ?`,
-    choices: withDistractors(roman, ROMAN_POOL[familyKey(chord)] ?? ROMAN_POOL.dom, 3, rng),
+    choices: withDistractors(roman, TRIAD_POOL[chord.quality] ?? ROMAN_POOL[familyKey(chord)] ?? ROMAN_POOL.dom, 3, rng),
     answer: roman,
     explain: `${sym} = ${roman} en ${keyLabel(seq.key)}. ${seq.template.hint}`
   };
@@ -183,7 +192,18 @@ function toneQ(seq: Seq, rng: Rng): Question {
   const askThird = rng() < 0.5;
   const pc = askThird ? g.third : g.seventh;
   const otherPc = askThird ? g.seventh : g.third;
-  const label = askThird ? (g.thirdLabel === '4' ? 'Quarte' : 'Tierce') : g.seventhLabel === '7' ? 'Septième' : g.seventhLabel === '6' ? 'Sixte' : 'Septième diminuée';
+  const triad = /5/.test(g.seventhLabel);
+  const label = askThird
+    ? g.thirdLabel === '4'
+      ? 'Quarte'
+      : 'Tierce'
+    : triad
+      ? 'Quinte'
+      : g.seventhLabel === '7'
+        ? 'Septième'
+        : g.seventhLabel === '6'
+          ? 'Sixte'
+          : 'Septième diminuée';
   const answer = spellInChord(c, pc);
   const letter = 'CDEFGAB'.indexOf(answer[0]);
   const near = [-1, 1].map((d) => noteName(spellWith(letter, pc + d)));
@@ -196,7 +216,9 @@ function toneQ(seq: Seq, rng: Rng): Question {
     prompt: `${label} de ${sym} ?`,
     choices: withDistractors(answer, pool, 3, rng),
     answer,
-    explain: `${sym} : 3ce = ${spellInChord(c, g.third)}, 7e = ${spellInChord(c, g.seventh)}. Ce sont ses guide tones.`
+    explain: triad
+      ? `${sym} : ${chordNotes(c).map(noteName).join(' ')}. 3ce = ${spellInChord(c, g.third)}, 5te = ${spellInChord(c, g.seventh)}.`
+      : `${sym} : 3ce = ${spellInChord(c, g.third)}, 7e = ${spellInChord(c, g.seventh)}. Ce sont ses guide tones.`
   };
 }
 

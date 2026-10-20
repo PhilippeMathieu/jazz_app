@@ -42,7 +42,7 @@ const weight = (tally: Tally, k: string, last?: string) => {
 
 export function makeEarQuestion(mode: EarMode, level: number, tally: Tally, last?: string, rng: Rng = Math.random): EarQuestion {
   if (mode === 'prog') {
-    const id = weightedPick(PROG_LEVELS[level - 1], (k) => weight(tally, 'prog:' + k, last), rng);
+    const id = weightedPick(PROG_LEVELS[level], (k) => weight(tally, 'prog:' + k, last), rng);
     let prev: number[] | null = null;
     const chords = spellProgression(keyFor(id, rndInt(12, rng)), id).map(({ chord, roman }) => {
       const v = voiceLead(chord, prev, 52, 76);
@@ -51,7 +51,7 @@ export function makeEarQuestion(mode: EarMode, level: number, tally: Tally, last
     });
     return { mode, id, chords, choices: progChoices(id, level, rng) };
   }
-  const q = weightedPick(QUALITY_LEVELS[level - 1], (k) => weight(tally, mode + ':' + k, last), rng);
+  const q = weightedPick(QUALITY_LEVELS[level], (k) => weight(tally, mode + ':' + k, last), rng);
   const c = chordOnPc(rndInt(12, rng), q);
   return { mode, q, c: { chord: c, notes: earVoicing(c, mode === 'ear' ? level : 1, rng) } };
 }
@@ -63,7 +63,7 @@ export function makeEarQuestion(mode: EarMode, level: number, tally: Tally, last
 export function progChoices(id: string, level: number, rng: Rng = Math.random): string[] {
   const n = PROGRESSIONS[id].steps.length;
   const same = (ids: string[]) => ids.filter((x) => x !== id && PROGRESSIONS[x].steps.length === n);
-  const near = [level - 1, level, level - 2, level + 1].filter((l) => l >= 0 && l < PROG_LEVELS.length);
+  const near = [level, level + 1, level - 1, level + 2].filter((l) => l >= 0 && l < PROG_LEVELS.length);
   const ordered: string[] = [];
   for (const l of near) for (const x of shuffle(same(PROG_LEVELS[l]), rng)) if (!ordered.includes(x)) ordered.push(x);
   return shuffle([id, ...ordered.slice(0, 3)], rng);

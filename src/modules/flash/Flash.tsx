@@ -18,6 +18,7 @@ import { notesMarks } from '../../ui/keyboardMarks';
 import { ChordStats, FlashSettings, Item, ORDER_LABEL, Order, nextBatch, statKey } from './batch';
 import { LEVEL_LABELS } from '../oreille/data';
 
+const VOICING_NAME: Record<VoicingType, string> = { triad: 'Débutant : 3 sons', shell: 'Shell', A: 'Type A', B: 'Type B' };
 const DEFAULT: FlashSettings = { level: 1, type: 'shell', order: 'iiVI', delay: 4, sound: true };
 const DELAYS = [2, 4, 6, 10, 0];
 
@@ -42,11 +43,11 @@ export function Flash() {
       <h2 class="label">Voicing</h2>
       <Segmented
         cards
-        cols={3}
+        cols={2}
         label="Voicing"
         value={s.type}
         onChange={(type) => setS({ ...s, type })}
-        options={(Object.keys(VOICING_LABEL) as VoicingType[]).map((t) => ({ value: t, label: t === 'shell' ? 'Shell' : `Type ${t}`, sub: VOICING_LABEL[t] }))}
+        options={(Object.keys(VOICING_LABEL) as VoicingType[]).map((t) => ({ value: t, label: VOICING_NAME[t], sub: VOICING_LABEL[t] }))}
       />
       <h2 class="label">Enchaînement</h2>
       <Segmented
@@ -57,10 +58,15 @@ export function Flash() {
         onChange={(order) => setS({ ...s, order })}
         options={(Object.keys(ORDER_LABEL) as Order[]).map((o) => ({ value: o, label: ORDER_LABEL[o] }))}
       />
-      {s.order === 'random' || s.order === 'cycle' ? (
+      {(s.order === 'random' || s.order === 'cycle') && s.type !== 'triad' ? (
         <>
           <h2 class="label">Accords</h2>
-          <Segmented label="Accords" value={s.level} onChange={(level) => setS({ ...s, level })} options={LEVEL_LABELS.build.map((t, i) => ({ value: i + 1, label: `N${i + 1}`, sub: t }))} />
+          <Segmented
+            label="Accords"
+            value={Math.max(1, s.level)}
+            onChange={(level) => setS({ ...s, level })}
+            options={LEVEL_LABELS.build.slice(1).map((t, i) => ({ value: i + 1, label: `N${i + 1}`, sub: t }))}
+          />
         </>
       ) : null}
       <h2 class="label">Temps pour jouer</h2>
@@ -70,9 +76,11 @@ export function Flash() {
         <span>Faire entendre le voicing après chaque accord</span>
       </label>
       <p class="muted small">
-        {s.type === 'shell'
-          ? 'Shell : fondamentale à la basse, puis 3ce et 7e. Sous la, la 3ce passe au-dessus de la 7e (1-7-10).'
-          : 'Sans fondamentale : la basse joue la fondamentale. A et B alternent pour que les voix bougent peu.'}{' '}
+        {s.type === 'triad'
+          ? 'Débutant : accords de 3 sons, majeurs et mineurs. Joue-les dans le renversement que tu veux ; l’appli montre le plus proche du précédent.'
+          : s.type === 'shell'
+            ? 'Shell : fondamentale à la basse, puis 3ce et 7e. Sous la, la 3ce passe au-dessus de la 7e (1-7-10).'
+            : 'Sans fondamentale : la basse joue la fondamentale. A et B alternent pour que les voix bougent peu.'}{' '}
         Les accords ratés ou lents reviennent plus souvent.
       </p>
       <button class="btn primary block" onClick={() => setRunning(true)}>
@@ -238,7 +246,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
       </div>
       <div class="stand-main">
         <div class="stand-now">
-          <span class="stand-bar">{item.type === 'shell' ? 'Shell' : `Sans fondamentale, type ${item.type}`}</span>
+          <span class="stand-bar">{item.type === 'triad' ? '3 sons' : item.type === 'shell' ? 'Shell' : `Sans fondamentale, type ${item.type}`}</span>
           <span class="stand-sym" style={`font-size:min(${fitSymbol(sym, 34, 150)}cqw, 26vh)`}>
             {sym}
           </span>
@@ -256,7 +264,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
           {revealed ? (
             <span class="stand-info">
               {voicing.map((m) => spellInChord(c, m)).join(' ')} <span class="muted">= {voicing.map((m) => degreeLabel(c, m)).join(' ')}</span>
-              {item.type !== 'shell' ? <span class="stand-bass">basse (main gauche ou contrebasse) : {spellInChord(c, rootPc(c))}</span> : null}
+              {item.type === 'A' || item.type === 'B' ? <span class="stand-bass">basse (main gauche ou contrebasse) : {spellInChord(c, rootPc(c))}</span> : null}
             </span>
           ) : (
             <span class="stand-info muted">{paused ? 'En pause' : 'Joue-le…'}</span>

@@ -102,3 +102,19 @@ describe('analyse harmonique', () => {
     expect(keyName(a.chords[2].key)).toBe('C');
   });
 });
+
+describe('accords de 3 sons', () => {
+  it('Dm G C : le G joue le V, même sans 7e ; les tonalités suivent le cycle', () => {
+    const c = chartById('cycle-tri')!;
+    const a = analyze(c);
+    expect(a.chords.slice(0, 3).map((x) => x.roman)).toEqual(['IIm', 'V', 'I']);
+    expect(a.brackets.length).toBeGreaterThanOrEqual(12);
+    expect(keyName(a.chords[4].key)).toBe('F');
+    expect(keyName(a.chords[8].key)).toBe('B♭');
+  });
+  it('I – VI – IV – V reste en C', () => {
+    const a = analyze(chartById('debutant-1645')!);
+    expect(a.chords.slice(0, 4).map((x) => x.roman)).toEqual(['I', 'VIm', 'IV', 'V']);
+    expect(new Set(a.chords.map((x) => keyName(x.key)))).toEqual(new Set(['C']));
+  });
+});

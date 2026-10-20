@@ -1,6 +1,8 @@
 // Contenu pédagogique du module Oreille.
 
 export const HINTS: Record<string, string> = {
+  maj: 'Tierce majeure (2 tons) puis tierce mineure : son clair, stable.',
+  min: 'Tierce mineure (1 ton ½) puis tierce majeure : son plus sombre, plus doux.',
   maj7: 'Tierce majeure + 7e majeure. Stable, lumineux : l’accord de tonique.',
   m7: 'Tierce mineure + 7e mineure. Doux ; c’est le II du ii–V–I.',
   '7': 'Tierce majeure + 7e mineure. Le triton entre 3 et 7 crée la tension qui veut résoudre.',
@@ -18,7 +20,9 @@ export const HINTS: Record<string, string> = {
   '13': '3, 7, 9 et 13, sans quinte. Dominante brillante.'
 };
 
+/** Qualités par niveau : 0 = débutant (3 sons), puis 1 à 4. */
 export const QUALITY_LEVELS = [
+  ['maj', 'min'],
   ['maj7', 'm7', '7'],
   ['maj7', 'm7', '7', 'm7b5', 'dim7'],
   ['maj7', 'm7', '7', 'm7b5', 'dim7', '6', 'm6', '7sus4', 'mM7'],
@@ -27,6 +31,7 @@ export const QUALITY_LEVELS = [
 
 /** Enchaînements par niveau (identifiants de core/theory/progressions). */
 export const PROG_LEVELS = [
+  ['I-IV-V', 'I-vi-IV-V', 'I-V-vi-IV', 'iiVItri'],
   ['iiVI', 'turn1', 'turn3', 'IVii'],
   ['iiVI', 'turn1', 'iiVim', 'sec', 'I7IV'],
   ['iiVI', 'subV', 'back', 'bridge', 'dimp'],
@@ -34,7 +39,7 @@ export const PROG_LEVELS = [
 ];
 
 export const LEVEL_LABELS = {
-  ear: ['maj7 · m7 · 7', '+ ø7 · °7', '+ 6 · m6 · sus4 · m(maj7), renversés', '9 · ♭9 · ♯9 · 13, sans fondamentale'],
-  prog: ['Diatonique', 'Mineur, secondaires', 'Substitutions', 'Avancé'],
-  build: ['maj7 · m7 · 7', '+ ø7 · °7', '+ 6 · m6 · sus4 · m(maj7)', '9 · ♭9 · ♯9 · 13']
+  ear: ['Débutant : majeur ou mineur (3 sons)', 'maj7 · m7 · 7', '+ ø7 · °7', '+ 6 · m6 · sus4 · m(maj7), renversés', '9 · ♭9 · ♯9 · 13, sans fondamentale'],
+  prog: ['Débutant : I, IV, V, VIm en 3 sons', 'Diatonique', 'Mineur, secondaires', 'Substitutions', 'Avancé'],
+  build: ['Débutant : majeur ou mineur (3 sons)', 'maj7 · m7 · 7', '+ ø7 · °7', '+ 6 · m6 · sus4 · m(maj7)', '9 · ♭9 · ♯9 · 13']
 };

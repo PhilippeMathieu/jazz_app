@@ -19,8 +19,8 @@ describe('analyse express', () => {
   });
 
   it('chaque question a des choix distincts dont la bonne réponse', () => {
-    for (const level of [1, 2, 3])
-      for (const q of rounds(level, 150, level)) {
+    for (const level of [0, 1, 2, 3])
+      for (const q of rounds(level, 150, level + 1)) {
         expect(q.choices).toContain(q.answer);
         expect(new Set(q.choices).size).toBe(q.choices.length);
         expect(q.choices.length).toBeGreaterThanOrEqual(2);
@@ -64,8 +64,16 @@ describe('analyse express', () => {
     }
   });
 
+  it('débutant : que des accords de 3 sons', () => {
+    for (const q of rounds(0, 100, 31)) {
+      for (const c of q.seq.chords) expect(['maj', 'min', 'dim']).toContain(c.chord.quality);
+      expect(['degree', 'pattern', 'tone']).toContain(q.type);
+      if (q.type === 'tone') expect(q.prompt).toMatch(/^(Tierce|Quinte)/);
+    }
+  });
+
   it('le chiffrage fonctionnel retrouve celui des enchaînements types', () => {
-    for (const id of ['iiVI', 'iiV', 'turn1', 'turn3', 'iiVim', 'iiVm', 'minTurn', 'sec', 'subV', 'back', 'casc', 'subVm', 'I7IV'])
+    for (const id of ['I-IV-V', 'I-vi-IV-V', 'I-V-vi-IV', 'I-vi-ii-V', 'iiVItri', 'iiVI', 'iiV', 'turn1', 'turn3', 'iiVim', 'iiVm', 'minTurn', 'sec', 'subV', 'back', 'casc', 'subVm', 'I7IV'])
       for (let pc = 0; pc < 12; pc++) {
         const seq = makeSeq(3, () => pc / 12 + 0.01, id);
         expect(functionalRomans(seq.chords.map((c) => c.chord), seq.key), `${id} ${pc}`).toEqual(seq.chords.map((c) => c.roman));

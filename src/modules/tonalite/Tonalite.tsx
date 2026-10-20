@@ -11,7 +11,7 @@ import { StatBars } from '../../ui/StatBars';
 import { Clock, fmtSec } from '../../ui/Clock';
 import { SpeakerIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
-import { DegQuality, LEVELS, MAJOR, MINOR, Question, Tally, chordOf, choicesFor, harmonize, makeQuestion } from './drill';
+import { DegQuality, LEVELS, MAJOR, MAJOR_TRIADS, MINOR, Question, Tally, chordOf, choicesFor, harmonize, makeQuestion } from './drill';
 
 type RunMode = 'sprint' | 'serie';
 const SPRINT_MS = 60_000;
@@ -33,7 +33,7 @@ interface Saved {
   byDeg: Timed;
   byKey: Timed;
 }
-const DEFAULT: Saved = { level: 1, mode: 'sprint', records: {}, items: {}, byDeg: {}, byKey: {} };
+const DEFAULT: Saved = { level: 0, mode: 'sprint', records: {}, items: {}, byDeg: {}, byKey: {} };
 
 interface Answer {
   q: Question;
@@ -45,13 +45,13 @@ interface Answer {
 }
 const known = (a: Answer) => a.ok && !a.guessed;
 
-const degKey = (q: Question) => `${q.key.mode === 'major' ? 'M' : 'm'}:${q.degree.roman}`;
+const degKey = (q: Question) => `${q.degree.triad ? 'T' : q.key.mode === 'major' ? 'M' : 'm'}:${q.degree.roman}`;
 const symOf = (q: DegQuality) => QUALITIES[q].sym;
 const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
   !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 
 /** Degrés dans l'ordre, pour les statistiques. */
-const DEG_ORDER = [...MAJOR.map((d) => ({ id: 'M:' + d.roman, label: d.roman })), ...MINOR.map((d) => ({ id: 'm:' + d.roman, label: d.roman + ' (mineur)' }))];
+const DEG_ORDER = [...MAJOR_TRIADS.map((d) => ({ id: 'T:' + d.roman, label: d.roman + ' (3 sons)' })), ...MAJOR.map((d) => ({ id: 'M:' + d.roman, label: d.roman })), ...MINOR.map((d) => ({ id: 'm:' + d.roman, label: d.roman + ' (mineur)' }))];
 
 function add(t: Timed, k: string, ok: boolean, ms: number): Timed {
   const b = t[k] ?? { c: 0, t: 0, ms: 0 };
@@ -104,12 +104,12 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
   return (
     <div class="screen">
       <TopBar title="Accords de la tonalité" />
-      <p class="intro">Une tonalité, une fondamentale : trouve le type d’accord. En D majeur, F♯ → m7.</p>
+      <p class="intro">Une tonalité, une fondamentale : trouve le type d’accord. En D majeur, F♯ → {level === 0 ? 'mineur (F♯m)' : 'm7 (F♯m7)'}.</p>
       <Segmented
         label="Niveau"
         value={level}
         onChange={(v) => setSaved((s) => ({ ...s, level: v }))}
-        options={LEVELS.map((l, i) => ({ value: i + 1, label: l.label, sub: l.desc }))}
+        options={LEVELS.map((l, i) => ({ value: i, label: l.label, sub: l.desc }))}
       />
       <Segmented
         label="Format"
@@ -128,6 +128,9 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
       </button>
       <details class="help">
         <summary>Le truc à retenir</summary>
+        <p class="small">
+          <b>Débutant, 3 sons</b> : <span class="mono">majeur, mineur, mineur, majeur, majeur, mineur, diminué</span> (I à VII). En C : C Dm Em F G Am B°.
+        </p>
         <p class="small">
           <b>Majeur</b> : <span class="mono">Δ7 m7 m7 Δ7 7 m7 ø7</span> (I à VII).
         </p>
@@ -201,7 +204,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   };
 
   const correct = answers.filter(known).length;
-  const row = harmonize(q.key);
+  const row = harmonize(q.key, !!q.degree.triad);
   return (
     <div class="screen play-screen">
       <header class="topbar">
@@ -209,7 +212,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          N{level} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {LEVELS[level].label} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -298,7 +301,7 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
           <span>de réflexion</span>
         </div>
       </div>
-      {newRecord ? <p class="banner ok">Nouveau record en N{saved.level}.</p> : null}
+      {newRecord ? <p class="banner ok">Nouveau record, niveau {LEVELS[saved.level].label}.</p> : null}
       <StatBars rows={per.map((x) => ({ label: x.label, c: x.c, t: x.n, value: `${x.c}/${x.n} · ${fmtSec(x.ms / x.n)}` }))} />
       <div class="row-actions">
         <button class="btn primary" onClick={onAgain}>

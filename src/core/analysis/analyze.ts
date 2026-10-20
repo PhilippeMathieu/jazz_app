@@ -83,6 +83,9 @@ function fitCost(c: Chord, tonic: number, mode: Mode, blues = false): number {
   const fn = fnOf(c);
   // Dans un blues, I7 et IV7 sont la norme.
   if (blues && mode === 'major' && fn === 'dom' && (d === 0 || d === 5)) return 0;
+  // Accords de 3 sons diatoniques : V majeur (en majeur comme en mineur), VII° en majeur, II° en mineur.
+  if (c.quality === 'maj' && d === 7) return 0;
+  if (c.quality === 'dim' && ((mode === 'major' && d === 11) || (mode === 'minor' && d === 2))) return 0;
   const v = (mode === 'major' ? MAJOR : MINOR)[d]?.[fn];
   if (v !== undefined) return v;
   if (fn === 'dom') return 1.5;
@@ -138,7 +141,14 @@ export function analyze(chart: Chart): Analysis {
   const next = (i: number) => (i + 1) % n; // la grille boucle
   const rp = (i: number) => rootPc(units[i].chord);
   const unitBeats = (i: number) => units[i].idx.reduce((t, ix) => t + flat[ix].beats, 0);
-  const fn = (i: number) => fnOf(units[i].chord);
+  // Accord majeur de 3 sons entre un mineur une quarte plus bas et une résolution une quarte plus haut
+  // (Dm G C) : il joue le rôle de V, même sans 7e.
+  const triadV = units.map((u, i) => {
+    if (u.chord.quality !== 'maj' || n < 3) return false;
+    const p = (i - 1 + n) % n;
+    return isMinorSeventhLike(units[p].chord) && mod(rp(i) - rp(p), 12) === 5 && mod(rp(next(i)) - rp(i), 12) === 5;
+  });
+  const fn = (i: number): Fn => (triadV[i] ? 'dom' : fnOf(units[i].chord));
 
   // 2. Résolutions et ii–V
   const res: (Resolution | undefined)[] = units.map((u, i) => {

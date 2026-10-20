@@ -28,7 +28,7 @@ interface Saved {
   byType: Record<string, { c: number; t: number; ms: number }>;
   byTemplate: Tally;
 }
-const DEFAULT: Saved = { level: 1, mode: 'sprint', records: {}, byType: {}, byTemplate: {} };
+const DEFAULT: Saved = { level: 0, mode: 'sprint', records: {}, byType: {}, byTemplate: {} };
 
 interface Answer {
   q: Question;
@@ -92,11 +92,10 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
       <TopBar title="Analyse express" />
       <p class="intro">Une suite d’accords, trois questions dessus, le plus vite possible.</p>
       <Segmented
-        cards
         label="Niveau"
         value={level}
         onChange={(v) => setSaved((s) => ({ ...s, level: v }))}
-        options={LEVELS.map((l, i) => ({ value: i + 1, label: l.label, sub: l.desc }))}
+        options={LEVELS.map((l, i) => ({ value: i, label: l.label, sub: l.desc }))}
       />
       <Segmented
         label="Format"
@@ -181,7 +180,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          N{level} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {LEVELS[level]?.label} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -262,7 +261,7 @@ function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved;
           <span>de réflexion</span>
         </div>
       </div>
-      {newRecord ? <p class="banner ok">Nouveau record en N{saved.level}.</p> : null}
+      {newRecord ? <p class="banner ok">Nouveau record, niveau {LEVELS[saved.level]?.label}.</p> : null}
       <StatBars rows={per.map((x) => ({ label: QTYPE_LABEL[x.t], c: x.c, t: x.n, value: `${x.c}/${x.n} · ${fmt(x.ms / x.n)}` }))} />
       <div class="row-actions">
         <button class="btn primary" onClick={onAgain}>

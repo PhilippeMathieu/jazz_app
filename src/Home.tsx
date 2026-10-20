@@ -16,7 +16,7 @@ interface Tile {
 }
 const METRO: Tile[] = [
   { href: '#/lecture', title: 'Lecture de notes', text: 'Clé de sol, clé de fa : touche, nomme ou joue la note au piano.' },
-  { href: '#/tonalite', title: 'Accords de la tonalité', text: 'En D majeur, F♯ : maj7, m7, 7 ou ø7 ? Chronométré, 12 tonalités.' },
+  { href: '#/tonalite', title: 'Accords de la tonalité', text: 'En D majeur, F♯ : majeur ou mineur ? Puis m7, 7, ø7. Chronométré.' },
   { href: '#/express', title: 'Analyse express', text: 'Degrés, enchaînements, 9 ou ♭9, guide tones, chronométrés.' },
   { href: '#/oreille', title: 'Oreille', text: 'Reconnaître accords et progressions, construire les accords.', tag: 'Écouteurs' }
 ];

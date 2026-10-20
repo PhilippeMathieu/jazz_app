@@ -34,6 +34,14 @@ export const PROGRESSIONS: Record<string, Progression> = Object.fromEntries(
     P('dimp', 'Diminué de passage', 'major', [[0, 0, 'maj7', 'IΔ7'], [0, 1, 'dim7', '♯I°7'], [1, 2, 'm7', 'IIm7'], [4, 7, '7', 'V7']], 'Le °7 relie I et II par une basse chromatique montante.'),
     P('casc', 'ii–V en cascade', 'major', [[2, 4, 'm7', 'IIIm7'], [5, 9, '7', 'V7/II'], [1, 2, 'm7', 'IIm7'], [4, 7, '7', 'V7'], [0, 0, 'maj7', 'IΔ7']], 'Un ii–V vers le II, puis un ii–V vers le I.'),
     P('subVm', 'Sub. tritonique en mineur', 'minor', [[1, 2, 'm7b5', 'IIø7'], [1, 1, '7', 'SubV7'], [0, 0, 'm6', 'Im6']], 'ii–V–i mineur avec le SubV7 à la place du V7.'),
+    // Accords de 3 sons (niveau débutant)
+    P('I-IV-V', 'I – IV – V – I', 'major', [[0, 0, 'maj', 'I'], [3, 5, 'maj', 'IV'], [4, 7, 'maj', 'V'], [0, 0, 'maj', 'I']], 'Les trois accords majeurs de la gamme : tonique, sous-dominante, dominante. Le V ramène au I.'),
+    P('I-vi-IV-V', 'I – VI – IV – V', 'major', [[0, 0, 'maj', 'I'], [5, 9, 'min', 'VIm'], [3, 5, 'maj', 'IV'], [4, 7, 'maj', 'V']], 'Tonique, relatif mineur, IV, V : la boucle des années 50.'),
+    P('I-V-vi-IV', 'I – V – VI – IV', 'major', [[0, 0, 'maj', 'I'], [4, 7, 'maj', 'V'], [5, 9, 'min', 'VIm'], [3, 5, 'maj', 'IV']], 'La boucle pop la plus jouée : le VIm est le relatif mineur du I.'),
+    P('I-vi-ii-V', 'I – VI – II – V (3 sons)', 'major', [[0, 0, 'maj', 'I'], [5, 9, 'min', 'VIm'], [1, 2, 'min', 'IIm'], [4, 7, 'maj', 'V']], 'Le turnaround en accords de 3 sons : la basse descend par quintes à partir du VI.'),
+    P('iiVItri', 'II – V – I (3 sons)', 'major', [[1, 2, 'min', 'IIm'], [4, 7, 'maj', 'V'], [0, 0, 'maj', 'I']], 'La cadence du jazz, sans les 7es : mineur, majeur, majeur, la basse monte de quarte.'),
+    P('i-iv-V', 'I – IV – V – I mineur', 'minor', [[0, 0, 'min', 'Im'], [3, 5, 'min', 'IVm'], [4, 7, 'maj', 'V'], [0, 0, 'min', 'Im']], 'En mineur, le V est majeur grâce à la sensible : Am Dm E Am.'),
+    P('iiVimtri', 'II – V – I mineur (3 sons)', 'minor', [[1, 2, 'dim', 'II°'], [4, 7, 'maj', 'V'], [0, 0, 'min', 'Im']], 'Le II du mineur est diminué, le V majeur, le I mineur.'),
     P('coltrane', 'Coltrane changes', 'major', [[0, 0, 'maj7', 'IΔ7'], [2, 3, '7', '♭III7'], [5, 8, 'maj7', '♭VIΔ7'], [6, 11, '7', 'VII7'], [2, 4, 'maj7', 'IIIΔ7']], 'Trois centres tonaux à une tierce majeure d’écart, reliés par leur V7.')
   ].map((p) => [p.id, p])
 );

@@ -80,8 +80,9 @@ export function displayVoicing(c: Chord, scale?: string): number[] {
 
 // ---------------------------------------------------------------- Main gauche (Flash voicings)
 
-export type VoicingType = 'shell' | 'A' | 'B';
+export type VoicingType = 'triad' | 'shell' | 'A' | 'B';
 export const VOICING_LABEL: Record<VoicingType, string> = {
+  triad: 'Fondamentale, 3ce, 5te, renversement libre',
   shell: 'Fondamentale, 3ce, 7e',
   A: 'Sans fondamentale, 3ce en bas',
   B: 'Sans fondamentale, 7e en bas'
@@ -107,6 +108,24 @@ const moveCost = (v: number[], prev: number[]) => v.reduce((s, x, i) => s + Math
 export function lhVoicing(c: Chord, type: VoicingType, prev: number[] | null = null): number[] {
   const r = rootPc(c);
   const iv = QUALITIES[c.quality].iv;
+  if (type === 'triad') {
+    // 3 sons serrés : état fondamental au départ, puis le renversement le plus proche.
+    const pcs = iv.slice(0, 3).map((x) => mod(r + x, 12));
+    if (!prev) return closeVoicing(pcs, 53 + mod(r - 53, 12));
+    const center = prev.reduce((a, b) => a + b, 0) / prev.length;
+    let best: number[] | null = null;
+    for (let rot = 0; rot < 3; rot++) {
+      const order = pcs.slice(rot).concat(pcs.slice(0, rot));
+      for (let low = 50; low <= 64; low++) {
+        if (mod(low, 12) !== order[0]) continue;
+        const v = closeVoicing(order, low);
+        if (v[0] !== low) continue;
+        const d = Math.abs(v.reduce((a, b) => a + b, 0) / 3 - center);
+        if (!best || d < Math.abs(best.reduce((a, b) => a + b, 0) / 3 - center)) best = v;
+      }
+    }
+    return best ?? closeVoicing(pcs, 53 + mod(r - 53, 12));
+  }
   if (type === 'shell') {
     const third = thirdOf(iv);
     const seventh = seventhOf(iv);

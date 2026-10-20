@@ -25,6 +25,155 @@ export interface Part {
 
 export const PARTS: Part[] = [
   {
+    title: 'Débuter',
+    lessons: [
+      {
+        id: 'triades',
+        title: 'Les accords de 3 sons',
+        sub: 'Majeur, mineur : la base de tout',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Un accord de base empile **deux tierces** sur une note, la fondamentale : on obtient la fondamentale, la **tierce** et la **quinte** (1, 3, 5). C’est un accord de 3 sons, ou triade.'
+          },
+          {
+            t: 'p',
+            text: 'Il existe deux tierces : **majeure** (2 tons, C → E) et **mineure** (1 ton ½, C → E♭). Leur ordre donne le type d’accord.'
+          },
+          {
+            t: 'table',
+            head: ['Accord', 'Tierces', 'Sur C', 'Symbole'],
+            rows: [
+              ['Majeur', 'majeure + mineure', 'C E G', 'C'],
+              ['Mineur', 'mineure + majeure', 'C E♭ G', 'Cm'],
+              ['Diminué', 'mineure + mineure', 'C E♭ G♭', 'C°'],
+              ['Augmenté', 'majeure + majeure', 'C E G♯', 'C+']
+            ]
+          },
+          { t: 'chords', label: 'Touche un accord pour l’entendre et le voir', chords: ['C', 'Cm', 'Cdim', 'Caug'], gap: 1.3 },
+          {
+            t: 'p',
+            text: '**Majeur** : clair, stable. **Mineur** : plus sombre, plus doux. Entre C et Cm, une seule note change : la tierce, E → E♭.'
+          },
+          { t: 'h', text: 'Les renversements' },
+          {
+            t: 'p',
+            text: 'Les mêmes notes dans un autre ordre restent le même accord : C E G (état fondamental), E G C (1er renversement), G C E (2e). On choisit le renversement le plus proche de l’accord précédent : la main bouge à peine.'
+          },
+          { t: 'chords', label: 'C, F, G, C en renversements proches', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'], voicing: 'triad', gap: 1.2 },
+          { t: 'tip', text: 'Majeur : **tierce majeure en bas**. Mineur : **tierce mineure en bas**. La quinte est la même (juste) dans les deux.' },
+          {
+            t: 'quiz',
+            q: 'Quelles notes forment Am ?',
+            choices: ['A C♯ E', 'A C E', 'A C E♭', 'A D E'],
+            answer: 1,
+            explain: 'A → C : tierce mineure, C → E : tierce majeure. A C E.'
+          },
+          {
+            t: 'quiz',
+            q: 'D F♯ A, c’est…',
+            choices: ['D majeur', 'D mineur', 'D diminué', 'F♯ mineur'],
+            answer: 0,
+            explain: 'D → F♯ : tierce majeure en bas, puis tierce mineure : D majeur.'
+          },
+          {
+            t: 'go',
+            links: [
+              { href: '#/oreille', label: 'Oreille, niveau Débutant : majeur ou mineur ?' },
+              { href: '#/flash', label: 'Flash voicings, « Débutant : 3 sons »' }
+            ]
+          }
+        ]
+      },
+      {
+        id: 'tonalite-3',
+        title: 'Les accords de la gamme',
+        sub: 'C Dm Em F G Am B°',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Construis un accord de 3 sons sur chaque note de la gamme de C majeur, avec seulement les notes de la gamme (les touches blanches) :'
+          },
+          { t: 'chords', chords: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'], romans: ['I', 'IIm', 'IIIm', 'IV', 'V', 'VIm', 'VII°'], gap: 0.9 },
+          {
+            t: 'p',
+            text: '**3 majeurs** (I, IV, V), **3 mineurs** (II, III, VI), **1 diminué** (VII). C’est la même chose dans toutes les tonalités : en G majeur, G Am Bm C D Em F♯°.'
+          },
+          {
+            t: 'p',
+            text: 'On numérote les degrés en chiffres romains : I pour la tonique, V pour la dominante. Le chiffre dit **où** est l’accord dans la tonalité, le « m » dit qu’il est mineur.'
+          },
+          { t: 'tip', text: '**Majeur, mineur, mineur, majeur, majeur, mineur, diminué** : à savoir par cœur, dans l’ordre.' },
+          {
+            t: 'quiz',
+            q: 'En F majeur, l’accord construit sur D est…',
+            choices: ['D', 'Dm', 'D°', 'D7'],
+            answer: 1,
+            explain: 'D est le VI de F : VIm, Dm (D F A).'
+          },
+          {
+            t: 'quiz',
+            q: 'En G majeur, les trois accords majeurs sont…',
+            choices: ['G, C, D', 'G, Am, D', 'G, C, Em', 'C, D, F'],
+            answer: 0,
+            explain: 'I, IV, V : G, C, D.'
+          },
+          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords de la tonalité, niveau Débutant' }] }
+        ]
+      },
+      {
+        id: 'premiers',
+        title: 'Premiers enchaînements',
+        sub: 'I–IV–V, I–VI–IV–V, II–V–I',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Trois accords suffisent pour des milliers de morceaux : **I, IV et V** (C, F, G en C). Le V appelle le retour au I.'
+          },
+          { t: 'chords', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'], voicing: 'triad', gap: 1.1 },
+          {
+            t: 'p',
+            text: 'Ajoute le VIm (Am, le relatif mineur) : **I – VI – IV – V**, la boucle des années 50, ou **I – V – VI – IV**, la boucle pop.'
+          },
+          { t: 'chords', label: 'I – VI – IV – V', chords: ['C', 'Am', 'F', 'G'], romans: ['I', 'VIm', 'IV', 'V'], voicing: 'triad', gap: 1 },
+          { t: 'chords', label: 'I – V – VI – IV', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'VIm', 'IV'], voicing: 'triad', gap: 1 },
+          { t: 'h', text: 'Vers le jazz : II – V – I' },
+          {
+            t: 'p',
+            text: 'Le jazz préfère **II – V – I** : Dm G C. La basse monte d’une quarte à chaque accord. Avec des 7es, c’est Dm7 G7 Cmaj7 : la suite des leçons.'
+          },
+          { t: 'chords', label: 'En 3 sons, puis avec les 7es', chords: ['Dm', 'G', 'C', 'Dm7', 'G7', 'Cmaj7'], romans: ['IIm', 'V', 'I', 'IIm7', 'V7', 'IΔ7'], gap: 1.1 },
+          { t: 'tip', text: 'Écoute la basse : si elle **monte d’une quarte** d’accord en accord (D → G → C), c’est un II – V – I.' },
+          {
+            t: 'quiz',
+            q: 'I – IV – V en F :',
+            choices: ['F C G', 'F B♭ C', 'F G A', 'F A♭ C'],
+            answer: 1,
+            explain: 'IV = B♭, V = C dans F majeur.'
+          },
+          {
+            t: 'quiz',
+            q: 'II – V – I en G :',
+            choices: ['Dm G C', 'Em A D', 'Am D G', 'Am C G'],
+            answer: 2,
+            explain: 'II = A (mineur), V = D, I = G.'
+          },
+          {
+            t: 'go',
+            links: [
+              { href: '#/express', label: 'Analyse express, niveau Débutant' },
+              { href: '#/grille/debutant-1645', label: 'Grille : I – VI – IV – V' },
+              { href: '#/grille/cycle-tri', label: 'Grille : II – V – I en 3 sons, 12 tonalités' }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
     title: 'Les accords',
     lessons: [
       {

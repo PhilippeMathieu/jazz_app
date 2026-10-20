@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { nextBatch, statKey, weakness } from './batch';
-import { chordSymbol } from '../../core/theory/chords';
+import { chordPcs, chordSymbol } from '../../core/theory/chords';
+import { lhVoicing } from '../../core/audio/voicing';
+import { mod } from '../../core/theory/notes';
 import { seeded } from '../../core/random';
 
 const S = { level: 1, type: 'A' as const, order: 'iiVI' as const, delay: 4, sound: true };
@@ -27,5 +29,20 @@ describe('flash voicings', () => {
     let hits = 0;
     for (let n = 0; n < 50; n++) hits += nextBatch({ ...S, order: 'random' }, n, stats, rng).filter((i) => statKey(i) === 'D♭7 · A').length;
     expect(hits).toBeGreaterThan(10);
+  });
+  it('débutant, 3 sons : II – V – I sans 7e, renversement le plus proche', () => {
+    const b = nextBatch({ ...S, type: 'triad' }, 0, {}, () => 0);
+    expect(b.map((i) => chordSymbol(i.chord)).join(' ')).toBe('Dm G C');
+    expect(b.every((i) => i.type === 'triad')).toBe(true);
+    let prev: number[] | null = null;
+    for (const it of b) {
+      const v = lhVoicing(it.chord, 'triad', prev);
+      expect(v).toHaveLength(3);
+      expect([...new Set(v.map((m) => mod(m, 12)))].sort()).toEqual([...chordPcs(it.chord)].sort());
+      if (prev) expect(Math.abs(v[1] - prev[1])).toBeLessThanOrEqual(5);
+      prev = v;
+    }
+    const r = nextBatch({ ...S, type: 'triad', order: 'random' }, 0);
+    for (const it of r) expect(['maj', 'min']).toContain(it.chord.quality);
   });
 });

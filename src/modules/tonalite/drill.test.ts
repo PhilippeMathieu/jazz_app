@@ -16,6 +16,18 @@ describe('accords de la tonalité', () => {
     expect(line('A', 'minor')).toBe('Am7 Bø7 Cmaj7 Dm7 E7 Fmaj7 G7 G♯°7');
     expect(line('C', 'minor')).toBe('Cm7 Dø7 E♭maj7 Fm7 G7 A♭maj7 B♭7 B°7');
   });
+  it('débutant : accords de 3 sons', () => {
+    expect(harmonize(k('D', 'major'), true).map((x) => x.symbol).join(' ')).toBe('D Em F♯m G A Bm C♯°');
+    expect(choicesFor(0).map((c) => c.q)).toEqual(['maj', 'min', 'dim']);
+    const rng = seeded(4);
+    for (let i = 0; i < 100; i++) {
+      const q = makeQuestion(0, {}, rng);
+      expect(q.degree.triad).toBe(true);
+      expect(['maj', 'min', 'dim']).toContain(q.answer);
+      expect(q.key.mode).toBe('major');
+      expect(q.explain).toContain('Notes');
+    }
+  });
   it('niveaux : tonalités et réponses proposées', () => {
     expect(keysFor(1)).toHaveLength(7);
     expect(keysFor(2).every((x) => x.mode === 'major')).toBe(true);

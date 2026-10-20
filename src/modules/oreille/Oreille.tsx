@@ -22,9 +22,14 @@ interface Stats {
   items: Tally;
   recent: Record<string, number[]>;
 }
-const DEFAULT: Stats = { mode: 'ear', lv: { ear: 1, prog: 1, build: 1 }, items: {}, recent: {} };
+const DEFAULT: Stats = { mode: 'ear', lv: { ear: 0, prog: 0, build: 0 }, items: {}, recent: {} };
 const PROMPT: Record<EarMode, string> = { ear: 'Quel accord ?', prog: 'Quelle progression ?', build: 'Construis cet accord' };
-const clampLv = (n: number) => (n >= 1 && n <= 4 ? n : 1);
+/** Accords de 3 sons : « majeur », « mineur » (le symbole seul serait vide pour le majeur). */
+const qualSym = (k: string) => (k === 'maj' ? 'majeur' : k === 'min' ? 'mineur' : QUALITIES[k].sym);
+const qualSub = (k: string) => (k === 'maj' ? 'ex. C' : k === 'min' ? 'ex. Cm' : QUALITIES[k].name);
+const clampLv = (n: number) => (n >= 0 && n <= 4 ? n : 1);
+/** « Débutant » (3 sons), puis N1 à N4. */
+const levelName = (n: number) => (n === 0 ? 'Débutant' : `N${n}`);
 
 export function Oreille() {
   const [stats, setStats] = useState<Stats>(() => load('oreille', DEFAULT));
@@ -139,7 +144,7 @@ export function Oreille() {
   const answered = answer !== null;
   const recent = stats.recent[mode + level] ?? [];
   const recentScore = recent.reduce((x, y) => x + y, 0);
-  const pool = mode === 'prog' ? PROG_LEVELS[level - 1] : QUALITY_LEVELS[level - 1];
+  const pool = mode === 'prog' ? PROG_LEVELS[level] : QUALITY_LEVELS[level];
 
   // Clavier
   let kb = null;
@@ -207,10 +212,10 @@ export function Oreille() {
           { value: 'build', label: 'Construire' }
         ]}
       />
-      <Segmented label="Niveau" value={level} onChange={setLevel} options={LEVEL_LABELS[mode].map((t, i) => ({ value: i + 1, label: `N${i + 1}`, sub: t }))} />
+      <Segmented label="Niveau" value={level} onChange={setLevel} options={LEVEL_LABELS[mode].map((t, i) => ({ value: i, label: levelName(i), sub: t }))} />
       {recent.length === 10 && recentScore >= 8 && level < 4 ? (
         <button class="banner ok" onClick={() => setLevel(level + 1)}>
-          {recentScore}/10 sur tes dernières réponses : passe au N{level + 1}
+          {recentScore}/10 sur tes dernières réponses : passe au {levelName(level + 1)}
         </button>
       ) : null}
 
@@ -292,8 +297,8 @@ export function Oreille() {
                   </>
                 ) : (
                   <>
-                    <span>{QUALITIES[k].sym}</span>
-                    <small>{QUALITIES[k].name}</small>
+                    <span>{qualSym(k)}</span>
+                    <small>{qualSub(k)}</small>
                   </>
                 )}
               </button>
@@ -323,12 +328,12 @@ export function Oreille() {
       </div>
 
       <section>
-        <h2 class="label">Réussite, niveau {level}</h2>
+        <h2 class="label">Réussite, {levelName(level)}</h2>
         <StatBars
           rows={pool
             .map((k) => {
               const it = stats.items[mode + ':' + k] ?? { c: 0, t: 0 };
-              return { label: mode === 'prog' ? PROGRESSIONS[k].name : QUALITIES[k].sym, c: it.c, t: it.t };
+              return { label: mode === 'prog' ? PROGRESSIONS[k].name : qualSym(k), c: it.c, t: it.t };
             })
             .sort((a, b) => (a.t ? a.c / a.t : 2) - (b.t ? b.c / b.t : 2))}
         />

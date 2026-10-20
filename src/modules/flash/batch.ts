@@ -30,7 +30,7 @@ export interface Item {
 export type ChordStats = Record<string, { c: number; t: number; ms: number }>;
 
 export const statKey = (it: Item) => `${chordSymbol(it.chord)} · ${it.type === 'shell' ? 'shell' : it.type}`;
-const other = (t: VoicingType): VoicingType => (t === 'A' ? 'B' : t === 'B' ? 'A' : 'shell');
+const other = (t: VoicingType): VoicingType => (t === 'A' ? 'B' : t === 'B' ? 'A' : t);
 
 /** Poids d'un accord : plus il est raté ou lent, plus il revient. */
 export function weakness(s: ChordStats, key: string): number {
@@ -42,14 +42,17 @@ export function weakness(s: ChordStats, key: string): number {
 }
 
 export function nextBatch(s: FlashSettings, step: number, stats: ChordStats = {}, rng: Rng = Math.random): Item[] {
+  const triad = s.type === 'triad';
   if (s.order === 'iiVI' || s.order === 'iiVim') {
-    const id = s.order;
+    // En 3 sons : II – V – I sans les 7es (II° en mineur).
+    const id = triad ? (s.order === 'iiVI' ? 'iiVItri' : 'iiVimtri') : s.order;
     const key = keyFor(id, rndInt(12, rng));
     const ctx = `${s.order === 'iiVim' ? 'ii–V–i' : 'ii–V–I'} en ${keyLabel(key)}`;
     // A, B, A : la conduite des voix reste serrée.
     return spellProgression(key, id).map(({ chord, roman }, i) => ({ chord, type: i === 1 ? other(s.type) : s.type, context: `${ctx} · ${roman}` }));
   }
-  const pool = QUALITY_LEVELS[Math.min(4, Math.max(1, s.level)) - 1];
+  // Les 3 sons se jouent en majeur et mineur ; les autres voicings suivent le niveau choisi.
+  const pool = triad ? QUALITY_LEVELS[0] : QUALITY_LEVELS[Math.min(4, Math.max(1, s.level))];
   if (s.order === 'cycle') {
     const q = pool[step % pool.length];
     return Array.from({ length: 12 }, (_, i) => ({
