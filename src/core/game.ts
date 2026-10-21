@@ -276,7 +276,8 @@ export function apply(g: GameState, ev: GameEvent, today = dayKey()): Reward[] {
       badge('analyste');
       standard(g, ev.chart, 'analyse', rewards, badge);
     }
-    progress(g, (c) => c.kind === 'analyse', rewards, gain);
+    // « Analyser [standard] » : seule cette grille compte ; « Analyser un morceau » : n'importe laquelle.
+    progress(g, (c) => c.kind === 'analyse' && (!chartOf(c) || chartOf(c) === ev.chart), rewards, gain);
   } else if (ev.type === 'listen') {
     day.ms += Math.min(10, ev.chords) * 4000;
     if (ev.chords >= 12) {
@@ -307,6 +308,9 @@ export function apply(g: GameState, ev: GameEvent, today = dayKey()): Reward[] {
   }
   return rewards;
 }
+
+/** La grille visée par un défi « Analyser … » (lue dans son lien), ou rien si n'importe laquelle convient. */
+const chartOf = (c: Challenge) => c.href.match(/^#\/grille\/([^/]+)/)?.[1];
 
 function standard(g: GameState, chart: string, part: 'analyse' | 'guide' | 'comp', rewards: Reward[], badge: (id: string) => void) {
   const s = (g.standards[chart] ??= {});

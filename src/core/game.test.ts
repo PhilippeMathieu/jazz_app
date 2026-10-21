@@ -71,4 +71,18 @@ describe('jeu', () => {
     apply(g, { type: 'listen', chart: 'blues-f', mode: 'analyse', ratio: 0.95, chords: 16 }, T);
     expect(g.badges.standard).toBeTruthy();
   });
+  it('défi « Analyser [standard] » : seule cette grille compte', () => {
+    const g = fresh();
+    const analyse = { id: 'analyse', text: 'Analyser Tune Up', kind: 'analyse' as const, goal: 1, done: 0, href: '#/grille/tune-up/analyser' };
+    g.challenges = { date: T, list: [analyse], bonus: false };
+    apply(g, { type: 'analyse', chart: 'autumn-leaves', found: 3, total: 10, bad: 0 }, T);
+    expect(g.challenges.list[0].done).toBe(0);
+    apply(g, { type: 'analyse', chart: 'tune-up', found: 3, total: 10, bad: 0 }, T);
+    expect(g.challenges.list[0].done).toBe(1);
+    // « Analyser un morceau » : n'importe laquelle.
+    const g2 = fresh();
+    g2.challenges = { date: T, list: [{ ...analyse, text: 'Analyser un morceau', href: '#/grilles' }], bonus: false };
+    apply(g2, { type: 'analyse', chart: 'autumn-leaves', found: 1, total: 10, bad: 0 }, T);
+    expect(g2.challenges.list[0].done).toBe(1);
+  });
 });
