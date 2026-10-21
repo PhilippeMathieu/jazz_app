@@ -28,11 +28,12 @@ S'entraîner
 - **Voicings** (piano) : un accord s'affiche, tu le joues, le micro valide et passe au suivant. 8 niveaux : main gauche (3 sons, shell, A, B), puis deux mains (écartés MG 1-7 / MD 3-5-9 ou 3-13-9, quartes So What, drop 2, upper structures II, VI, ♭VI, ♭III, ♭V sur 3-7). Enchaînements : au hasard, cycle de quartes, ii–V–I majeurs ou mineurs, ii–V–I dans les 12 tonalités. À deux mains, la quinte n'est pas exigée au micro (confondue avec l'harmonique de la basse). Pour dire si une note attendue est là, le micro retire moins les harmoniques (une note dont l'octave porte le son, comme G3, ne disparaît plus derrière C3) : 98 % des voicings d'une main reconnus (93 % avant), 4 % de faux acceptés.
 
 Jouer
-- **Morceaux** : 28 standards (faciles, moyens, avancés) + grilles d’exercice, import Ultimate Guitar / ChordPro. Quatre vues :
+- **Morceaux** : 28 standards (faciles, moyens, avancés) + grilles d’exercice, import Ultimate Guitar / ChordPro. Cinq vues :
   - *Degrés* : analyse (ii–V, centres tonaux, dominantes secondaires, SubV, backdoor) ; avec le micro, vérifie que ton comping contient la 3ce et la 7e.
   - *Analyser* : à toi. Touche le premier puis le dernier accord d'un enchaînement, dis ce que c'est (ii–V–I, ii–V–i mineur, ii–V, V–I, dominante secondaire, SubV, backdoor, turnaround) et vers quelle tonalité. « Vérifier » : juste / presque / faux avec l'explication, ce que tu as manqué, et à voir aussi (turnarounds, changements de tonalité, diminués de passage). Repérages gardés par grille.
   - *Gammes* : gamme de chaque accord ; avec le micro, classe chaque note jouée et compte les notes de l'accord jouées sur le 1er temps.
-  - *Guide tones* : deux lignes 3ce/7e conduites par demi-ton ; le micro vérifie le guide tone au 1er temps.
+  - *Guides* (guide tones) : deux lignes 3ce/7e conduites par demi-ton ; le micro vérifie le guide tone au 1er temps.
+  - *Mémoire* : les accords se cachent (1/4, 1/2, 3/4 sauf le début de chaque ligne, tout) ; retrouver chacun parmi 4 choix (même fondamentale autre nature, accords voisins de la grille), la case demandée reste visible sous la question ; meilleur score gardé par niveau et par morceau. On peut aussi lancer la lecture et jouer la grille de mémoire (le micro vérifie le comping).
   - Play-along (piano, contrebasse, batterie) dans 7 styles, transposition, mode pupitre plein écran.
 
 Partout : explication après chaque réponse, « J'ai deviné », questions ratées qui reviennent plus souvent. **Micro** (en bas de l'accueil) : niveau, seuil de silence, note et accord entendus.
@@ -60,7 +61,6 @@ src/
 
 Stack : TypeScript, Preact, Vite, WebAudio, service worker (hors ligne), GitHub Pages. Tests : Vitest (théorie, analyse, import, arrangement, détection calibrée sur les vrais échantillons de piano).
 
-À venir : mémoire des grilles.
 
 ## Installer
 

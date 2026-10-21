@@ -642,3 +642,12 @@
 .rh-grid { display: flex; flex-direction: column; gap: 4px; }
 .rh-grid .label { margin: 0; }
 .rh-grid .pchip b { font-family: var(--mono); }
+
+/* ---------------------------------------------------------------- Mémoire des grilles */
+.mem-panel { position: sticky; top: 0; z-index: 3; display: flex; flex-direction: column; gap: var(--s2); padding: var(--s2) 0; background: var(--bg); }
+.mem-panel .choices .choice { min-height: 48px; }
+.prompt-sm { font-weight: 600; font-size: var(--t-body, 16px); margin: 0; }
+.ch.masked .sym { color: var(--faint); }
+.ch.asked { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ch.mem-ok .sym { color: var(--ok); }
+.ch.mem-bad .sym { color: var(--bad); }

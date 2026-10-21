@@ -24,12 +24,13 @@ import { notesMarks, scaleMarks } from '../../ui/keyboardMarks';
 import { ListenMode, useListening } from './useListening';
 import { ListenButtons, useListen, withActive } from '../../ui/Listen';
 import { AnalyserForm, AnalyserHint, AnalyserPanel, useAnalyser } from './Analyser';
+import { MemoirePanel, useMemoire } from './Memoire';
 
-type Mode = ListenMode | 'analyser';
+type Mode = ListenMode | 'analyser' | 'memoire';
 type Listen = ReturnType<typeof useListening>;
 const LIVE_LO = 55;
 const LIVE_HI = 79;
-const MODES: Mode[] = ['analyse', 'analyser', 'gammes', 'guide'];
+const MODES: Mode[] = ['analyse', 'analyser', 'gammes', 'guide', 'memoire'];
 
 export function ChartView({ chart: original, initialMode }: { chart: Chart; initialMode?: Mode }) {
   const [view, setView] = useState(() => {
@@ -48,9 +49,12 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
   const rows = useMemo(() => barRows(chart), [chart]);
   const byBar = useMemo(() => chordsByBar(plan.flat), [plan]);
   const player = usePlayer(chart, original.id, original.tempo);
-  const listenMode: ListenMode = mode === 'analyser' ? 'analyse' : mode;
+  const listenMode: ListenMode = mode === 'analyser' || mode === 'memoire' ? 'analyse' : mode;
   const listen = useListening(listenMode, plan, player.pos, chart.beatsPerBar);
   const an = useAnalyser(original.id, plan, chart.beatsPerBar, shift);
+  // Premier accord de chaque ligne : reste visible au niveau « 3/4 » de la mémoire.
+  const firsts = useMemo(() => rows.map((r) => (byBar.get(r.bars[0]) ?? [])[0]).filter((x): x is number => x !== undefined), [rows, byBar]);
+  const mem = useMemoire(original.id, plan, firsts, mode === 'memoire');
   const pos = player.pos;
   const n = plan.flat.length;
   const sel = selected !== null && selected < n ? selected : null;
@@ -86,6 +90,17 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
     if (r.top < top || r.bottom > bottom) window.scrollBy({ top: r.top - top - 24, behavior: 'smooth' });
   }, [pos?.bar]);
 
+  // Mémoire : la case demandée reste visible sous le panneau.
+  useEffect(() => {
+    if (mode !== 'memoire' || mem.current === null || pos) return;
+    const el = document.querySelector(`[data-ci="${mem.current}"]`);
+    const panel = document.querySelector('.mem-panel');
+    if (!el || !panel) return;
+    const r = el.getBoundingClientRect();
+    const top = panel.getBoundingClientRect().bottom + 8;
+    if (r.top < top || r.bottom > window.innerHeight - 120) window.scrollBy({ top: r.top - top - 16, behavior: 'smooth' });
+  }, [mem.current, mode]);
+
   const keyTags = useMemo(() => {
     const m = new Map<number, string>();
     plan.analysis.regions.forEach((r) => {
@@ -105,6 +120,11 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
     setSelected(ci);
     if (mode === 'analyse') setDrawer(true);
     if (mode === 'analyser') an.tap(ci);
+    if (mode === 'memoire') {
+      mem.pick(ci);
+      // Une case cachée ne se fait pas entendre : ce serait la réponse.
+      if (mem.masked.has(ci) && mem.decor(ci).sym) return;
+    }
     if (!player.playing) {
       audio();
       playChord(displayVoicing(plan.flat[ci].chord, plan.scales[ci].scale), now() + 0.02, 1.3, 0.55);
@@ -134,13 +154,15 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
             { value: 'analyse', label: 'Degrés' },
             { value: 'analyser', label: 'Analyser' },
             { value: 'gammes', label: 'Gammes' },
-            { value: 'guide', label: 'Guide tones' }
+            { value: 'guide', label: 'Guides' },
+            { value: 'memoire', label: 'Mémoire' }
           ]}
         />
         <div class="subbar">
           <TransposeStepper chartKey={chart.key} shift={shift} onShift={setShift} />
         </div>
         {mode === 'analyser' ? <AnalyserHint an={an} plan={plan} /> : null}
+        {mode === 'memoire' ? <MemoirePanel m={mem} plan={plan} /> : null}
 
         {(mode === 'gammes' || mode === 'guide') && n ? <LivePanel refEl={liveRef} mode={mode} plan={plan} cur={cur} listen={listen} /> : null}
 
@@ -162,6 +184,7 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
                           const a = plan.analysis.chords[ci];
                           const st = listen.statusOf(pos?.chorus ?? 0, ci);
                           const dec = mode === 'analyser' ? an.decor(ci) : null;
+                          const md = mode === 'memoire' ? mem.decor(ci) : null;
                           let sub = '';
                           let subCls = 'rn';
                           if (dec) {
@@ -172,11 +195,11 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
                             sub = a.roman + arrow;
                             if (!a.diatonic) subCls += ' out';
                           } else if (mode === 'gammes') sub = SCALES[plan.scales[ci].scale].short;
-                          else sub = `${plan.guideA[ci].name} · ${plan.guideB[ci].name}`;
+                          else if (mode === 'guide') sub = `${plan.guideA[ci].name} · ${plan.guideB[ci].name}`;
                           const lCls = st?.done ? (st.ok ? ' l-ok' : ' l-miss') : '';
                           return (
-                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci && (pos || (sel !== null && mode !== 'analyser')) ? ' now' : '') + lCls + (dec?.cls ?? '')} onClick={() => tapChord(ci)}>
-                              <span class="sym">{chordSymbol(plan.flat[ci].chord)}</span>
+                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci && (pos || (sel !== null && mode !== 'analyser' && mode !== 'memoire')) ? ' now' : '') + lCls + (dec?.cls ?? '') + (md?.cls ?? '')} onClick={() => tapChord(ci)}>
+                              <span class="sym">{md?.sym ?? chordSymbol(plan.flat[ci].chord)}</span>
                               <span class={subCls}>{sub || ' '}</span>
                               {mode === 'analyse' ? <i class={'bk' + bracketPart(ci)} /> : dec ? <i class={'bk' + dec.bk} /> : null}
                               {st && st.hits.length ? (
