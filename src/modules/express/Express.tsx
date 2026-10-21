@@ -6,7 +6,10 @@ import { playSequence } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
 import { report } from '../../core/game';
 import { TopBar } from '../../ui/Screen';
-import { LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
+import { ComponentChildren } from 'preact';
+import { Field, LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
+import { Segmented } from '../../ui/Segmented';
+import { Reharm } from './Reharm';
 import { StatBars } from '../../ui/StatBars';
 import { SpeakerIcon } from '../../ui/icons';
 import { Clock, fmtSec } from '../../ui/Clock';
@@ -24,13 +27,15 @@ interface RunRecord {
   ms: number;
 }
 interface Saved {
+  /** Analyser (questions sur une grille) ou réharmoniser. */
+  exercise: 'analyse' | 'reharm';
   level: number;
   mode: RunMode;
   records: Record<string, RunRecord>;
   byType: Record<string, { c: number; t: number; ms: number }>;
   byTemplate: Tally;
 }
-const DEFAULT: Saved = { level: 0, mode: 'sprint', records: {}, byType: {}, byTemplate: {} };
+const DEFAULT: Saved = { exercise: 'analyse', level: 0, mode: 'sprint', records: {}, byType: {}, byTemplate: {} };
 
 interface Answer {
   q: Question;
@@ -49,8 +54,12 @@ const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
 
 const playSeq = (seq: Seq) => playSequence(seq.chords.map((c) => c.chord));
 
-export function Express() {
-  const [saved, setSaved] = useState<Saved>(() => load('express', DEFAULT));
+/** preset : « reharm » ouvre directement la réharmonisation. */
+export function Express({ preset }: { preset?: string }) {
+  const [saved, setSaved] = useState<Saved>(() => {
+    const x = load('express', DEFAULT);
+    return preset === 'reharm' || preset === 'analyse' ? { ...x, exercise: preset } : x;
+  });
   const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup');
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [newRecord, setNewRecord] = useState(false);
@@ -78,14 +87,30 @@ export function Express() {
     setPhase('done');
   };
 
+  const exerciseField = (
+    <Field label="Exercice">
+      <Segmented
+        cards
+        cols={2}
+        label="Exercice"
+        value={saved.exercise}
+        onChange={(exercise) => setSaved((s) => ({ ...s, exercise }))}
+        options={[
+          { value: 'analyse', label: 'Analyser', sub: 'Degrés, ii–V, tonalité : vite' },
+          { value: 'reharm', label: 'Réharmoniser', sub: 'SubV, dominantes, diminués, ii–V' }
+        ]}
+      />
+    </Field>
+  );
+  if (saved.exercise === 'reharm') return <Reharm header={exerciseField} />;
   if (phase === 'play') return <Play saved={saved} onFinish={finish} />;
   if (phase === 'done') return <Result saved={saved} answers={answers} newRecord={newRecord} onAgain={() => setPhase('play')} onSetup={() => setPhase('setup')} />;
-  return <Setup saved={saved} setSaved={setSaved} onStart={() => setPhase('play')} />;
+  return <Setup saved={saved} setSaved={setSaved} onStart={() => setPhase('play')} header={exerciseField} />;
 }
 
 // ---------------------------------------------------------------- Réglages
 
-function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: Saved) => Saved) => void; onStart: () => void }) {
+function Setup({ saved, setSaved, onStart, header }: { saved: Saved; setSaved: (f: (s: Saved) => Saved) => void; onStart: () => void; header: ComponentChildren }) {
   const { level, mode } = saved;
   const rec = saved.records[`${level}-${mode}`];
   const types = (Object.keys(QTYPE_LABEL) as QType[]).filter((t) => saved.byType[t]);
@@ -93,6 +118,7 @@ function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: S
     <div class="screen">
       <TopBar title="Enchaînements" />
       <p class="intro">Une suite d’accords s’affiche : trois questions dessus (degrés, ii–V, tonalité…), le plus vite possible.</p>
+      {header}
       <LevelPicker exo="express" levels={LEVELS} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
       <SprintOptions mode={mode} n={SERIE_N} what="questions" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
       <StartButton onClick={onStart} />

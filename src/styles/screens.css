@@ -637,3 +637,8 @@
 .comp-cells i.on.ant.ok { box-shadow: inset 0 0 0 2px var(--ok); }
 .comp-cells i.on.ant.late { box-shadow: inset 0 0 0 2px var(--accent); }
 .comp-cells i.on.ant.bad { box-shadow: inset 0 0 0 2px var(--bad); }
+
+/* ---------------------------------------------------------------- Réharmoniser */
+.rh-grid { display: flex; flex-direction: column; gap: 4px; }
+.rh-grid .label { margin: 0; }
+.rh-grid .pchip b { font-family: var(--mono); }

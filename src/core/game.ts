@@ -8,7 +8,8 @@ import { load, save } from './storage';
 export const EXOS: Record<string, { levels: number; name: string; href: string }> = {
   lecture: { levels: 4, name: 'Notes', href: '#/lecture' },
   tonalite: { levels: 5, name: 'Accords', href: '#/tonalite' },
-  express: { levels: 4, name: 'Enchaînements', href: '#/express' },
+  express: { levels: 4, name: 'Enchaînements', href: '#/express/analyse' },
+  reharm: { levels: 5, name: 'Réharmoniser', href: '#/express/reharm' },
   'oreille-iv': { levels: 5, name: 'Oreille · intervalles', href: '#/oreille/iv' },
   'oreille-ear': { levels: 5, name: 'Oreille · accords', href: '#/oreille/ear' },
   'oreille-full': { levels: 5, name: 'Oreille · accord entier', href: '#/oreille/full' },

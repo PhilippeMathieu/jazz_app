@@ -593,6 +593,35 @@ export const PARTS: Part[] = [
         ]
       },
       {
+        id: 'reharm',
+        title: 'Réharmoniser',
+        sub: 'SubV, dominantes ajoutées, diminués de passage, ii–V chromatiques',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Réharmoniser, c’est changer les accords sans changer la mélodie ni la destination. Toutes les techniques ci-dessous font la même chose : **préparer l’accord suivant** plus fort, ou autrement.'
+          },
+          { t: 'chords', label: 'Le point de départ', chords: ['Cmaj7', 'Am7', 'Dm7', 'G7', 'Cmaj7'], romans: ['IΔ7', 'VIm7', 'IIm7', 'V7', 'IΔ7'], gap: 1.2 },
+          { t: 'h', text: '1. SubV' },
+          { t: 'p', text: 'G7 et D♭7 ont le même triton (B–F) : on remplace l’un par l’autre. La basse descend par demi-tons (D → D♭ → C).' },
+          { t: 'chords', chords: ['Cmaj7', 'Am7', 'Dm7', 'D♭7', 'Cmaj7'], romans: ['IΔ7', 'VIm7', 'IIm7', 'SubV', 'IΔ7'], gap: 1.2 },
+          { t: 'h', text: '2. Dominantes secondaires' },
+          { t: 'p', text: 'Chaque accord peut être précédé de sa propre dominante : Am7 devient A7, la dominante de Dm7.' },
+          { t: 'chords', chords: ['Cmaj7', 'A7', 'Dm7', 'G7', 'Cmaj7'], romans: ['IΔ7', 'V7/II', 'IIm7', 'V7', 'IΔ7'], gap: 1.2 },
+          { t: 'h', text: '3. Diminués de passage' },
+          { t: 'p', text: 'Entre deux accords dont les fondamentales sont à un ton, un °7 un demi-ton sous l’arrivée : C♯°7 entre C et Dm7. C’est A7♭9 sans fondamentale.' },
+          { t: 'chords', chords: ['Cmaj7', 'C♯°7', 'Dm7', 'G7', 'Cmaj7'], romans: ['IΔ7', '♯I°7', 'IIm7', 'V7', 'IΔ7'], gap: 1.2 },
+          { t: 'h', text: '4. ii–V du SubV, ii–V chromatiques' },
+          { t: 'p', text: 'Le ii–V entier se déplace : A♭m7–D♭7 à la place de Dm7–G7. Ou on ajoute un ii–V un demi-ton au-dessus qui glisse sur le vrai : E♭m7–A♭7 → Dm7–G7.' },
+          { t: 'chords', chords: ['Cmaj7', 'E♭m7', 'A♭7', 'Dm7', 'G7', 'Cmaj7'], gap: 1.1 },
+          { t: 'tip', text: 'Au piano, commence par une seule technique par grille. Sur un standard, cherche les V7 (SubV possible), les accords qu’on atteint par un ton (diminué de passage), et les mesures tenues (ii–V ajouté).' },
+          { t: 'quiz', q: 'Le SubV de A7 ?', choices: ['D7', 'E♭7', 'B♭7', 'E7'], answer: 1, explain: 'Un triton au-dessus de A : E♭7. A7 et E♭7 partagent C♯ (D♭) et G.' },
+          { t: 'quiz', q: 'Diminué de passage entre Fmaj7 et G7 ?', choices: ['F♯°7', 'G♯°7', 'E°7'], answer: 0, explain: 'Un demi-ton sous G : F♯°7 (= D7♭9 sans fondamentale, la dominante de G).' },
+          { t: 'go', links: [{ href: '#/express/reharm', label: 'Enchaînements › Réharmoniser, niveau 1 : SubV' }] }
+        ]
+      },
+      {
         id: 'blues',
         title: 'Le blues jazz',
         sub: '12 mesures, que des 7',

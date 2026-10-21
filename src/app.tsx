@@ -30,7 +30,7 @@ export function App() {
     const c = a ? chartById(a) : undefined;
     return c ? <ChartView key={c.id + (b ?? '')} chart={c} initialMode={b === 'analyser' ? 'analyser' : undefined} /> : <ChartList />;
   }
-  if (page === 'express') return <Express />;
+  if (page === 'express') return <Express key={a ?? ''} preset={a} />;
   if (page === 'cours') return a === 'astuces' ? <TipsView /> : a ? <LessonView key={a} id={a} /> : <CoursList />;
   if (page === 'clavier') return <Clavier />;
   if (page === 'progres') return <Progres />;
