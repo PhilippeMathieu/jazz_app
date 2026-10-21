@@ -22,7 +22,7 @@ export const INTERVALS: Interval[] = [
   { id: '2M', semis: 2, steps: 1, name: 'seconde majeure', short: '2de M', song: 'Frère Jacques (début)', jazz: '{b} est la 9e de {a}maj9 ; un pas de gamme.' },
   { id: '3m', semis: 3, steps: 2, name: 'tierce mineure', short: '3ce m', song: 'Greensleeves (début)', jazz: '{b} est la tierce de {a}m7 : la couleur mineure.' },
   { id: '3M', semis: 4, steps: 2, name: 'tierce majeure', short: '3ce M', song: 'Oh When the Saints (début)', jazz: '{b} est la tierce de {a}maj7 et de {a}7 : la couleur majeure.' },
-  { id: '4', semis: 5, steps: 3, name: 'quarte juste', short: '4te', song: 'la Marche nuptiale de Wagner (début)', jazz: '{b} est la 11e de {a}m11 ; les voicings en quartes (So What) empilent cet intervalle.' },
+  { id: '4', semis: 5, steps: 3, name: 'quarte juste', short: '4te', song: '« Mon beau sapin » (début : « Mon beau »)', jazz: '{b} est la 11e de {a}m11 ; les voicings en quartes (So What) empilent cet intervalle.' },
   { id: 'tri', semis: 6, steps: 4, name: 'triton', short: 'triton', song: 'Maria, de West Side Story (début)', jazz: '{b} est la ♭5 de {a}ø7 ; c’est aussi l’écart entre la 3ce et la 7e de tout accord de dominante.' },
   { id: '5', semis: 7, steps: 4, name: 'quinte juste', short: '5te', song: 'Ah ! vous dirai-je, maman (do-do-sol)', jazz: '{b} est la quinte de {a} ; la contrebasse y va souvent au 3e temps.' },
   { id: '6m', semis: 8, steps: 5, name: 'sixte mineure', short: '6te m', song: 'The Entertainer de Scott Joplin (mi → do aigu)', jazz: '{b} est la ♭13 de {a}7♭13, une note altérée.' },

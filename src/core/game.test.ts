@@ -21,11 +21,14 @@ describe('jeu', () => {
     const g = fresh();
     let rewards: string[] = [];
     for (let i = 0; i < 20; i++) rewards = rewards.concat(apply(g, { type: 'answer', exo: 'tonalite', level: 0, ok: i % 10 !== 0, ms: 2000 }, T).map((r) => r.kind));
-    expect(g.stars['tonalite:0']).toBe(2); // 18/20 = 90 %
+    expect(g.stars['tonalite:0']).toBe(3); // 18/20 = 90 %
     expect(g.unlocked.tonalite).toBe(1);
     expect(rewards).toContain('star');
     expect(rewards).toContain('unlock');
-    expect(starsFor(0.79)).toBe(0);
+    expect(starsFor(0.59)).toBe(0);
+    expect(starsFor(0.6)).toBe(1);
+    expect(starsFor(0.75)).toBe(2);
+    expect(starsFor(0.89)).toBe(2);
     expect(starsFor(1)).toBe(3);
   });
   it('objectif du jour : temps actif plafonné à 30 s par réponse', () => {

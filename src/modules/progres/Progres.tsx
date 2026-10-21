@@ -83,7 +83,7 @@ export function Progres() {
         <h2 class="label">
           Étoiles · {starsTotal}/{starsMax}
         </h2>
-        <p class="muted small">Sur les 20 dernières réponses d’un niveau : ★ à 80 %, ★★ à 90 %, ★★★ à 97 %. La première étoile ouvre le niveau suivant.</p>
+        <p class="muted small">Sur les 20 dernières réponses d’un niveau : ★ à 60 % (12/20), ★★ à 75 % (15/20), ★★★ à 90 % (18/20). La première étoile ouvre le niveau suivant.</p>
         <div class="pg-stars">
           {Object.entries(EXOS).map(([id, e]) => (
             <a key={id} class="pg-star-row" href={e.href}>

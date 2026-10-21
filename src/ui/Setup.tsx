@@ -59,7 +59,7 @@ export function LevelPicker({ levels, value, onChange, base = 0, exo }: { levels
         </div>
         {asked !== null ? (
           <p class="seg-detail">
-            Niveau {asked + 1} fermé : obtiens une étoile au niveau {asked} (80 % sur 20 réponses).{' '}
+            Niveau {asked + 1} fermé : obtiens une étoile au niveau {asked} (60 % sur 20 réponses).{' '}
             <button
               class="linkbtn inline"
               onClick={() => {

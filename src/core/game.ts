@@ -28,7 +28,7 @@ export const EXOS: Record<string, { levels: number; name: string; href: string }
 /** Taille de la fenêtre glissante qui donne les étoiles d'un niveau. */
 export const WINDOW = 20;
 /** Étoiles selon la réussite sur les 20 dernières réponses du niveau. */
-export const starsFor = (acc: number) => (acc >= 0.97 ? 3 : acc >= 0.9 ? 2 : acc >= 0.8 ? 1 : 0);
+export const starsFor = (acc: number) => (acc >= 0.9 ? 3 : acc >= 0.75 ? 2 : acc >= 0.6 ? 1 : 0);
 
 // ---------------------------------------------------------------- Grades
 
@@ -91,7 +91,22 @@ const DEFAULT: GameState = {
   streaks: {},
   fx: true
 };
-export const loadGame = (): GameState => load('jeu', DEFAULT);
+export const loadGame = (): GameState => rescore(load('jeu', DEFAULT));
+
+/** Recalcule les étoiles avec les seuils actuels (60 / 75 / 90 %) : n'en retire jamais, ouvre le niveau suivant. */
+function rescore(g: GameState): GameState {
+  for (const [key, r] of Object.entries(g.recent ?? {})) {
+    if (r.length < WINDOW) continue;
+    const s = starsFor(r.reduce((a, b) => a + b, 0) / r.length);
+    if (s <= (g.stars[key] ?? 0)) continue;
+    g.stars[key] = s;
+    const i = key.lastIndexOf(':');
+    const exo = key.slice(0, i), level = Number(key.slice(i + 1));
+    const max = EXOS[exo]?.levels ?? 1;
+    if (level + 1 < max && (g.unlocked[exo] ?? 0) < level + 1) g.unlocked[exo] = level + 1;
+  }
+  return g;
+}
 const saveGame = (g: GameState) => save('jeu', g);
 
 export const dayKey = (d: Date = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -144,7 +159,7 @@ export const BADGES: Badge[] = [
   { id: 'serie-3', name: 'Trois jours', desc: '3 jours d’affilée' },
   { id: 'serie-7', name: 'Une semaine', desc: '7 jours d’affilée' },
   { id: 'serie-30', name: 'Un mois', desc: '30 jours d’affilée' },
-  { id: 'etoile', name: 'Première étoile', desc: '80 % sur 20 réponses d’un niveau' },
+  { id: 'etoile', name: 'Première étoile', desc: '60 % sur 20 réponses d’un niveau' },
   { id: 'etoiles-10', name: 'Constellation', desc: '10 étoiles' },
   { id: 'trois-etoiles', name: 'Sans faute', desc: '★★★ à un niveau (97 % sur 20 réponses)' },
   { id: 'defis', name: 'Défis relevés', desc: 'Les 3 défis d’une journée' },

@@ -82,6 +82,7 @@ export function audio(): AudioContext {
     }
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     ctx = new AC();
+    wake();
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -16;
     comp.knee.value = 8;
@@ -120,6 +121,36 @@ export function audio(): AudioContext {
   return ctx;
 }
 export const now = () => (ctx ? ctx.currentTime : 0);
+
+/**
+ * Téléphones : le son ne démarre (ou ne reprend, après verrouillage ou appel) que dans un geste de
+ * l'utilisateur. Chaque toucher relance donc le contexte audio ; le premier joue aussi un son vide,
+ * ce qui débloque iOS. Le bouton silencieux est contourné par la session audio « playback ».
+ */
+let primed = false;
+function wake() {
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+  try {
+    if (nav.audioSession && nav.audioSession.type !== 'playback') nav.audioSession.type = 'playback';
+  } catch {
+    /* non pris en charge */
+  }
+  if (!ctx) return;
+  if (ctx.state !== 'running') void ctx.resume();
+  if (!primed) {
+    primed = true;
+    const src = ctx.createBufferSource();
+    src.buffer = ctx.createBuffer(1, 1, 22050);
+    src.connect(ctx.destination);
+    src.start(0);
+  }
+}
+if (typeof window !== 'undefined') {
+  for (const ev of ['pointerdown', 'touchend', 'keydown'] as const) window.addEventListener(ev, wake, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && ctx && ctx.state !== 'running') void ctx.resume();
+  });
+}
 
 /** Début réel du son : premier échantillon au-dessus du seuil, moins 1 ms. */
 function onsetOf(buf: AudioBuffer): number {
