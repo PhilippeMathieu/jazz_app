@@ -145,8 +145,11 @@ const NOTE_HI = 100; // E7
  */
 /** Réglages calibrés sur les échantillons de piano (voir detect.test.ts). */
 const TUNE = { fifth: 0.55, third: 0.35, fifth2: 0.3 };
+/** Part du retrait des harmoniques gardée pour juger les notes attendues (voir analyzeChordBuffer). */
+export let SOFT = 0.5;
+export const setSoft = (x: number) => (SOFT = x);
 
-function noteEnergies(mag: Float32Array, sr: number): Float32Array {
+function noteEnergies(mag: Float32Array, sr: number, k = 1): Float32Array {
   const n = mag.length * 2;
   const df = sr / n;
   const E = new Float32Array(NOTE_HI + 1);
@@ -183,7 +186,7 @@ function noteEnergies(mag: Float32Array, sr: number): Float32Array {
     for (const [semi, c] of HARM) {
       const h = m + semi;
       if (h > NOTE_HI) break;
-      E[h] = Math.max(0, E[h] - c * base);
+      E[h] = Math.max(0, E[h] - k * c * base);
     }
   }
   return E;
@@ -221,16 +224,16 @@ export interface ChordCheck {
   score: number;
 }
 
-export const LIMITS = { present: 0.18, extra: 0.4 };
+export const LIMITS = { present: 0.18, extra: 0.4, presentSoft: 0.12 };
 
 /**
  * Compare un chroma aux classes de hauteur attendues.
  * optional : notes jouées mais pas exigées (la quinte d'un voicing à deux mains se confond avec l'harmonique 3 de la basse).
  */
-export function checkChord(chroma: Float32Array, target: number[], optional: number[] = []): ChordCheck {
+export function checkChord(chroma: Float32Array, target: number[], optional: number[] = [], soft: Float32Array = chroma): ChordCheck {
   const O = new Set(optional.map((p) => ((p % 12) + 12) % 12));
   const T = new Set(target.map((p) => ((p % 12) + 12) % 12));
-  const missing = [...T].filter((p) => !O.has(p) && chroma[p] < LIMITS.present);
+  const missing = [...T].filter((p) => !O.has(p) && soft[p] < (soft === chroma ? LIMITS.present : LIMITS.presentSoft));
   const extra: number[] = [];
   let inT = 0;
   let all = 0;
@@ -244,6 +247,10 @@ export function checkChord(chroma: Float32Array, target: number[], optional: num
 
 /** Raccourci : tampon temporel → vérification d'accord. */
 export function analyzeChordBuffer(buf: Float32Array, sr: number) {
-  const E = noteEnergies(magnitude(buf), sr);
-  return { energies: E, chroma: chromaOf(E), lowest: lowestNote(E) };
+  const mag = magnitude(buf);
+  const E = noteEnergies(mag, sr);
+  // Retrait des harmoniques adouci : pour dire si une note attendue est là. Une note dont l'octave porte
+  // l'essentiel du son (G3 au piano) disparaîtrait sinon derrière la 3e harmonique d'une note grave (C3).
+  const soft = chromaOf(noteEnergies(mag, sr, SOFT));
+  return { energies: E, chroma: chromaOf(E), soft, lowest: lowestNote(E) };
 }

@@ -38,7 +38,7 @@ export function App() {
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
   if (page === 'oreille') return <Oreille key={(a ?? '') + (b ?? '')} preset={a} focus={b === 'confusions'} />;
-  if (page === 'flash') return <Flash />;
+  if (page === 'flash') return <Flash key={a ?? ''} preset={a} />;
   if (page === 'phrases') return <Phrases />;
   if (page === 'micro') return <Micro />;
   return <Home />;

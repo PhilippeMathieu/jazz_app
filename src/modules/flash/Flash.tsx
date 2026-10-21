@@ -19,6 +19,7 @@ import { fitSymbol } from '../../ui/fit';
 import { notesMarks } from '../../ui/keyboardMarks';
 import { ChordStats, FlashSettings, Item, ORDER_LABEL, Order, nextBatch, statKey } from './batch';
 import { LEVEL_LABELS } from '../oreille/data';
+import { Comping } from './Comping';
 
 const VOICING_NAME: Record<VoicingType, string> = {
   triad: 'Débutant, 3 sons',
@@ -57,7 +58,7 @@ const typeLine = (it: Item) =>
         : it.type === 'A' || it.type === 'B'
           ? `Sans fondamentale, type ${it.type}`
           : VOICING_NAME[it.type];
-const DEFAULT: FlashSettings = { level: 1, type: 'shell', order: 'iiVI', delay: 4, sound: true };
+const DEFAULT: FlashSettings = { exercise: 'flash', level: 1, type: 'shell', order: 'iiVI', delay: 4, sound: true };
 const DELAYS = [2, 4, 6, 10, 0];
 
 interface Heard {
@@ -68,16 +69,37 @@ interface Heard {
   lowest: number | null;
 }
 
-export function Flash() {
-  const [s, setS] = useState<FlashSettings>(() => load('flash', DEFAULT));
+/** preset « comping » : ouvre directement le comping. */
+export function Flash({ preset }: { preset?: string }) {
+  const [s, setS] = useState<FlashSettings>(() => {
+    const x = load('flash', DEFAULT);
+    return preset === 'comping' || preset === 'flash' ? { ...x, exercise: preset } : x;
+  });
   const [running, setRunning] = useState(false);
   useEffect(() => save('flash', s), [s]);
   useMicRelease();
+  const exerciseField = (
+    <Field label="Exercice">
+      <Segmented
+        cards
+        cols={2}
+        label="Exercice"
+        value={s.exercise ?? 'flash'}
+        onChange={(exercise) => setS({ ...s, exercise })}
+        options={[
+          { value: 'flash', label: 'Un accord à la fois', sub: 'Le micro valide chaque voicing' },
+          { value: 'comping', label: 'Comping en rythme', sub: 'Les voicings sur la grille, en place' }
+        ]}
+      />
+    </Field>
+  );
+  if (s.exercise === 'comping') return <Comping header={exerciseField} />;
   if (running) return <Run s={s} onEnd={() => setRunning(false)} />;
   return (
     <div class="screen">
       <TopBar title="Voicings" actions={<MicPill />} />
       <p class="intro">Un accord s’affiche : joue-le, à la main gauche jusqu’au niveau 4, à deux mains ensuite. Avec le micro, l’appli valide et passe au suivant.</p>
+      {exerciseField}
       <LevelPicker
         exo="flash"
         levels={TYPES.map((t) => ({ name: VOICING_NAME[t], desc: VOICING_LABEL[t] }))}
@@ -243,7 +265,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
     const target = [...new Set(c.v.map((m) => mod(m, 12)))];
     // À deux mains, la quinte n'est pas exigée : le micro la confond avec l'harmonique 3 de la basse.
     const it = c.L[c.k];
-    const ck = checkChord(r.chroma, target, TWO_HANDS.includes(it.type) ? [mod(rootPc(it.chord) + 7, 12)] : []);
+    const ck = checkChord(r.chroma, target, TWO_HANDS.includes(it.type) ? [mod(rootPc(it.chord) + 7, 12)] : [], r.soft);
     const now12 = [...Array(12).keys()].filter((p) => r.chroma[p] >= LIMITS.present);
     setLive((l) => (l.join() === now12.join() ? l : now12));
     const lowest = r.lowest !== null ? mod(r.lowest, 12) : null;

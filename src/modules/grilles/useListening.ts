@@ -102,7 +102,7 @@ export function useListening(mode: ListenMode, plan: ImprovPlan, pos: Position |
     if (!h || performance.now() - h.t > 2000) return;
     const r = readChord(gate.current);
     if (!r?.analysis) return;
-    const ck = checkComping(r.analysis.chroma, plan.flat[h.chord].chord, plan.scales[h.chord].scale);
+    const ck = checkComping(r.analysis.chroma, plan.flat[h.chord].chord, plan.scales[h.chord].scale, r.analysis.soft);
     update(`${h.chorus}:${h.chord}`, (x) => ({ ...x, compHeard: x.compHeard + 1, compOk: x.compOk + (ck.ok ? 1 : 0) }));
   }, 150);
 

@@ -20,6 +20,7 @@ export const EXOS: Record<string, { levels: number; name: string; href: string }
   'rythme-oreille': { levels: 6, name: 'Rythme · reconnaître un rythme', href: '#/rythme/oreille' },
   'rythme-style': { levels: 1, name: 'Rythme · reconnaître un style', href: '#/rythme/style' },
   flash: { levels: 8, name: 'Voicings', href: '#/flash' },
+  comping: { levels: 5, name: 'Comping', href: '#/flash/comping' },
   phrases: { levels: 4, name: 'Phrases', href: '#/phrases' }
 };
 /** Taille de la fenêtre glissante qui donne les étoiles d'un niveau. */

@@ -19,6 +19,8 @@ export const ORDER_LABEL: Record<Order, string> = {
 const CYCLE = Array.from({ length: 12 }, (_, i) => (i * 5) % 12);
 
 export interface FlashSettings {
+  /** Un accord à la fois, ou comping en rythme. */
+  exercise?: 'flash' | 'comping';
   level: number;
   type: VoicingType;
   order: Order;

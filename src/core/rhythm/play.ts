@@ -10,10 +10,10 @@ import { GROOVES, StyleId } from './styles';
 const STAB = [52, 55, 59, 62];
 
 // Planification en flux (fenêtre de 150 ms) : on peut tout arrêter, même ce qui n'a pas encore sonné.
-type Ev = { t: number; run: (t: number) => void };
+export type Ev = { t: number; run: (t: number) => void };
 let stopCurrent: (() => void) | null = null;
 
-function schedule(evs: Ev[]): () => void {
+export function schedule(evs: Ev[]): () => void {
   stopCurrent?.();
   evs.sort((a, b) => a.t - b.t);
   let i = 0;
@@ -51,7 +51,7 @@ export interface Take {
 }
 
 /** Métronome « jazz » d'une mesure : ride ternaire et charleston sur 2 et 4 ; ou shaker en croches droites. */
-function backingBar(evs: Ev[], t: number, spb: number, feel: Feel, tempo: number) {
+export function backingBar(evs: Ev[], t: number, spb: number, feel: Feel, tempo: number) {
   const r = swingRatio(tempo);
   for (let b = 0; b < 4; b++) {
     const tb = t + b * spb;

@@ -615,3 +615,25 @@
 .phrase-played { font-size: 18px; min-height: 1.4em; }
 .rec.off { background: var(--faint); animation: none; }
 .phrases-run .topbar { gap: var(--s2); }
+
+/* ---------------------------------------------------------------- Comping */
+.comp-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.comp-bar { display: flex; flex-direction: column; gap: 3px; padding: 6px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); min-width: 0; }
+.comp-bar.cur { border-color: var(--accent); }
+.comp-bar b { font-family: var(--mono); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-bar small { font-family: var(--mono); font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.comp-cells { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; margin-top: 2px; }
+.comp-cells i { height: 14px; border-radius: 3px; background: var(--surface-2); }
+.comp-cells i.beat { box-shadow: inset 0 -2px 0 var(--line); }
+.comp-cells i.on { background: var(--fg); }
+.comp-cells i.on.ok { background: var(--ok); }
+.comp-cells i.on.late { background: var(--accent); }
+.comp-cells i.on.bad { background: var(--bad); }
+.comp-cells i.on.none { background: var(--faint); }
+.comp-cells i.now { outline: 2px solid var(--accent); outline-offset: -2px; }
+.banner.warn { background: var(--surface-2); color: var(--fg); border-left: 3px solid var(--accent); }
+.comp-run .topbar { gap: var(--s2); }
+.comp-cells i.on.ant { background: transparent; box-shadow: inset 0 0 0 2px var(--fg); }
+.comp-cells i.on.ant.ok { box-shadow: inset 0 0 0 2px var(--ok); }
+.comp-cells i.on.ant.late { box-shadow: inset 0 0 0 2px var(--accent); }
+.comp-cells i.on.ant.bad { box-shadow: inset 0 0 0 2px var(--bad); }
