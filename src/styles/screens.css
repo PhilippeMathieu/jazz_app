@@ -516,6 +516,7 @@
 .an-sel { font-size: 22px; white-space: normal; }
 .an-top { display: flex; flex-direction: column; gap: var(--s2); }
 .an-top .btn { align-self: flex-start; }
+.an-actions { display: flex; align-items: center; gap: var(--s4); }
 
 /* Oreille : confusions */
 .pairs { display: flex; flex-direction: column; gap: var(--s1); }
