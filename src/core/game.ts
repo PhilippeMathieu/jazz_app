@@ -8,6 +8,7 @@ import { load, save } from './storage';
 export const EXOS: Record<string, { levels: number; name: string; href: string }> = {
   lecture: { levels: 4, name: 'Notes', href: '#/lecture' },
   tonalite: { levels: 5, name: 'Accords', href: '#/tonalite' },
+  armures: { levels: 5, name: 'Gammes et armures', href: '#/armures' },
   express: { levels: 4, name: 'Enchaînements', href: '#/express/analyse' },
   reharm: { levels: 5, name: 'Réharmoniser', href: '#/express/reharm' },
   memoire: { levels: 4, name: 'Mémoire des grilles', href: '#/grilles' },
@@ -355,7 +356,7 @@ const seedOf = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0))
 export function makeChallenges(today: string, h: ChallengeHints): Challenge[] {
   const seed = seedOf(today);
   const out: Challenge[] = [];
-  const exos = ['tonalite', 'express', 'oreille', 'lecture'];
+  const exos = ['tonalite', 'express', 'oreille', 'lecture', 'armures'];
   const exo = h.weakExo ?? { exo: exos[seed % exos.length], name: EXOS[exos[seed % exos.length]]?.name ?? 'Oreille', href: `#/${exos[seed % exos.length]}` };
   out.push({ id: 'answers', text: `${exo.name} : 20 bonnes réponses`, kind: 'answers', exo: exo.exo, goal: 20, done: 0, href: exo.href });
   if (h.duel) out.push({ id: 'duel', text: `${h.duel.text} : 10 duels gagnés`, kind: 'duel', goal: 10, done: 0, href: h.duel.href });

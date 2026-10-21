@@ -651,3 +651,12 @@
 .ch.asked { outline: 2px solid var(--accent); outline-offset: -2px; }
 .ch.mem-ok .sym { color: var(--ok); }
 .ch.mem-bad .sym { color: var(--bad); }
+
+/* ---------------------------------------------------------------- Armures */
+.ks-card { align-items: stretch; }
+.ks-key { font-family: var(--display); font-size: 30px; font-weight: 700; }
+.ks-key .muted { font-family: var(--body); font-size: var(--t-sec); font-weight: 400; }
+.staff.keysig { max-height: 22vh; }
+.ks-typed { font-size: 20px; min-height: 1.5em; color: var(--accent); }
+.choices.names { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.choices.names .choice { min-height: 44px; padding: 0; font-size: 15px; }

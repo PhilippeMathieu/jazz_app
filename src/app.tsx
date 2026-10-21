@@ -7,6 +7,7 @@ import { Oreille } from './modules/oreille/Oreille';
 import { Phrases } from './modules/phrases/Phrases';
 import { Express } from './modules/express/Express';
 import { Tonalite } from './modules/tonalite/Tonalite';
+import { Armures } from './modules/armures/Armures';
 import { Lecture } from './modules/lecture/Lecture';
 import { CoursList, LessonView } from './modules/cours/Cours';
 import { TipsView } from './modules/cours/Tips';
@@ -37,6 +38,7 @@ export function App() {
   if (page === 'rythme') return <Rythme key={(a ?? '') + (b ?? '')} piano={a === 'piano'} preset={a && a !== 'piano' ? { exercise: a, level: b && b !== 'confusions' ? Number(b) - 1 : -1, confusions: b === 'confusions' } : undefined} />;
   if (page === 'lecture') return <Lecture />;
   if (page === 'tonalite') return <Tonalite />;
+  if (page === 'armures') return <Armures />;
   if (page === 'oreille') return <Oreille key={(a ?? '') + (b ?? '')} preset={a} focus={b === 'confusions'} />;
   if (page === 'flash') return <Flash key={a ?? ''} preset={a} />;
   if (page === 'phrases') return <Phrases />;
