@@ -4,6 +4,7 @@ import { ChartList } from './modules/grilles/ChartList';
 import { ChartView } from './modules/grilles/ChartView';
 import { Import } from './modules/grilles/Import';
 import { Oreille } from './modules/oreille/Oreille';
+import { Phrases } from './modules/phrases/Phrases';
 import { Express } from './modules/express/Express';
 import { Tonalite } from './modules/tonalite/Tonalite';
 import { Lecture } from './modules/lecture/Lecture';
@@ -38,6 +39,7 @@ export function App() {
   if (page === 'tonalite') return <Tonalite />;
   if (page === 'oreille') return <Oreille key={(a ?? '') + (b ?? '')} preset={a} focus={b === 'confusions'} />;
   if (page === 'flash') return <Flash />;
+  if (page === 'phrases') return <Phrases />;
   if (page === 'micro') return <Micro />;
   return <Home />;
 }

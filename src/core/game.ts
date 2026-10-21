@@ -19,7 +19,8 @@ export const EXOS: Record<string, { levels: number; name: string; href: string }
   'rythme-taper': { levels: 6, name: 'Rythme · lire et taper', href: '#/rythme/taper' },
   'rythme-oreille': { levels: 6, name: 'Rythme · reconnaître un rythme', href: '#/rythme/oreille' },
   'rythme-style': { levels: 1, name: 'Rythme · reconnaître un style', href: '#/rythme/style' },
-  flash: { levels: 8, name: 'Voicings', href: '#/flash' }
+  flash: { levels: 8, name: 'Voicings', href: '#/flash' },
+  phrases: { levels: 4, name: 'Phrases', href: '#/phrases' }
 };
 /** Taille de la fenêtre glissante qui donne les étoiles d'un niveau. */
 export const WINDOW = 20;

@@ -1,5 +1,5 @@
 // Noms des rubriques, les mêmes partout : accueil, titres d'écran, « Continuer », conseils.
-export type SectionId = 'cours' | 'clavier' | 'lecture' | 'tonalite' | 'express' | 'oreille' | 'rythme' | 'flash' | 'grilles' | 'micro';
+export type SectionId = 'cours' | 'clavier' | 'lecture' | 'tonalite' | 'express' | 'oreille' | 'rythme' | 'flash' | 'phrases' | 'grilles' | 'micro';
 
 export interface Section {
   title: string;
@@ -18,9 +18,10 @@ export const SECTIONS: Record<SectionId, Section> = {
   oreille: { title: 'Oreille', sub: 'Intervalles, accords, suites, basse', where: 'Métro' },
   rythme: { title: 'Rythme', sub: 'Placement, tempo, styles', where: 'Métro · piano' },
   flash: { title: 'Voicings', sub: 'Jouer les accords, le micro valide', where: 'Piano' },
+  phrases: { title: 'Phrases', sub: 'Vocabulaire sur ii–V–I, à rejouer', where: 'Piano' },
   grilles: { title: 'Morceaux', sub: 'Les standards, analysés et accompagnés', where: 'Piano' },
   micro: { title: 'Micro', sub: 'Tester et régler l’écoute du piano' }
 };
 
-/** Les six exercices de l'accueil, par compétence. */
-export const TRAINING: SectionId[] = ['lecture', 'tonalite', 'express', 'oreille', 'rythme', 'flash'];
+/** Les exercices de l'accueil, par compétence. */
+export const TRAINING: SectionId[] = ['lecture', 'tonalite', 'express', 'oreille', 'rythme', 'flash', 'phrases'];

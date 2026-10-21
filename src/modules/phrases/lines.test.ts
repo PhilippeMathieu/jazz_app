@@ -51,6 +51,7 @@ describe('phrases', () => {
     expect(m.pass).toBe(false);
     expect(matchPhrase([62, 65, 69, 72], [62, 61, 65, 69, 72]).pass).toBe(true); // une note en trop
     expect(matchPhrase([62, 65, 69, 72], [62, 69, 65, 72]).pass).toBe(false); // ordre
+    expect(matchPhrase([62, 65, 69, 72], [62, 66, 69, 72]).pass).toBe(false); // une note fausse
   });
 });
 

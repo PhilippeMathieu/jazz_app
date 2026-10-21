@@ -446,6 +446,7 @@
 
 /* Accueil : tuiles des exercices */
 .tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+.tiles > .tile:last-child:nth-child(odd) { grid-column: span 2; }
 .tile {
   display: flex;
   flex-direction: column;
@@ -597,3 +598,20 @@
 .degpad .deg:active:not(:disabled) { background: var(--fg); color: var(--bg); }
 .stand-info .hand { display: block; }
 .stand-info .hand small { display: inline-block; min-width: 2.2em; font-family: var(--body); font-size: var(--t-cap); font-weight: 600; color: var(--muted); }
+
+/* ---------------------------------------------------------------- Phrases */
+.phrase-staff { max-height: none; }
+.staff-stem { stroke: var(--ink); stroke-width: 0.12; }
+.staff-stem.ok { stroke: #1f9d6b; }
+.staff-stem.bad { stroke: #d0453c; }
+.staff-stem.cur { stroke: #c98a00; }
+.staff-ink.cur { fill: #c98a00; }
+.staff-bar { stroke: var(--ink); stroke-width: 0.14; }
+.staff-chord { fill: var(--ink); font-family: var(--mono); font-size: 1.5px; font-weight: 600; }
+.phrase-preview { display: flex; flex-direction: column; gap: var(--s2); }
+.phrase-chords { font-size: 20px; text-align: center; padding: var(--s3) 0; }
+.phase-line { display: flex; flex-direction: column; gap: var(--s1); font-size: var(--t-sec); }
+.phase-line > span:first-child { display: flex; align-items: center; gap: var(--s2); }
+.phrase-played { font-size: 18px; min-height: 1.4em; }
+.rec.off { background: var(--faint); animation: none; }
+.phrases-run .topbar { gap: var(--s2); }
