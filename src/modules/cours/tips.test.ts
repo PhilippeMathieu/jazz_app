@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { chordSymbol } from '../../core/theory/chords';
 import { seeded } from '../../core/random';
-import { TIPS, anotherKey, realize } from './tips';
+import { TIPS, anotherKey, motion, realize } from './tips';
 
 const tip = (id: string) => TIPS.find((t) => t.id === id)!;
 const names = (id: string, pc = 0) => realize(tip(id), pc).line.map((n) => n.name).join(' ');
@@ -28,6 +28,19 @@ describe('astuces', () => {
     expect(names('mineur-b9')).toBe('A♭ A♭ G');
     expect(names('backdoor')).toBe('A♭ A♭ G');
     expect(names('iv-ivm')).toBe('A A♭ G');
+  });
+  it('le rôle de chaque note, comme dans le texte', () => {
+    const roles = (id: string) => realize(tip(id), 0).line.map((n) => n.role).join(' ');
+    expect(roles('7-3')).toBe('7e 3ce 7e');
+    expect(roles('enclosure')).toBe('7e approche 3ce');
+    expect(roles('approche')).toBe('5te approche 3ce');
+    expect(roles('dim-passage')).toBe('3ce 3ce 3ce 7e');
+    expect(roles('mineur-b9')).toBe('♭5 ♭9 5te');
+  });
+  it('le mouvement entre deux notes', () => {
+    expect(motion(72, 71)).toBe('↓ ½ ton');
+    expect(motion(71, 71)).toBe('reste');
+    expect(motion(74, 76)).toBe('↑ 1 ton');
   });
   it('les accords des exemples en C', () => {
     expect(realize(tip('subv'), 0).chords.map(chordSymbol).join(' ')).toBe('Dm7 D♭7 Cmaj7');

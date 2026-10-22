@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { STEPS, activityById } from './steps';
 import { Parcours, nextInStep, nextItem, pianoWaiting, stepState } from './progress';
 import { RHYTHM_LEVELS, rhythmsOf } from '../core/rhythm/patterns';
+import { TIPS } from '../modules/cours/tips';
 import { offsetOf, saveOffset } from '../core/rhythm/offset';
 
 // Stockage en mémoire (tests sous Node).
@@ -32,6 +33,10 @@ describe('parcours : contenu', () => {
         expect(rhythmsOf(a.run.level).length).toBeGreaterThan(3);
       }
     }
+  });
+  it('chaque astuce d’enchaînement est dans une étape, une seule fois', () => {
+    const used = STEPS.flatMap((s) => s.tips ?? []);
+    expect(used.sort()).toEqual(TIPS.map((t) => t.id).sort());
   });
   it('du rythme à chaque étape', () => {
     for (const s of STEPS) expect(s.activities.some((a) => a.run.kind === 'rythme' && !a.optional)).toBe(true);

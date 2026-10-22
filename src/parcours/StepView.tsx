@@ -69,12 +69,14 @@ export function StepView({ id }: { id: string }) {
               <ChevronIcon />
             </a>
           ))}
-          {step.id === 'voicings' ? (
-            <a class="row" href="#/astuces">
-              <Check state="todo" />
+          {step.tips?.length ? (
+            <a class="row" href={`#/astuces/${step.id}`}>
+              <span class="check-none" />
               <span class="row-main">
                 <span class="row-title">Astuces d’enchaînement</span>
-                <span class="row-sub">15 réflexes de conduite des voix, à écouter</span>
+                <span class="row-sub">
+                  {step.tips.length} réflexe{step.tips.length > 1 ? 's' : ''} à écouter et à jouer · facultatif
+                </span>
               </span>
               <ChevronIcon />
             </a>

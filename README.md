@@ -41,6 +41,8 @@ Ce que contiennent les exercices :
 - **Morceaux** : analyser le Blues en F et Autumn Leaves, les retrouver de mémoire, jouer les guide tones, accompagner, improviser au micro.
 - **Rythme** : tenir le tempo (avec le clic, sur 2 et 4, clic sur 2 et 4, une mesure sur deux, seul), lire et taper (noires, croches swing, contretemps, comping, triolets, claves), reconnaître un rythme, reconnaître un style (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Le décalage du téléphone se règle une fois (10 s) au premier exercice.
 
+**Astuces d'enchaînement** (facultatives, 15 en tout) : rangées dans l'étape qui les rend compréhensibles (ii–V–I : 3 ; voicings : 1 ; blues : 2 ; mineur : 5 ; substitutions : 1 ; improvisation : 3). Pour chacune : la règle en mots simples, les accords avec la note de la main droite (nommée : « 7e », « 3ce », « approche ») et son mouvement d'un accord à l'autre (« ↓ ½ ton », « reste »), un clavier où l'accord est en gris et la note en jaune, l'écoute, et « Autre tonalité ».
+
 **Côté ludique, minimal** : étapes cochées, objectif du jour (5, 10 ou 20 min de pratique) et série de jours (un jour manqué par semaine ne la casse pas). Pas de points, de grades ni de badges.
 
 **À revoir** (accueil) : l'appli retient ce que tu confonds à l'oreille (m7 ↔ ø7, deux intervalles, deux rythmes, deux styles…) ; la paire la plus confondue s'affiche, à départager deux réponses à la fois.
