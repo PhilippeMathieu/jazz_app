@@ -149,6 +149,78 @@ export const PARTS: Part[] = [
         ]
       },
       {
+        id: 'armures',
+        title: 'Les armures',
+        sub: 'Combien de ♯ ou de ♭, quelle tonalité',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'L’**armure**, ce sont les ♯ ou les ♭ écrits au début de chaque ligne : ils valent pour tout le morceau. Chaque tonalité majeure a la sienne, et sa **relative mineure** a la même.'
+          },
+          { t: 'h', text: 'Les dièses' },
+          {
+            t: 'p',
+            text: 'Ils arrivent toujours dans le même ordre : **fa do sol ré la mi si** (F C G D A E B). La tonique majeure est **un demi-ton au-dessus du dernier ♯**. 3 ♯ (F♯ C♯ G♯) : G♯ + ½ ton = **A majeur**.'
+          },
+          {
+            t: 'table',
+            head: ['À la clé', 'Majeur', 'Mineur'],
+            rows: [
+              ['rien', 'C', 'Am'],
+              ['1 ♯ : F♯', 'G', 'Em'],
+              ['2 ♯ : + C♯', 'D', 'Bm'],
+              ['3 ♯ : + G♯', 'A', 'F♯m'],
+              ['4 ♯ : + D♯', 'E', 'C♯m'],
+              ['5 ♯ : + A♯', 'B', 'G♯m']
+            ]
+          },
+          { t: 'h', text: 'Les bémols' },
+          {
+            t: 'p',
+            text: 'L’ordre inverse : **si mi la ré sol do fa** (B E A D G C F). La tonique majeure est **l’avant-dernier ♭**. 3 ♭ (B♭ E♭ A♭) : **E♭ majeur**. Seule exception : 1 ♭ = **F**.'
+          },
+          {
+            t: 'table',
+            head: ['À la clé', 'Majeur', 'Mineur'],
+            rows: [
+              ['1 ♭ : B♭', 'F', 'Dm'],
+              ['2 ♭ : + E♭', 'B♭', 'Gm'],
+              ['3 ♭ : + A♭', 'E♭', 'Cm'],
+              ['4 ♭ : + D♭', 'A♭', 'Fm'],
+              ['5 ♭ : + G♭', 'D♭', 'B♭m']
+            ]
+          },
+          { t: 'h', text: 'Le relatif mineur' },
+          { t: 'p', text: 'Même armure, tonique **1 ton ½ plus bas** (le 6e degré de la gamme majeure) : A majeur → F♯ mineur ; E♭ majeur → C mineur.' },
+          {
+            t: 'tip',
+            text: 'En jazz, un thème change souvent de tonalité sans changer d’armure : l’armure donne la tonalité de départ, les ii–V donnent les autres.'
+          },
+          {
+            t: 'quiz',
+            q: '4 ♯ à la clé : quelle tonalité majeure ?',
+            choices: ['A', 'E', 'B', 'D'],
+            answer: 1,
+            explain: 'F♯ C♯ G♯ D♯ : le dernier est D♯, + ½ ton = E.'
+          },
+          {
+            t: 'quiz',
+            q: 'E♭ majeur : combien de ♭ ?',
+            choices: ['2', '3', '4', '1'],
+            answer: 1,
+            explain: 'B♭ E♭ A♭ : l’avant-dernier, E♭, est la tonique.'
+          },
+          {
+            t: 'quiz',
+            q: 'Le relatif mineur de F majeur (1 ♭) :',
+            choices: ['Dm', 'Am', 'Gm', 'Cm'],
+            answer: 0,
+            explain: '1 ton ½ sous F : D. Même armure, 1 ♭.'
+          }
+        ]
+      },
+      {
         id: 'tonalite-3',
         title: 'Les accords de la gamme',
         sub: 'C Dm Em F G Am B°',

@@ -97,6 +97,23 @@ export const oreilleItemName = itemName;
 
 type SetStats = (f: (s: Stats) => Stats) => void;
 
+/**
+ * Deux progressions, accord par accord : ce qui change entre la bonne réponse et l'autre.
+ * « 2e accord : V7/IV (bonne) au lieu de V7/II (ta réponse) ».
+ */
+export function progDiff(truth: string, other: string, wrong: boolean): string {
+  const a = romanLine(truth).split(' – ');
+  const b = romanLine(other).split(' – ');
+  const them = wrong ? 'ta réponse' : PROGRESSIONS[other].name;
+  const head = `${PROGRESSIONS[truth].name} : ${a.join(' – ')} ; ${them} : ${b.join(' – ')}.`;
+  if (a.length !== b.length) return `${head} Pas le même nombre d’accords (${a.length} contre ${b.length}).`;
+  const ord = (i: number) => (i === 0 ? '1er' : `${i + 1}e`);
+  const changes = a.map((x, i) => (x === b[i] ? null : `${ord(i)} accord : ${x} au lieu de ${b[i]}`)).filter(Boolean);
+  if (!changes.length) return head;
+  const same = a.length - changes.length;
+  return `Ce qui change : ${changes.join(' ; ')}.${same ? ` Le reste est identique (${same} accord${same > 1 ? 's' : ''}).` : ''}`;
+}
+
 /** Question suivante : duel sur une paire confondue, ou tout le niveau (confusions plus fréquentes). */
 function nextQuestion(stats: Stats, mode: EarMode, level: number, last?: string): EarQuestion {
   const pairs: Pair[] = mode === 'build' ? [] : confusions(domainOf(mode));
@@ -277,16 +294,18 @@ function EarPlay({ stats, setStats, mode, onStop }: { stats: Stats; setStats: Se
       const diff =
         q.mode === 'ear'
           ? qualityDiff(truth, other, (k) => QUALITIES[k].iv, qualSym)
-          : `${PROGRESSIONS[truth].name} : ${romanLine(truth)} ; ${PROGRESSIONS[other].name} : ${romanLine(other)}.`;
+          : progDiff(truth, other, !ok);
       compare = (
         <div class="compare">
-          <span class="label">Compare, sur la même {q.mode === 'ear' ? 'fondamentale' : 'tonalité'}</span>
+          <span class="label">{!ok ? 'Compare ta réponse et la bonne' : 'Compare avec l’autre'}, sur la même {q.mode === 'ear' ? 'fondamentale' : 'tonalité'}</span>
           <div class="row-actions">
             <button class="btn sm" onClick={() => hear(truth)}>
-              <PlayIcon /> {itemName(mode, truth)}
+              <PlayIcon /> {!ok ? 'La bonne : ' : ''}
+              {itemName(mode, truth)}
             </button>
             <button class="btn sm" onClick={() => hear(other)}>
-              <PlayIcon /> {itemName(mode, other)}
+              <PlayIcon /> {!ok ? 'Ta réponse : ' : ''}
+              {itemName(mode, other)}
             </button>
           </div>
           {diff ? <p class="small">{diff}</p> : null}
@@ -339,7 +358,7 @@ function EarPlay({ stats, setStats, mode, onStop }: { stats: Stats; setStats: Se
               </>
             ) : q.mode === 'prog' ? (
               <>
-                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>{ok ? `Juste : ${PROGRESSIONS[q.id].name}.` : `Non, c’était : ${PROGRESSIONS[q.id].name}.`}</p>
+                <p class={'verdict ' + (ok ? 'ok' : 'bad')}>{ok ? `Juste : ${PROGRESSIONS[q.id].name}.` : `Non : c’était ${PROGRESSIONS[q.id].name}, tu as dit ${PROGRESSIONS[answer!]?.name ?? answer}.`}</p>
                 <div class="pchips">
                   {q.chords.map((c, i) => (
                     <button

@@ -3,6 +3,7 @@ import { JSX } from 'preact';
 import { Run, Where } from './steps';
 import { LectureRun } from '../modules/lecture/Lecture';
 import { TonaliteRun } from '../modules/tonalite/Tonalite';
+import { ArmuresRun } from '../modules/armures/Armures';
 import { ExpressRun } from '../modules/express/Express';
 import { ReharmRun } from '../modules/express/Reharm';
 import { OreilleRun } from '../modules/oreille/Oreille';
@@ -20,6 +21,8 @@ export function renderRun(run: Run, total: number, onExit: () => void, where: Wh
       return <LectureRun level={run.level} answer={run.answer} total={total} onExit={onExit} />;
     case 'tonalite':
       return <TonaliteRun level={run.level} total={total} onExit={onExit} />;
+    case 'armures':
+      return <ArmuresRun level={run.level} total={total} onExit={onExit} />;
     case 'express':
       return <ExpressRun level={run.level} total={total} onExit={onExit} />;
     case 'reharm':

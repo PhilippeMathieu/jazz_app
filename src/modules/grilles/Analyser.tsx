@@ -13,6 +13,7 @@ import { report } from '../../core/events';
 import { Segmented } from '../../ui/Segmented';
 import { Field } from '../../ui/Setup';
 import { PlayIcon } from '../../ui/icons';
+import { ConfirmButton } from '../../ui/ConfirmButton';
 
 interface Saved {
   marks: Mark[];
@@ -109,6 +110,9 @@ export function AnalyserHint({ an, plan }: { an: Analyser; plan: ImprovPlan }) {
         <p class={'verdict ' + (r.found === r.total ? 'ok' : 'bad')}>
           Trouvé : {r.found} sur {r.total} enchaînement{r.total > 1 ? 's' : ''}. <span class="muted small">Le détail est sous la grille.</span>
         </p>
+        <button class="btn primary" onClick={an.reset}>
+          Recommencer l’analyse
+        </button>
       </div>
     );
   return (
@@ -121,9 +125,12 @@ export function AnalyserHint({ an, plan }: { an: Analyser; plan: ImprovPlan }) {
             : 'Repère les enchaînements : touche le premier accord, puis le dernier. Tu diras ensuite ce que c’est.'}
       </p>
       {an.saved.marks.length ? (
-        <button class="btn primary" onClick={an.check}>
-          Vérifier ({an.saved.marks.length})
-        </button>
+        <div class="an-actions">
+          <button class="btn primary" onClick={an.check}>
+            Vérifier ({an.saved.marks.length})
+          </button>
+          <ConfirmButton label="Tout effacer" confirm="Effacer les repérages ?" onConfirm={an.reset} />
+        </div>
       ) : null}
     </div>
   );

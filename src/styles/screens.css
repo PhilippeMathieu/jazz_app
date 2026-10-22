@@ -499,6 +499,7 @@
 .an-sel { font-size: 22px; white-space: normal; }
 .an-top { display: flex; flex-direction: column; gap: var(--s2); }
 .an-top .btn { align-self: flex-start; }
+.an-actions { display: flex; align-items: center; gap: var(--s4); }
 
 /* Oreille : confusions */
 .pairs { display: flex; flex-direction: column; gap: var(--s1); }
@@ -669,7 +670,12 @@
 .goal-box { display: flex; flex-direction: column; gap: 4px; padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
 .goal-box .label { margin: 0; }
 .goal-box b { font-size: 18px; }
-.mission-bar { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: 8px var(--s4); background: var(--surface); border-bottom: 1px solid var(--line); font-size: var(--t-cap); }
+.mission-bar { display: flex; align-items: center; gap: var(--s3); flex-wrap: wrap; padding: calc(env(safe-area-inset-top, 0px) + 8px) var(--s4) 8px; background: var(--surface); border-bottom: 1px solid var(--line); font-size: var(--t-cap); }
+/* Sous le bandeau de l'objectif : l'écran de l'exercice ne recompte pas la zone du haut, et tient dans la hauteur restante. */
+.mission .screen { padding-top: var(--s2); }
+.mission:has(> div > .play-screen) { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+.mission > div:has(> .play-screen) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.mission .play-screen { height: auto; flex: 1; min-height: 0; width: 100%; }
 .mission-dots { display: flex; gap: 3px; flex: 1 1 120px; }
 .mission-dots i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); max-width: 22px; }
 .mission-dots i.on { background: var(--accent); }
@@ -681,3 +687,12 @@
 .result-card.ok b { color: var(--ok); }
 .result-card.bad b { color: var(--accent); }
 .result-card > span:nth-child(2) { font-size: 18px; }
+
+/* ---------------------------------------------------------------- Armures */
+.ks-card { align-items: stretch; }
+.ks-key { font-family: var(--display); font-size: 30px; font-weight: 700; }
+.ks-key .muted { font-family: var(--body); font-size: var(--t-sec); font-weight: 400; }
+.staff.keysig { max-height: 22vh; }
+.ks-typed { font-size: 20px; min-height: 1.5em; color: var(--accent); }
+.choices.names { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.choices.names .choice { min-height: 44px; padding: 0; font-size: 15px; }

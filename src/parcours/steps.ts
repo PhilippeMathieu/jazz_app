@@ -12,6 +12,7 @@ export type Where = 'metro' | 'piano';
 export type Run =
   | { kind: 'lecture'; level: number; answer: 'clavier' | 'piano' }
   | { kind: 'tonalite'; level: number }
+  | { kind: 'armures'; level: number }
   | { kind: 'express'; level: number }
   | { kind: 'reharm'; level: number }
   | { kind: 'ear'; mode: 'ear' | 'build' | 'prog'; level: number }
@@ -92,13 +93,15 @@ export const STEPS: Step[] = [
   {
     id: 'gamme',
     title: 'La gamme et ses accords',
-    aim: 'Savoir quel accord se trouve sur chaque degré, et entendre I, IV et V.',
-    lessons: ['tonalite-3', 'premiers'],
+    aim: 'Lire une armure, savoir quel accord se trouve sur chaque degré, et entendre I, IV et V.',
+    lessons: ['armures', 'tonalite-3', 'premiers'],
     activities: [
+      A('g-arm', 'Armures : les dièses', 'L’armure ↔ la tonalité majeure, jusqu’à 3 ♯', 'metro', { kind: 'armures', level: 0 }),
       A('g-ton', 'Quel accord sur ce degré ?', 'Une tonalité, une note : majeur, mineur ou diminué', 'metro', { kind: 'tonalite', level: 0 }),
       A('g-bass', 'La basse : I, IV ou V ?', 'Quatre notes de contrebasse après l’accord de la tonique', 'metro', { kind: 'bass', level: 0 }, { kind: 'answers', n: 20, min: 16 }),
       A('g-full', 'Quel accord, dans la tonalité ?', 'L’accord de la tonique, puis un accord de la gamme', 'metro', { kind: 'full', level: 0 }),
       A('r-24', 'Sur 2 et 4', 'Le clic compte les 4 temps, tu tapes 2 et 4', 'metro', { kind: 'rythme', exercise: 'tempo', level: 1 }, T3),
+      A('g-arm7', 'Armures : jusqu’à 7 ♯', 'Jusqu’à C♯ majeur', 'metro', { kind: 'armures', level: 1 }, Q10, true),
       A('g-piano', 'Enchaîner ii–V–I', 'En 3 sons, le renversement le plus proche', 'piano', { kind: 'flash', type: 'triad', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 })
     ]
   },
@@ -110,6 +113,7 @@ export const STEPS: Step[] = [
     activities: [
       A('q-build', 'Construire maj7, m7, 7', 'Un symbole, tu touches ses 4 notes', 'metro', { kind: 'ear', mode: 'build', level: 1 }),
       A('q-ear', 'maj7, m7 ou 7 ?', 'À l’oreille', 'metro', { kind: 'ear', mode: 'ear', level: 1 }),
+      A('q-arm', 'Armures : les bémols', 'De F (1 ♭) à C♭ (7 ♭)', 'metro', { kind: 'armures', level: 2 }),
       A('q-ear2', '+ ø7 et °7', 'À l’oreille, 5 natures', 'metro', { kind: 'ear', mode: 'ear', level: 2 }),
       A('r-croches', 'Taper des croches swing', 'Longue-courte : « dou-ba »', 'metro', { kind: 'rythme', exercise: 'taper', level: 1 }, T5),
       A('q-piano', 'Shells : 1, 3, 7', 'Au piano, main gauche', 'piano', { kind: 'flash', type: 'shell', order: 'random', level: 2 })
@@ -168,10 +172,12 @@ export const STEPS: Step[] = [
     lessons: ['iiVim', 'secondaires', 'backdoor', 'styles'],
     activities: [
       A('m-exp', 'Analyser : mineur et dominantes', 'Degrés, ii–V, 9 ou ♭9', 'metro', { kind: 'express', level: 2 }, { kind: 'answers', n: 12, min: 10 }),
+      A('m-arm', 'Armures et relatif mineur', 'Dièses et bémols mélangés, majeur ou mineur', 'metro', { kind: 'armures', level: 3 }),
       A('m-full', 'Dominantes secondaires à l’oreille', 'Accord entier : VI7, II7, III7…', 'metro', { kind: 'full', level: 2 }),
       A('m-reharm', 'Ajouter des dominantes', 'La dominante qui mène à un accord, et son ii', 'metro', { kind: 'reharm', level: 1 }),
       A('m-autumn', 'Analyser Autumn Leaves', 'ii–V majeurs et mineurs', 'metro', { kind: 'chart', chart: 'autumn-leaves', mode: 'analyser' }, { kind: 'analyse', ratio: 0.8 }),
       A('r-style', 'Reconnaître un style', 'Swing, ballade, valse, bossa, samba, latin, funk', 'metro', { kind: 'rythme', exercise: 'style', level: 0 }),
+      A('m-cite', 'Citer les altérations', 'Dans l’ordre : F♯ C♯ G♯…', 'metro', { kind: 'armures', level: 4 }, Q10, true),
       A('m-piano', 'ii–V–i mineurs', 'Au piano, A et B', 'piano', { kind: 'flash', type: 'A', order: 'iiVim' }, { kind: 'answers', n: 9, min: 7 })
     ]
   },

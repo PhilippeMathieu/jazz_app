@@ -29,7 +29,36 @@ h1, h2, h3 { margin: 0; }
 }
 .screen.with-player { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--player-h) + var(--s6)); }
 /* Une main dans le métro : la zone de réponse descend en bas de l'écran */
-.play-screen { min-height: 100dvh; }
+.play-screen {
+  /* Un exercice tient dans l'écran : la page ne défile jamais, les boutons restent visibles. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  gap: var(--s3);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--s3));
+}
+.play-screen > * { flex-shrink: 0; }
+/* La carte du milieu cède la place ; elle ne défile qu'en dernier recours. */
+.play-screen > :not(.topbar):not(.thumb-zone) { flex-shrink: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.play-screen .thumb-zone .fb { max-height: 28dvh; overflow-y: auto; flex-shrink: 1; }
+@media (max-height: 760px) {
+  .play-screen { gap: var(--s2); }
+  .play-screen .choice { min-height: 46px; padding: 6px var(--s2); }
+  .play-screen .btn.block { min-height: 46px; }
+  .play-screen .thumb-zone { gap: var(--s2); }
+  .play-screen .tq-root { font-size: 72px; }
+  .play-screen .tq-card.answered .tq-root { font-size: 40px; }
+  .play-screen .tq-card.answered .tq-qual { font-size: 32px; }
+  .play-screen .staff { max-height: 26vh; }
+  .play-screen .tq-card .kbsvg { max-height: 11vh; width: auto; max-width: 100%; margin: 0 auto; }
+  .play-screen .tq-card { padding-top: var(--s2); padding-bottom: var(--s2); gap: 2px; }
+  .play-screen .harmo { margin-top: 4px; }
+  /* Après la réponse, seuls la bonne réponse et le choix fait restent : place pour l'explication. */
+  .play-screen .thumb-zone .choice:disabled:not(.is-ok):not(.is-bad) { display: none; }
+  .play-screen .thumb-zone .choices:has(.choice:disabled) { grid-template-columns: 1fr 1fr; }
+  .play-screen .thumb-zone .choice:disabled { grid-column: auto; min-height: 40px; padding: 4px var(--s2); }
+  .play-screen .thumb-zone .choice:disabled small { display: none; }
+}
 .thumb-zone { margin-top: auto; display: flex; flex-direction: column; gap: var(--s3); }
 
 .intro { color: var(--muted); font-size: var(--t-sec); }

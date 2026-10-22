@@ -14,16 +14,16 @@ Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'acc
 |---|---|---|---|
 | 1 | Notes et intervalles | 2 | 4 (+1) |
 | 2 | Les accords de 3 sons | 1 | 4 |
-| 3 | La gamme et ses accords | 2 | 5 |
-| 4 | Les accords de 4 sons | 3 | 5 |
+| 3 | La gamme et ses accords | 3 | 6 (+1) |
+| 4 | Les accords de 4 sons | 3 | 6 |
 | 5 | Le ii–V–I | 2 | 7 |
 | 6 | Voicings et guide tones | 1 | 6 |
 | 7 | Lire une grille : le blues | 3 | 6 (+3) |
-| 8 | Le mineur et les dominantes secondaires | 4 | 6 |
+| 8 | Le mineur et les dominantes secondaires | 4 | 7 (+1) |
 | 9 | Substitutions et couleurs | 4 | 7 (+3) |
 | 10 | Improviser sur les accords | 2 | 7 (+3) |
 
-24 leçons, 57 exercices (28 dans le métro, 18 au piano, 11 de rythme), 10 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
+25 leçons, 60 exercices (31 dans le métro, 18 au piano, 11 de rythme), 12 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
 
 Chaque étape : **Comprendre** (leçons de 3 à 5 min, exemples à écouter et à voir au clavier, mini-quiz), **Dans le métro** (sans piano, d'une main, écouteurs), **Au piano** (le micro valide ; sans micro, on peut valider soi-même), **Rythme**, **Pour aller plus loin**.
 
@@ -31,6 +31,7 @@ Chaque exercice a un **objectif** chiffré, affiché avant et pendant : « 8 jus
 
 Ce que contiennent les exercices :
 - **Notes** : lire en clé de sol ou de fa, toucher la note au clavier ou la jouer au piano (le micro vérifie l'octave).
+- **Armures** : l’armure ↔ la tonalité (3 ♯ → A majeur), dièses puis bémols, relatif mineur, citer les altérations dans l’ordre.
 - **Accords** : construire un accord au clavier ; quel accord sur ce degré ; majeur/mineur puis maj7, m7, 7, ø7, °7 à l'oreille ; l'accord entier (fondamentale et nature) dans une tonalité.
 - **Intervalles et basse** à l'oreille : intervalles, degrés de la ligne de basse (I, IV, V… jusqu'à la walking bass).
 - **Enchaînements** : analyse (degrés, ii–V, tonalité, 9 ou ♭9, gammes) ; reconnaître un enchaînement à l'oreille ; réharmoniser (SubV, dominantes secondaires, diminués de passage, ii–V du SubV, reconnaître la technique à l'écoute).
