@@ -80,6 +80,17 @@ export function makeDuelQuestion(mode: 'ear' | 'prog', pairs: Pair[], level: num
 }
 
 /**
+ * Deux natures à départager, toujours les mêmes (dans cet ordre sur les boutons), sur une fondamentale au hasard.
+ * Pas plus de 3 fois de suite la même réponse.
+ */
+export function makePairQuestion(pair: [string, string], level: number, recent: string[] = [], rng: Rng = Math.random): EarQuestion {
+  const run = recent.slice(-3);
+  const truth = run.length === 3 && run.every((x) => x === run[0]) ? pair.find((x) => x !== run[0])! : pair[rng() < 0.5 ? 0 : 1];
+  const c = chordOnPc(rndInt(12, rng), truth);
+  return { mode: 'ear', q: truth, c: { chord: c, notes: earVoicing(c, Math.max(1, level), rng) }, choices: [...pair] };
+}
+
+/**
  * Choix pour « quelle progression ? » : seulement des progressions du même nombre d'accords,
  * pour que compter les accords ne suffise pas. D'abord celles du niveau, puis les voisines.
  */

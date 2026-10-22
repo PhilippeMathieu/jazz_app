@@ -17,7 +17,9 @@ export type Block =
   /** Des styles à écouter, avec leurs indices. */
   | { t: 'grooves'; styles: StyleId[]; label?: string }
   /** Une astuce d'enchaînement : la note de la main droite qui reste ou glisse, à écouter et à voir (tips.ts). */
-  | { t: 'astuce'; id: string };
+  | { t: 'astuce'; id: string }
+  /** Deux natures d'accord côte à côte : la note qui change, à voir et à entendre. */
+  | { t: 'pair'; a: string; b: string };
 
 const tempoOf = (id: StyleId) => `${GROOVES[id].tempo[0]}–${GROOVES[id].tempo[1]}`;
 
@@ -391,6 +393,60 @@ export const PARTS: Part[] = [
             choices: ['12', '6', '4', '3'],
             answer: 3,
             explain: 'C°7 = E♭°7 = G♭°7 = A°7 (mêmes notes). Il reste C°7, C♯°7 et D°7.'
+          }
+        ]
+      },
+      {
+        id: 'comparer',
+        title: 'Comparer les accords deux à deux',
+        sub: 'maj7, 7, m7, ø7, °7 : une note change à la fois',
+        minutes: 6,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Les cinq accords de 4 sons se ressemblent beaucoup : de l’un au suivant, **une seule note** descend d’un demi-ton. Pars de Cmaj7 : baisse la 7e, tu as C7 ; baisse la 3ce, tu as Cm7 ; baisse la 5te, tu as Cø7 ; baisse encore la 7e, tu as C°7.'
+          },
+          {
+            t: 'table',
+            head: ['Accord', '3ce', '5te', '7e'],
+            rows: [
+              ['Cmaj7', 'E', 'G', 'B'],
+              ['C7', 'E', 'G', '**B♭**'],
+              ['Cm7', '**E♭**', 'G', 'B♭'],
+              ['Cø7', 'E♭', '**G♭**', 'B♭'],
+              ['C°7', 'E♭', 'G♭', '**B𝄫** (= A)']
+            ]
+          },
+          { t: 'p', text: 'Pour les distinguer, compare-les **deux par deux**, sur la même fondamentale. Écoute l’un, puis l’autre, et cherche la note qui bouge.' },
+          { t: 'pair', a: 'maj7', b: '7' },
+          { t: 'pair', a: '7', b: 'm7' },
+          { t: 'pair', a: 'maj7', b: 'm7' },
+          { t: 'pair', a: 'm7', b: 'm7b5' },
+          { t: 'pair', a: 'm7b5', b: 'dim7' },
+          {
+            t: 'tip',
+            text: 'Pour reconnaître un accord, écoute dans l’ordre : **la 3ce** (clair ou sombre ?), puis **la 7e** (au repos ou qui tire ?). Si c’est sombre et que ça tire : **la 5te** est-elle stable (m7) ou instable (ø7, °7) ?'
+          },
+          {
+            t: 'quiz',
+            q: 'De Cmaj7 à C7, quelle note change ?',
+            choices: ['La 7e : B devient B♭', 'La 3ce : E devient E♭', 'La 5te : G devient G♭', 'Aucune, c’est le même accord'],
+            answer: 0,
+            explain: 'Seule la 7e baisse d’un demi-ton : la 7e majeure devient une 7e mineure.'
+          },
+          {
+            t: 'quiz',
+            q: 'Un accord sombre, avec une 7e, mais posé, sans inquiétude :',
+            choices: ['m7', 'ø7', '°7', '7'],
+            answer: 0,
+            explain: 'Sombre : 3ce mineure. Posé : la 5te est juste. C’est m7 ; ø7 et °7 ont une 5te baissée, instable.'
+          },
+          {
+            t: 'quiz',
+            q: 'De Cø7 à C°7 :',
+            choices: ['La 7e baisse : B♭ → B𝄫 (= A)', 'La 3ce baisse : E♭ → E𝄫', 'La 5te monte : G♭ → G', 'On ajoute une 9e'],
+            answer: 0,
+            explain: 'ø7 et °7 ne diffèrent que par la 7e : mineure dans ø7, diminuée (un demi-ton plus bas) dans °7.'
           }
         ]
       },

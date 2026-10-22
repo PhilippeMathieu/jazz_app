@@ -698,3 +698,11 @@
 .ks-typed { font-size: 20px; min-height: 1.5em; color: var(--accent); }
 .choices.names { grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .choices.names .choice { min-height: 44px; padding: 0; font-size: 15px; }
+
+/* ---------------------------------------------------------------- Leçon : deux accords côte à côte */
+.pair-demo { display: flex; flex-direction: column; gap: var(--s2); }
+.pair-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.pair-head b { font-family: var(--display); font-size: 24px; font-weight: 700; }
+.pair-btns { flex-wrap: wrap; }
+.pair-btns .btn.on { border-color: var(--accent); color: var(--accent); }
+.pair-cue { border-left: 3px solid var(--accent); padding-left: var(--s3); }
