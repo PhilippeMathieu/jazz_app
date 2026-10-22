@@ -203,7 +203,7 @@ function Say({ children, tone }: { children: ComponentChildren; tone?: 'ok' | 'b
 }
 
 /** Zone à taper (écran) ou rappel du micro. */
-function TapPad({ input, active, count, onTap }: { input: Input; active: boolean; count: number; onTap: (e: PointerEvent) => void }) {
+function TapPad({ input, active, count }: { input: Input; active: boolean; count: number }) {
   const mic = useMicState();
   if (input === 'mic')
     return (
@@ -220,15 +220,10 @@ function TapPad({ input, active, count, onTap }: { input: Input; active: boolean
       </div>
     );
   return (
-    <button
-      class={'tap-pad' + (active ? ' live' : '')}
-      onPointerDown={(e) => {
-        e.preventDefault();
-        onTap(e);
-      }}
-    >
+    // Le toucher est compté par useHits (n'importe où sur l'écran) ; la zone sert de cible et montre chaque coup.
+    <button class={'tap-pad' + (active ? ' live' : '')} onPointerDown={(e) => e.preventDefault()}>
       <span key={count} class="tap-flash">
-        {active ? 'Tape ici' : 'Zone où taper'}
+        {active ? `Tape ici${count ? ` · ${count}` : ''}` : 'Zone où taper'}
       </span>
     </button>
   );
@@ -292,9 +287,14 @@ function Verdict({ r, tol, what, extra, devs }: { r: TimingResult; tol: number; 
 
 // ---------------------------------------------------------------- Réglage du décalage
 
+/** Décalage habituel d'un téléphone (son + toucher), si l'élève passe le réglage. */
+const DEFAULT_OFFSET = 60;
+
 function Calibrate({ input, first, onDone, onCancel }: { input: Input; first?: boolean; onDone: (ms: number) => void; onCancel: () => void }) {
   const [phase, setPhase] = useState<'ready' | 'run' | 'fail' | 'bleed' | 'done'>('ready');
   const [ms, setMs] = useState(0);
+  /** Touches (ou notes) reçues lors d'un essai raté : pour dire ce qui n'a pas marché. */
+  const [got, setGot] = useState(0);
   const clicks = useRef<number[]>([]);
   const hits = useHits(phase === 'run', input);
   const [clock, runClock] = useBeatClock();
@@ -315,6 +315,7 @@ function Calibrate({ input, first, onDone, onCancel }: { input: Input; first?: b
       () => {
         if (input === 'mic' && countInHits(hits.hits.current, clicks.current[0], spb) >= 2) return setPhase('bleed');
         const r = calibrate(clicks.current, hits.hits.current);
+        setGot(hits.hits.current.length);
         if (r === null) return setPhase('fail');
         setMs(Math.max(-150, Math.min(400, r)));
         setPhase('done');
@@ -322,7 +323,8 @@ function Calibrate({ input, first, onDone, onCancel }: { input: Input; first?: b
       (t0 - now() + 12 * spb + 0.4) * 1000
     );
   };
-  const what = input === 'mic' ? 'joue une note au piano' : 'tape la zone';
+  const what = input === 'mic' ? 'joue une note au piano' : 'tape l’écran';
+  const unit = input === 'mic' ? 'note' : 'touche';
   return (
     <div class="screen play-screen">
       <TopBar title="Réglage (10 secondes)" onBack={onCancel} />
@@ -337,25 +339,40 @@ function Calibrate({ input, first, onDone, onCancel }: { input: Input; first?: b
           </Say>
         ) : (
           <Say>
-            {input === 'mic' ? 'Joue' : 'Tape'} sur chaque clic ! <span class="muted">Clic {Math.min(8, (clock.beat ?? 7) + 1)} / 8</span>
+            {input === 'mic' ? 'Joue' : 'Tape'} sur chaque clic !{' '}
+            <span class="muted">
+              Clic {Math.min(8, (clock.beat ?? 7) + 1)} / 8 · {hits.count} {unit}
+              {hits.count > 1 ? 's' : ''}
+            </span>
           </Say>
         )
       ) : phase === 'done' ? (
         <Say tone="ok">Réglé : {ms} ms de décalage, corrigé automatiquement.</Say>
       ) : phase === 'fail' ? (
-        <Say tone="bad">Pas assez de coups réguliers. Recommence, bien sur les clics.</Say>
+        <Say tone="bad">
+          {got === 0
+            ? `Aucune ${unit} reçue. ${input === 'mic' ? 'Active le micro, puis joue' : 'Tape l’écran (la grande zone ou ailleurs)'} à chaque clic, après le décompte.`
+            : got < 5
+              ? `Seulement ${got} ${unit}s reçues pour 8 clics. ${input === 'mic' ? 'Joue' : 'Tape'} à chaque clic, du premier au dernier.`
+              : `${got} ${unit}s reçues, mais trop loin des clics. Recommence en suivant le son, pas l’écran.`}
+        </Say>
       ) : phase === 'bleed' ? (
         <BleedWarning />
       ) : (
         <Say>Prêt ? Lance les clics.</Say>
       )}
       <div class="thumb-zone">
-        <TapPad input={input} active={phase === 'run'} count={hits.count} onTap={hits.tap} />
+        <TapPad input={input} active={phase === 'run'} count={hits.count} />
         {phase === 'done' ? (
           <StartButton label="Continuer" onClick={() => onDone(ms)} />
         ) : (
           <StartButton label={phase === 'run' ? 'En cours…' : phase === 'ready' ? 'Lancer les clics' : 'Recommencer'} disabled={phase === 'run'} onClick={run} />
         )}
+        {phase === 'ready' || phase === 'fail' || phase === 'bleed' ? (
+          <button class="linkbtn" onClick={() => onDone(DEFAULT_OFFSET)}>
+            Passer : garder un réglage moyen ({DEFAULT_OFFSET} ms), à refaire plus tard dans les réglages
+          </button>
+        ) : null}
       </div>
     </div>
   );
@@ -499,7 +516,7 @@ function TapRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
       ) : null}
       {result?.bleed ? <BleedWarning /> : null}
       <div class="thumb-zone">
-        <TapPad input={saved.input} active={phase === 'take'} count={hits.count} onTap={hits.tap} />
+        <TapPad input={saved.input} active={phase === 'take'} count={hits.count} />
         <div class="row-actions">
           {phase === 'listen' || phase === 'demo' ? (
             <button class="btn primary" disabled={busy} onClick={demo}>
@@ -654,7 +671,7 @@ function KeepTime({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
         </>
       ) : null}
       <div class="thumb-zone">
-        <TapPad input={saved.input} active={phase === 'take'} count={hits.count} onTap={hits.tap} />
+        <TapPad input={saved.input} active={phase === 'take'} count={hits.count} />
         <StartButton label={phase === 'take' ? 'En cours…' : phase === 'done' ? 'Recommencer' : 'Commencer'} disabled={phase === 'take'} onClick={go} />
       </div>
     </div>

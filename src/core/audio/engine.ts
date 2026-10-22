@@ -131,7 +131,9 @@ let primed = false;
 function wake() {
   const nav = navigator as Navigator & { audioSession?: { type: string } };
   try {
-    if (nav.audioSession && nav.audioSession.type !== 'playback') nav.audioSession.type = 'playback';
+    // « playback » (le son passe outre le bouton silencieux), sauf si le micro a demandé « play-and-record » :
+    // repasser en lecture seule pendant un exercice au micro couperait l'écoute.
+    if (nav.audioSession && nav.audioSession.type === 'auto') nav.audioSession.type = 'playback';
   } catch {
     /* non pris en charge */
   }
