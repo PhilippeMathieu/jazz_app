@@ -4,10 +4,9 @@ import { keyLabel } from '../../core/chart/model';
 import { pcOf } from '../../core/theory/notes';
 import { audio, bass, drum, now, piano, playChord, silence } from '../../core/audio/engine';
 import { confusions, recordAnswer } from '../../core/confusions';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
-import { levelShort } from '../../ui/Setup';
 import { BASS_LEVELS, BASS_NOTES, BassQuestion, DEGREES, chordLine, degreeName, judgeBass, makeBassQuestion } from './bassline';
 import { Tally } from './questions';
 
@@ -133,7 +132,7 @@ export function BassPlay({
           Arrêter
         </button>
         <span class="play-meta">
-          Ligne de basse · {levelShort(level)} · {session.c}/{session.t}
+          Ligne de basse · {session.c}/{session.t}
         </span>
       </header>
       <section class="ear-stage">

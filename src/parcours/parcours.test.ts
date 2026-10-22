@@ -1,0 +1,77 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { STEPS, activityById } from './steps';
+import { Parcours, nextInStep, nextItem, pianoWaiting, stepState } from './progress';
+import { RHYTHM_LEVELS, rhythmsOf } from '../core/rhythm/patterns';
+import { offsetOf, saveOffset } from '../core/rhythm/offset';
+
+// Stockage en mémoire (tests sous Node).
+const mem = new Map<string, string>();
+(globalThis as { localStorage?: unknown }).localStorage = {
+  getItem: (k: string) => mem.get(k) ?? null,
+  setItem: (k: string, v: string) => void mem.set(k, v),
+  removeItem: (k: string) => void mem.delete(k)
+};
+
+const fresh = (start = 0): Parcours => ({ start, acts: {}, lessons: [], where: 'metro' });
+const all = STEPS.flatMap((s) => s.activities);
+
+describe('parcours : contenu', () => {
+  it('des identifiants uniques', () => {
+    expect(new Set(all.map((a) => a.id)).size).toBe(all.length);
+    expect(activityById('r-tempo')?.step.id).toBe('notes');
+  });
+  it('des objectifs atteignables', () => {
+    for (const a of all) if (a.goal.kind === 'answers') expect(a.goal.min).toBeLessThanOrEqual(a.goal.n);
+  });
+  it('des niveaux de rythme qui existent', () => {
+    for (const a of all) {
+      if (a.run.kind !== 'rythme') continue;
+      if (a.run.exercise === 'tempo') expect(a.run.level).toBeLessThan(5);
+      else if (a.run.exercise !== 'style') {
+        expect(a.run.level).toBeLessThan(RHYTHM_LEVELS.length);
+        expect(rhythmsOf(a.run.level).length).toBeGreaterThan(3);
+      }
+    }
+  });
+  it('du rythme à chaque étape', () => {
+    for (const s of STEPS) expect(s.activities.some((a) => a.run.kind === 'rythme' && !a.optional)).toBe(true);
+  });
+});
+
+describe('parcours : la suite', () => {
+  it('commence par la première leçon', () => {
+    const n = nextItem(fresh());
+    expect(n).toEqual({ kind: 'lesson', step: STEPS[0], id: STEPS[0].lessons[0] });
+  });
+  it('dans le métro, saute les exercices au piano', () => {
+    const s = STEPS[0];
+    const p = fresh();
+    p.lessons = [...s.lessons];
+    for (const a of s.activities) if (a.where === 'metro') p.acts[a.id] = { best: 10, passed: true, at: 0 };
+    const n = nextItem(p, 'metro');
+    expect(n?.step).toBe(STEPS[1]);
+    expect(pianoWaiting(p)).toBe(s.activities.filter((a) => a.where === 'piano' && !a.optional).length);
+    const inStep = nextInStep(p, s, 'piano');
+    expect(inStep?.kind === 'activity' && inStep.act.where).toBe('piano');
+  });
+  it('les étapes avant le point de départ sont acquises', () => {
+    const p = fresh(3);
+    expect(stepState(p, STEPS[2]).complete).toBe(true);
+    expect(stepState(p, STEPS[3]).complete).toBe(false);
+    expect(nextItem(p)?.step).toBe(STEPS[3]);
+  });
+});
+
+describe('décalage', () => {
+  beforeEach(() => mem.clear());
+  it('pas encore mesuré', () => {
+    expect(offsetOf('tap')).toBeUndefined();
+  });
+  it('reprend l’ancien réglage des exercices de rythme', () => {
+    mem.set('hj:rythme', JSON.stringify({ offsets: { tap: 40, mic: 120 } }));
+    expect(offsetOf('tap')).toBe(40);
+    saveOffset('mic', 90);
+    expect(offsetOf('mic')).toBe(90);
+    expect(offsetOf('tap')).toBe(40);
+  });
+});

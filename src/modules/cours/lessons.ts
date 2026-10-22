@@ -12,7 +12,6 @@ export type Block =
   | { t: 'table'; head: string[]; rows: string[][] }
   | { t: 'tip'; text: string }
   | { t: 'quiz'; q: string; choices: string[]; answer: number; explain: string }
-  | { t: 'go'; links: { href: string; label: string }[] }
   /** Un rythme en cases, à écouter (compare : en swing puis en croches droites). */
   | { t: 'rhythm'; id: string; label?: string; compare?: boolean; tempo?: number }
   /** Des styles à écouter, avec leurs indices. */
@@ -36,6 +35,37 @@ export const PARTS: Part[] = [
   {
     title: 'Débuter',
     lessons: [
+      {
+        id: 'clavier',
+        title: 'Le clavier et les notes',
+        sub: 'Les noms des notes, le ton et le demi-ton, la gamme majeure',
+        minutes: 3,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Les grilles de jazz nomment les notes en anglais : **C D E F G A B** = do ré mi fa sol la si. Sur le clavier, C est la touche blanche juste à gauche des deux touches noires.'
+          },
+          { t: 'table', head: ['Anglais', 'Français'], rows: [['C', 'do'], ['D', 'ré'], ['E', 'mi'], ['F', 'fa'], ['G', 'sol'], ['A', 'la'], ['B', 'si']] },
+          { t: 'h', text: 'Le demi-ton et le ton' },
+          {
+            t: 'p',
+            text: 'Le **demi-ton** est l’écart entre deux touches voisines : une blanche et une noire, ou E–F et B–C, qui n’ont pas de noire entre elles. Un **ton** vaut deux demi-tons (C–D).'
+          },
+          {
+            t: 'p',
+            text: 'Le **♯** (dièse) monte d’un demi-ton, le **♭** (bémol) descend d’un demi-ton. La touche noire entre C et D s’appelle donc C♯ ou D♭ : même son, deux noms.'
+          },
+          { t: 'h', text: 'La gamme majeure' },
+          {
+            t: 'p',
+            text: 'Ton, ton, demi-ton, ton, ton, ton, demi-ton : c’est la gamme de C, sur les touches blanches. Partie d’une autre note, il faut des ♯ ou des ♭ pour garder ce schéma : G majeur a un F♯, F majeur un B♭.'
+          },
+          { t: 'chords', label: 'C, F et G : trois accords de la gamme de C', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'] },
+          { t: 'tip', text: 'Un accord porte le nom de sa note de base, la fondamentale : Dm7 se construit sur D (ré).' },
+          { t: 'quiz', q: 'Combien de demi-tons entre E et F ?', choices: ['1', '2'], answer: 0, explain: 'Pas de touche noire entre E et F : elles sont voisines, à un demi-ton.' },
+          { t: 'quiz', q: 'La touche noire entre F et G s’appelle…', choices: ['F♯ ou G♭', 'F♭ ou G♯', 'E♯'], answer: 0, explain: 'F monté d’un demi-ton (F♯), ou G descendu d’un demi-ton (G♭).' }
+        ]
+      },
       {
         id: 'triades',
         title: 'Les accords de 3 sons',
@@ -85,13 +115,6 @@ export const PARTS: Part[] = [
             choices: ['D majeur', 'D mineur', 'D diminué', 'F♯ mineur'],
             answer: 0,
             explain: 'D → F♯ : tierce majeure en bas, puis tierce mineure : D majeur.'
-          },
-          {
-            t: 'go',
-            links: [
-              { href: '#/oreille/ear', label: 'Oreille › Accords, niveau 1 : majeur ou mineur ?' },
-              { href: '#/flash', label: 'Voicings, niveau 1 : accords de 3 sons' }
-            ]
           }
         ]
       },
@@ -122,14 +145,7 @@ export const PARTS: Part[] = [
           },
           { t: 'chords', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'], label: 'I, IV, V, I : écoute la basse' },
           { t: 'quiz', q: 'C → G, en montant : quel intervalle ?', choices: ['Une quarte', 'Une quinte', 'Une sixte'], answer: 1, explain: 'C D E F G : 5 notes, 7 demi-tons : une quinte juste.' },
-          { t: 'quiz', q: 'En F majeur, la basse joue F puis B♭. Quel degré ?', choices: ['II', 'IV', 'V'], answer: 1, explain: 'F G A B♭ : B♭ est la 4e note de la gamme de F, le IV.' },
-          {
-            t: 'go',
-            links: [
-              { href: '#/oreille/iv', label: 'Oreille › Intervalles, niveau 1' },
-              { href: '#/oreille/bass', label: 'Oreille › Ligne de basse, niveau 1 : I, IV, V' }
-            ]
-          }
+          { t: 'quiz', q: 'En F majeur, la basse joue F puis B♭. Quel degré ?', choices: ['II', 'IV', 'V'], answer: 1, explain: 'F G A B♭ : B♭ est la 4e note de la gamme de F, le IV.' }
         ]
       },
       {
@@ -165,8 +181,7 @@ export const PARTS: Part[] = [
             choices: ['G, C, D', 'G, Am, D', 'G, C, Em', 'C, D, F'],
             answer: 0,
             explain: 'I, IV, V : G, C, D.'
-          },
-          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords, niveau 1' }] }
+          }
         ]
       },
       {
@@ -206,14 +221,6 @@ export const PARTS: Part[] = [
             choices: ['Dm G C', 'Em A D', 'Am D G', 'Am C G'],
             answer: 2,
             explain: 'II = A (mineur), V = D, I = G.'
-          },
-          {
-            t: 'go',
-            links: [
-              { href: '#/express', label: 'Enchaînements, niveau 1' },
-              { href: '#/grille/debutant-1645', label: 'Morceaux : I – VI – IV – V' },
-              { href: '#/grille/cycle-tri', label: 'Morceaux : II – V – I en 3 sons, 12 tonalités' }
-            ]
           }
         ]
       }
@@ -265,8 +272,7 @@ export const PARTS: Part[] = [
             choices: ['°7', 'm7', 'ø7', '7♭5'],
             answer: 2,
             explain: 'Demi-diminué (m7♭5) : quinte diminuée, mais 7e mineure. Le °7 a une 7e diminuée (𝄫7).'
-          },
-          { t: 'go', links: [{ href: '#/oreille/build', label: 'Oreille › Construire : touche les notes d’un accord' }] }
+          }
         ]
       },
       {
@@ -311,8 +317,7 @@ export const PARTS: Part[] = [
             choices: ['12', '6', '4', '3'],
             answer: 3,
             explain: 'C°7 = E♭°7 = G♭°7 = A°7 (mêmes notes). Il reste C°7, C♯°7 et D°7.'
-          },
-          { t: 'go', links: [{ href: '#/oreille/ear', label: 'Oreille › Accords : reconnaître maj7, m7, 7, ø7, °7' }] }
+          }
         ]
       },
       {
@@ -360,8 +365,7 @@ export const PARTS: Part[] = [
             choices: ['Bm7', 'B7', 'Bø7', 'Bmaj7'],
             answer: 1,
             explain: 'B est le V : en mineur, le V prend la sensible (D♯) et devient B7.'
-          },
-          { t: 'go', links: [{ href: '#/tonalite', label: 'Accords, niveaux 2 à 5' }] }
+          }
         ]
       }
     ]
@@ -405,13 +409,6 @@ export const PARTS: Part[] = [
             choices: ['Sur B, la 3ce de G7', 'Sur D, la 5te de G7', 'Elle reste : C', 'Sur F, la 7e de G7'],
             answer: 0,
             explain: 'C descend d’un demi-ton sur B, la 3ce de G7. F (3ce de Dm7) reste et devient la 7e de G7.'
-          },
-          {
-            t: 'go',
-            links: [
-              { href: '#/grille/cycle-maj', label: 'Morceaux : ii–V–I dans les 12 tonalités' },
-              { href: '#/flash', label: 'Voicings, niveau 2 (shell) : ii–V–I' }
-            ]
           }
         ]
       },
@@ -449,8 +446,7 @@ export const PARTS: Part[] = [
             choices: ['Pour faire « blues »', 'C’est la ♭6 de la tonalité mineure', 'Pour éviter la 3ce', 'C’est une note d’approche'],
             answer: 1,
             explain: 'En C mineur, A♭ (♭6) est la ♭9 de G7 : la gamme du morceau la donne.'
-          },
-          { t: 'go', links: [{ href: '#/grille/cycle-min', label: 'Morceaux : ii–V–i mineur dans les 12 tonalités' }, { href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves' }] }
+          }
         ]
       },
       {
@@ -479,8 +475,7 @@ export const PARTS: Part[] = [
             choices: ['Fmaj7 Dm7 Gm7 C7', 'Fmaj7 Am7 Dm7 G7', 'Fmaj7 Dm7 Em7 A7', 'Fmaj7 Gm7 Am7 B♭maj7'],
             answer: 0,
             explain: 'VI = D, II = G, V = C dans F.'
-          },
-          { t: 'go', links: [{ href: '#/grille/rhythm-changes', label: 'Morceaux : Rhythm changes en B♭' }, { href: '#/express', label: 'Enchaînements, niveau 2' }] }
+          }
         ]
       },
       {
@@ -527,8 +522,7 @@ export const PARTS: Part[] = [
             choices: ['B7', 'E7', 'A7', 'F7'],
             answer: 0,
             explain: 'La dominante de E est B : B7 = V7/III.'
-          },
-          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 4' }, { href: '#/grille/a-train', label: 'Morceaux : Take the A Train (V7/V)' }] }
+          }
         ]
       },
       {
@@ -561,8 +555,7 @@ export const PARTS: Part[] = [
             choices: ['G et D♭', 'B (C♭) et F', 'D et A♭', 'Aucune'],
             answer: 1,
             explain: 'Le triton 3ce–7e : B–F pour G7, F–C♭ pour D♭7.'
-          },
-          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 4' }] }
+          }
         ]
       },
       {
@@ -588,8 +581,7 @@ export const PARTS: Part[] = [
             choices: ['Am7 D7 Gmaj7', 'Cm7 F7 Gmaj7', 'Cmaj7 F7 Gmaj7', 'A♭7 Gmaj7'],
             answer: 1,
             explain: 'IVm7 = Cm7, ♭VII7 = F7, puis Gmaj7.'
-          },
-          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 4' }] }
+          }
         ]
       },
       {
@@ -617,8 +609,7 @@ export const PARTS: Part[] = [
           { t: 'chords', chords: ['Cmaj7', 'E♭m7', 'A♭7', 'Dm7', 'G7', 'Cmaj7'], gap: 1.1 },
           { t: 'tip', text: 'Au piano, commence par une seule technique par grille. Sur un standard, cherche les V7 (SubV possible), les accords qu’on atteint par un ton (diminué de passage), et les mesures tenues (ii–V ajouté).' },
           { t: 'quiz', q: 'Le SubV de A7 ?', choices: ['D7', 'E♭7', 'B♭7', 'E7'], answer: 1, explain: 'Un triton au-dessus de A : E♭7. A7 et E♭7 partagent C♯ (D♭) et G.' },
-          { t: 'quiz', q: 'Diminué de passage entre Fmaj7 et G7 ?', choices: ['F♯°7', 'G♯°7', 'E°7'], answer: 0, explain: 'Un demi-ton sous G : F♯°7 (= D7♭9 sans fondamentale, la dominante de G).' },
-          { t: 'go', links: [{ href: '#/express/reharm', label: 'Enchaînements › Réharmoniser, niveau 1 : SubV' }] }
+          { t: 'quiz', q: 'Diminué de passage entre Fmaj7 et G7 ?', choices: ['F♯°7', 'G♯°7', 'E°7'], answer: 0, explain: 'Un demi-ton sous G : F♯°7 (= D7♭9 sans fondamentale, la dominante de G).' }
         ]
       },
       {
@@ -652,14 +643,6 @@ export const PARTS: Part[] = [
             choices: ['F7', 'C7', 'B♭7', 'Gm7'],
             answer: 2,
             explain: 'Début de la 2e phrase : le IV7.'
-          },
-          {
-            t: 'go',
-            links: [
-              { href: '#/grille/blues-f', label: 'Morceaux : Blues en F' },
-              { href: '#/grille/blues-mineur', label: 'Morceaux : Blues mineur' },
-              { href: '#/grille/blues-bird', label: 'Morceaux : Blues Bird' }
-            ]
           }
         ]
       }
@@ -703,8 +686,7 @@ export const PARTS: Part[] = [
             choices: ['C E G B', 'E G B D', 'B D E G', 'E B D G'],
             answer: 1,
             explain: '3-5-7-9 : E G B D.'
-          },
-          { t: 'go', links: [{ href: '#/flash', label: 'Voicings, niveaux 2 à 4 : shell, A et B, avec le micro' }] }
+          }
         ]
       },
       {
@@ -756,8 +738,7 @@ export const PARTS: Part[] = [
             choices: ['F', 'G', 'A', 'B♭'],
             answer: 1,
             explain: 'Le II de F, c’est G : G B D = 9, ♯11, 13 de F7.'
-          },
-          { t: 'go', links: [{ href: '#/flash', label: 'Voicings, niveaux 5 à 8 : deux mains, quartes, drop 2, upper structures' }] }
+          }
         ]
       },
       {
@@ -798,8 +779,7 @@ export const PARTS: Part[] = [
             choices: ['9 (D)', '11 (F)', '♯11 (F♯)', '13 (A)'],
             answer: 1,
             explain: 'F est un demi-ton au-dessus de E (la 3ce) : il brouille l’accord.'
-          },
-          { t: 'go', links: [{ href: '#/express', label: 'Enchaînements, niveau 3 : 9 ou ♭9' }] }
+          }
         ]
       },
       {
@@ -837,8 +817,7 @@ export const PARTS: Part[] = [
             choices: ['D éolien', 'D dorien', 'D phrygien', 'D mineur harmonique'],
             answer: 1,
             explain: 'Le II d’une tonalité majeure : dorien (D E F G A B C).'
-          },
-          { t: 'go', links: [{ href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves, vue Gammes, avec le micro' }] }
+          }
         ]
       }
     ]
@@ -886,8 +865,7 @@ export const PARTS: Part[] = [
             choices: ['40', '80', '160', '320'],
             answer: 1,
             explain: '2 clics par mesure de 4 temps : la moitié du tempo, 80.'
-          },
-          { t: 'go', links: [{ href: '#/rythme/tempo/2', label: 'Rythme › Tenir le tempo, niveau 2 (sur 2 et 4)' }] }
+          }
         ]
       },
       {
@@ -924,13 +902,6 @@ export const PARTS: Part[] = [
             choices: ['Sur le 1 de la mesure 2', 'Sur le « et » de 4 de la mesure 1', 'Sur le 4 de la mesure 1', 'Sur le 2 de la mesure 2'],
             answer: 1,
             explain: 'Une croche avant la barre de mesure, puis tenu sur le 1 : le changement d’accord arrive en avance.'
-          },
-          {
-            t: 'go',
-            links: [
-              { href: '#/rythme/taper/3', label: 'Rythme › Lire et taper, niveaux 3 et 4' },
-              { href: '#/grille/autumn-leaves', label: 'Morceaux : Autumn Leaves, comper en Charleston' }
-            ]
           }
         ]
       },
@@ -976,13 +947,6 @@ export const PARTS: Part[] = [
             choices: ['Funk', 'Afro-cubain', 'Swing', 'Valse jazz'],
             answer: 2,
             explain: 'Ride ternaire, 2 et 4 et walking bass : le swing à 4 temps (en valse, 3 temps par mesure).'
-          },
-          {
-            t: 'go',
-            links: [
-              { href: '#/rythme/style', label: 'Rythme › Reconnaître un style' },
-              { href: '#/grilles', label: 'Morceaux : change le style dans les réglages du play-along' }
-            ]
           }
         ]
       },
@@ -1020,8 +984,7 @@ export const PARTS: Part[] = [
             choices: ['Le 3e coup est sur le « et » de 4', 'Elle se joue en ternaire', 'Elle a 6 coups', 'Elle commence toujours par la mesure à 2 coups'],
             answer: 0,
             explain: 'Même motif, mais le 3e coup recule d’une croche, du 4 au « et » de 4.'
-          },
-          { t: 'go', links: [{ href: '#/rythme/taper/6', label: 'Rythme › Lire et taper, niveau 6 (claves)' }] }
+          }
         ]
       }
     ]

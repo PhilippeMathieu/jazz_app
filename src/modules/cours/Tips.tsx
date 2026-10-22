@@ -8,10 +8,10 @@ import { TopBar } from '../../ui/Screen';
 import { PlayIcon } from '../../ui/icons';
 import { TIPS, Tip, anotherKey, realize } from './tips';
 
-export function TipsView() {
+export function TipsView({ onBack }: { onBack: () => void }) {
   return (
     <div class="screen lesson">
-      <TopBar title="Astuces d’enchaînement" back="/cours" />
+      <TopBar title="Astuces d’enchaînement" onBack={onBack} />
       <p class="intro">
         {TIPS.length} réflexes de conduite des voix pour passer d’un accord à l’autre. Écoute l’exemple, joue-le, puis change de tonalité : l’astuce marche partout.
       </p>

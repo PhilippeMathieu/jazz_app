@@ -1,21 +1,18 @@
 // Phrases : vocabulaire sur ii–V–I en appel-réponse. L'appli joue une phrase, tu la rejoues ; le micro vérifie les notes dans l'ordre.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { audio, silence } from '../../core/audio/engine';
+import { silence } from '../../core/audio/engine';
 import { keyLabel } from '../../core/chart/model';
 import { pick } from '../../core/random';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { micSettings, readMono, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { NoteTracker } from '../../core/listen/tracker';
 import { plainName } from '../../core/theory/notes';
-import { TopBar } from '../../ui/Screen';
-import { Segmented } from '../../ui/Segmented';
-import { Field, LevelPicker, MoreOptions, StartButton, levelShort } from '../../ui/Setup';
 import { MicPill } from '../../ui/MicPill';
 import { PlayIcon } from '../../ui/icons';
 import { PhraseStaff } from '../../ui/PhraseStaff';
 import { useWakeLock } from '../../ui/wakeLock';
-import { CYCLE, LEVELS, LINES, Line, Match, Phrase, chordNames, matchPhrase, noteLabel, phraseIn } from './lines';
+import { CYCLE, LINES, Line, Match, Phrase, chordNames, lineById, matchPhrase, noteLabel, phraseIn } from './lines';
 import { playCall } from './play';
 
 type Keys = 'cycle' | 'C' | 'random';
@@ -32,82 +29,16 @@ interface Saved {
   done: Record<string, number[]>;
 }
 const DEFAULT: Saved = { level: 0, line: 'arp1357', keys: 'cycle', tempo: 100, show: true, backing: false, done: {} };
-const KEYS_LABEL: Record<Keys, string> = { cycle: 'Les 12, par quartes', C: 'C seulement', random: 'Au hasard' };
-const TEMPOS = [80, 100, 120, 140];
-const levelLines = (l: number) => LINES.filter((x) => x.level === l);
 /** Silence après la dernière note : la réponse est terminée. */
 const END_SILENCE = 2500;
 
-export function Phrases() {
-  const [s, setS] = useState<Saved>(() => load('phrases', DEFAULT));
-  const [running, setRunning] = useState(false);
-  useEffect(() => save('phrases', s), [s]);
+/** Une phrase en appel-réponse, dans les tonalités par quartes. */
+export function PhraseRun({ line, onExit }: { line: string; onExit: () => void }) {
   useMicRelease();
-  const lines = levelLines(s.level);
-  const line = lines.find((l) => l.id === s.line) ?? lines[0];
-  if (running) return <Run s={s} line={line} setS={setS} onEnd={() => setRunning(false)} />;
-  const preview = phraseIn(line, 0);
-  return (
-    <div class="screen">
-      <TopBar title="Phrases" actions={<MicPill />} />
-      <p class="intro">Du vocabulaire sur ii–V–I. L’appli joue une phrase, tu la rejoues au piano ; le micro vérifie les notes dans l’ordre (le rythme est libre). Puis la même phrase dans la tonalité suivante.</p>
-      <LevelPicker
-        exo="phrases"
-        levels={LEVELS.map((desc) => ({ desc }))}
-        value={s.level}
-        onChange={(level) => setS({ ...s, level, line: levelLines(level)[0].id })}
-      />
-      <Field label="Phrase">
-        <Segmented
-          cards
-          cols={lines.length > 2 ? 3 : 2}
-          label="Phrase"
-          value={line.id}
-          onChange={(id) => setS({ ...s, line: id })}
-          options={lines.map((l) => ({ value: l.id, label: l.name, sub: `${(s.done[l.id] ?? []).length}/12 tonalités` }))}
-        />
-      </Field>
-      <section class="phrase-preview">
-        <PhraseStaff notes={preview.notes} chords={chordNames(preview)} label={`${line.name} en C`} />
-        <div class="row-actions">
-          <button
-            class="btn sm"
-            onClick={() => {
-              silence();
-              playCall(preview, s.tempo, { phrase: true, backing: true });
-            }}
-          >
-            <PlayIcon /> Écouter en C
-          </button>
-        </div>
-        <p class="muted small">{line.tip}</p>
-      </section>
-      <MoreOptions summary={`${KEYS_LABEL[s.keys]} · ${s.tempo} à la noire${s.show ? '' : ' · à l’oreille'}${s.backing ? ' · accompagné' : ''}`}>
-        <Field label="Tonalités">
-          <Segmented label="Tonalités" value={s.keys} onChange={(keys) => setS({ ...s, keys })} options={(Object.keys(KEYS_LABEL) as Keys[]).map((k) => ({ value: k, label: KEYS_LABEL[k] }))} />
-        </Field>
-        <Field label="Tempo">
-          <Segmented label="Tempo" value={s.tempo} onChange={(tempo) => setS({ ...s, tempo })} options={TEMPOS.map((t) => ({ value: t, label: String(t) }))} />
-        </Field>
-        <Field label="Partition">
-          <Segmented
-            label="Partition"
-            value={s.show ? 1 : 0}
-            onChange={(v) => setS({ ...s, show: v === 1 })}
-            options={[
-              { value: 1, label: 'Affichée', sub: 'Lire et écouter' },
-              { value: 0, label: 'À l’oreille', sub: 'Montrée après ta réponse' }
-            ]}
-          />
-        </Field>
-        <label class="toggle">
-          <input type="checkbox" checked={s.backing} onChange={() => setS({ ...s, backing: !s.backing })} />
-          <span>Accompagnement pendant ta réponse (au casque : sinon le micro l’entend)</span>
-        </label>
-      </MoreOptions>
-      <StartButton onClick={() => (audio(), setRunning(true))} />
-    </div>
-  );
+  const [s, setS] = useState<Saved>(() => ({ ...load('phrases', DEFAULT), line, keys: 'cycle' }));
+  useEffect(() => save('phrases', s), [s]);
+  const l = lineById(line) ?? LINES[0];
+  return <Run s={s} line={l} setS={setS} onEnd={onExit} />;
 }
 
 type Phase = 'call' | 'answer' | 'result';
@@ -243,7 +174,7 @@ function Run({ s, line, setS, onEnd }: { s: Saved; line: Line; setS: (f: Saved) 
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(s.level)} · {score.ok}/{score.total}
+          {score.ok}/{score.total}
         </span>
         <MicPill />
       </header>

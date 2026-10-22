@@ -1,27 +1,24 @@
 // Comping : les voicings en rythme sur ii–V–I, avec contrebasse et batterie. Le micro mesure le placement de chaque
 // attaque et vérifie l'accord joué.
-import { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { audio, bass, drum, now, playChord } from '../../core/audio/engine';
 import { keyLabel } from '../../core/chart/model';
 import { keyFor } from '../../core/theory/progressions';
 import { chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
-import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
-import { listenOnsets, micSettings, readChord, useMicLoop, useMicState } from '../../core/listen/mic';
+import { load } from '../../core/storage';
+import { report } from '../../core/events';
+import { listenOnsets, micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { Ev, backingBar, schedule } from '../../core/rhythm/play';
 import { countInHits, tendency, tolerance } from '../../core/rhythm/timing';
 import { TPB } from '../../core/rhythm/patterns';
 import { Keyboard } from '../../ui/Keyboard';
-import { TopBar } from '../../ui/Screen';
-import { Segmented } from '../../ui/Segmented';
-import { Field, LevelPicker, MoreOptions, StartButton, levelShort } from '../../ui/Setup';
 import { MicPill } from '../../ui/MicPill';
 import { PlayIcon } from '../../ui/icons';
 import { notesMarks } from '../../ui/keyboardMarks';
 import { useWakeLock } from '../../ui/wakeLock';
-import { COMP_LEVELS, COMP_VOICING_LABEL, CompResult, CompRound, CompVoicing, Snapshot, evaluate, makeRound, tickBeat } from './comping';
+import { CompResult, CompRound, CompVoicing, Snapshot, evaluate, makeRound, tickBeat } from './comping';
+import { micOffset } from '../reglages/Calibrate';
 
 interface Saved {
   level: number;
@@ -33,69 +30,14 @@ interface Saved {
   show: boolean;
 }
 const DEFAULT: Saved = { level: 0, voicing: 'AB', tempo: 100, backing: 'band', keys: 'cycle', show: true };
-const TEMPOS = [80, 100, 120, 140, 160];
 const CYCLE = Array.from({ length: 12 }, (_, i) => (i * 5) % 12);
 const BAR = 4 * TPB;
 
-/** Écran du comping : réglages, puis le jeu. header : le choix de l'exercice (Voicings / Comping). */
-export function Comping({ header }: { header: ComponentChildren }) {
-  const [s, setS] = useState<Saved>(() => load('comping', DEFAULT));
-  const [running, setRunning] = useState(false);
-  useEffect(() => save('comping', s), [s]);
-  if (running) return <Run s={s} onEnd={() => setRunning(false)} />;
-  return (
-    <div class="screen">
-      <TopBar title="Voicings" actions={<MicPill echo />} />
-      <p class="intro">Joue les voicings en rythme sur ii–V–I, avec contrebasse et batterie. Le micro mesure le placement de chaque attaque et vérifie l’accord.</p>
-      {header}
-      <LevelPicker exo="comping" levels={COMP_LEVELS.map((l) => ({ name: l.name, desc: l.desc }))} value={s.level} onChange={(level) => setS({ ...s, level })} />
-      <Field label="Voicings">
-        <Segmented
-          cards
-          cols={3}
-          label="Voicings"
-          value={s.voicing}
-          onChange={(voicing) => setS({ ...s, voicing })}
-          options={(Object.keys(COMP_VOICING_LABEL) as CompVoicing[]).map((v) => ({ value: v, label: COMP_VOICING_LABEL[v].name, sub: COMP_VOICING_LABEL[v].sub }))}
-        />
-      </Field>
-      <MoreOptions summary={`${s.tempo} à la noire · ${s.backing === 'band' ? 'basse et batterie' : 'charleston seul'} · ${s.keys === 'cycle' ? '12 tonalités' : 'C'}`}>
-        <Field label="Tempo">
-          <Segmented label="Tempo" value={s.tempo} onChange={(tempo) => setS({ ...s, tempo })} options={TEMPOS.map((t) => ({ value: t, label: String(t) }))} />
-        </Field>
-        <Field label="Accompagnement">
-          <Segmented
-            label="Accompagnement"
-            value={s.backing}
-            onChange={(backing) => setS({ ...s, backing })}
-            options={[
-              { value: 'band', label: 'Basse et batterie', sub: 'Au casque : sinon le micro les entend' },
-              { value: 'click', label: 'Charleston seul', sub: 'Sur 2 et 4, plus discret' }
-            ]}
-          />
-        </Field>
-        <Field label="Tonalités">
-          <Segmented
-            label="Tonalités"
-            value={s.keys}
-            onChange={(keys) => setS({ ...s, keys })}
-            options={[
-              { value: 'cycle', label: 'Les 12, par quartes' },
-              { value: 'C', label: 'C seulement' }
-            ]}
-          />
-        </Field>
-        <label class="toggle">
-          <input type="checkbox" checked={s.show} onChange={() => setS({ ...s, show: !s.show })} />
-          <span>Montrer les voicings (notes et clavier)</span>
-        </label>
-      </MoreOptions>
-      <StartButton onClick={() => (audio(), setRunning(true))} />
-      <p class="muted small">
-        8 mesures : ii–V–I–I deux fois, une mesure de décompte avant. « Exemple » fait entendre le comping attendu. Le placement utilise le réglage du décalage fait dans Rythme.
-      </p>
-    </div>
-  );
+/** Comping en rythme, au niveau et aux voicings fixés par le parcours. */
+export function CompingRun({ level, voicing, onExit }: { level: number; voicing: CompVoicing; onExit: () => void }) {
+  useMicRelease();
+  const [s] = useState<Saved>(() => ({ ...load('comping', DEFAULT), level, voicing }));
+  return <Run s={s} onEnd={onExit} />;
 }
 
 type Phase = 'ready' | 'count' | 'play' | 'result';
@@ -122,7 +64,7 @@ function Run({ s, onEnd }: { s: Saved; onEnd: () => void }) {
   const key = keyFor('iiVI', tonicOf(k));
   const spb = 60 / s.tempo;
   const tol = tolerance(s.tempo);
-  const offset = load<{ offsets: Record<string, number> }>('rythme', { offsets: {} }).offsets.mic ?? 0;
+  const offset = micOffset();
 
   const stopAll = () => {
     stopRef.current?.();
@@ -250,7 +192,7 @@ function Run({ s, onEnd }: { s: Saved; onEnd: () => void }) {
           Arrêter
         </button>
         <span class="play-meta">
-          Comping · {levelShort(s.level)}
+          Comping
           {score.total ? ` · ${score.ok}/${score.total}` : ''}
         </span>
         <MicPill echo />

@@ -3,23 +3,17 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { chordSymbol, degreeLabel, rootPc, spellInChord } from '../../core/theory/chords';
 import { Note, mod, noteName, pcOf, spellWith } from '../../core/theory/notes';
 import { audio, bass, now, playChord, silence } from '../../core/audio/engine';
-import { TWO_HANDS, UPPER_STRUCTURES, VOICING_LABEL, VoicingType, bassRoot, lhVoicing, twoHands } from '../../core/audio/voicing';
+import { TWO_HANDS, UPPER_STRUCTURES, VoicingType, bassRoot, lhVoicing, twoHands } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { checkChord, LIMITS } from '../../core/listen/detect';
 import { micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { Keyboard } from '../../ui/Keyboard';
-import { TopBar } from '../../ui/Screen';
-import { Segmented } from '../../ui/Segmented';
-import { Field, LevelPicker, MoreOptions, StartButton } from '../../ui/Setup';
-import { MicPill } from '../../ui/MicPill';
 import { CloseIcon } from '../../ui/icons';
 import { useWakeLock } from '../../ui/wakeLock';
 import { fitSymbol } from '../../ui/fit';
 import { notesMarks } from '../../ui/keyboardMarks';
 import { ChordStats, FlashSettings, Item, ORDER_LABEL, Order, nextBatch, statKey } from './batch';
-import { LEVEL_LABELS } from '../oreille/data';
-import { Comping } from './Comping';
 
 const VOICING_NAME: Record<VoicingType, string> = {
   triad: 'Débutant, 3 sons',
@@ -59,7 +53,6 @@ const typeLine = (it: Item) =>
           ? `Sans fondamentale, type ${it.type}`
           : VOICING_NAME[it.type];
 const DEFAULT: FlashSettings = { exercise: 'flash', level: 1, type: 'shell', order: 'iiVI', delay: 4, sound: true };
-const DELAYS = [2, 4, 6, 10, 0];
 
 interface Heard {
   kind: 'ok' | 'ko' | 'silence';
@@ -69,91 +62,11 @@ interface Heard {
   lowest: number | null;
 }
 
-/** preset « comping » : ouvre directement le comping. */
-export function Flash({ preset }: { preset?: string }) {
-  const [s, setS] = useState<FlashSettings>(() => {
-    const x = load('flash', DEFAULT);
-    return preset === 'comping' || preset === 'flash' ? { ...x, exercise: preset } : x;
-  });
-  const [running, setRunning] = useState(false);
-  useEffect(() => save('flash', s), [s]);
+/** Voicings, au réglage fixé par le parcours : temps libre (le micro valide, ou « Révéler »), voicing entendu après. */
+export function FlashRun({ type, order, level = 1, onExit }: { type: VoicingType; order: Order; level?: number; onExit: () => void }) {
   useMicRelease();
-  const exerciseField = (
-    <Field label="Exercice">
-      <Segmented
-        cards
-        cols={2}
-        label="Exercice"
-        value={s.exercise ?? 'flash'}
-        onChange={(exercise) => setS({ ...s, exercise })}
-        options={[
-          { value: 'flash', label: 'Un accord à la fois', sub: 'Le micro valide chaque voicing' },
-          { value: 'comping', label: 'Comping en rythme', sub: 'Les voicings sur la grille, en place' }
-        ]}
-      />
-    </Field>
-  );
-  if (s.exercise === 'comping') return <Comping header={exerciseField} />;
-  if (running) return <Run s={s} onEnd={() => setRunning(false)} />;
-  return (
-    <div class="screen">
-      <TopBar title="Voicings" actions={<MicPill />} />
-      <p class="intro">Un accord s’affiche : joue-le, à la main gauche jusqu’au niveau 4, à deux mains ensuite. Avec le micro, l’appli valide et passe au suivant.</p>
-      {exerciseField}
-      <LevelPicker
-        exo="flash"
-        levels={TYPES.map((t) => ({ name: VOICING_NAME[t], desc: VOICING_LABEL[t] }))}
-        value={TYPES.indexOf(s.type)}
-        onChange={(i) => setS({ ...s, type: TYPES[i] })}
-      />
-      <MoreOptions summary={`${ORDER_LABEL[s.order]} · ${s.delay ? `${s.delay} s` : 'temps libre'}${s.sound ? '' : ' · sans son'}`}>
-        <Field label="Enchaînement">
-          <Segmented
-            cards
-            cols={2}
-            label="Enchaînement"
-            value={s.order}
-            onChange={(order) => setS({ ...s, order })}
-            options={(Object.keys(ORDER_LABEL) as Order[]).map((o) => ({ value: o, label: ORDER_LABEL[o] }))}
-          />
-        </Field>
-        {(s.order === 'random' || s.order === 'cycle') && s.type !== 'triad' && s.type !== 'us' ? (
-          <Field label="Types d’accords">
-            <Segmented
-              label="Types d’accords"
-              value={Math.max(1, s.level)}
-              onChange={(level) => setS({ ...s, level })}
-              options={LEVEL_LABELS.build.slice(1).map((t, i) => ({ value: i + 1, label: String(i + 1), sub: t }))}
-            />
-          </Field>
-        ) : null}
-        <Field label="Temps pour jouer">
-          <Segmented label="Temps pour jouer" value={s.delay} onChange={(delay) => setS({ ...s, delay })} options={DELAYS.map((d) => ({ value: d, label: d ? `${d} s` : 'Libre' }))} />
-        </Field>
-        <label class="toggle">
-          <input type="checkbox" checked={s.sound} onChange={() => setS({ ...s, sound: !s.sound })} />
-          <span>Faire entendre le voicing après chaque accord</span>
-        </label>
-      </MoreOptions>
-      <StartButton onClick={() => setRunning(true)} />
-      <p class="muted small">
-        {s.type === 'triad'
-          ? 'Joue-les dans le renversement que tu veux ; l’appli montre le plus proche du précédent.'
-          : s.type === 'shell'
-            ? 'Fondamentale à la basse, puis 3ce et 7e. Sous la, la 3ce passe au-dessus de la 7e (1-7-10).'
-            : s.type === 'A' || s.type === 'B'
-              ? 'Sans fondamentale : la basse joue la fondamentale. A et B alternent pour que les voix bougent peu.'
-              : s.type === 'spread'
-                ? 'Main gauche : fondamentale et 7e. Main droite : 3ce, puis 5te (13 sur les dominantes) et 9e.'
-                : s.type === 'quartal'
-                  ? 'So What sur les m7 : trois quartes et une tierce majeure (D G C | F A sur Dm7). Ailleurs, des quartes sur les notes de couleur.'
-                  : s.type === 'drop2'
-                    ? 'Prends l’accord serré à la main droite, descends la 2e note en partant du haut d’une octave : elle va à la main gauche.'
-                    : 'Main gauche : 3ce et 7e. Main droite : une triade majeure, II (9 ♯11 13), VI (13 ♭9 3), ♭VI (♭13 1 ♯9), ♭III (♯9 5 ♭7) ou ♭V (♯11 ♭7 ♭9).'}{' '}
-        Les accords ratés ou lents reviennent plus souvent.
-      </p>
-    </div>
-  );
+  const [s] = useState<FlashSettings>({ ...DEFAULT, type, order, level, delay: 0, sound: true });
+  return <Run s={s} onEnd={onExit} />;
 }
 
 function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {

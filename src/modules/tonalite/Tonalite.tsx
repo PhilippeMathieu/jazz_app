@@ -1,23 +1,19 @@
 // Accords de la tonalité : réglages, partie chronométrée, résultat.
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { keyLabel, keyName } from '../../core/chart/model';
 import { QUALITIES } from '../../core/theory/chords';
 import { noteName } from '../../core/theory/notes';
 import { playOne } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
-import { TopBar } from '../../ui/Screen';
-import { LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
-import { StatBars } from '../../ui/StatBars';
-import { Clock, fmtSec } from '../../ui/Clock';
+import { report } from '../../core/events';
+import { Clock } from '../../ui/Clock';
 import { SpeakerIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { ChordKeys } from '../../ui/ChordKeys';
-import { DegQuality, LEVELS, MAJOR, MAJOR_TRIADS, MINOR, Question, Tally, chordOf, choicesFor, harmonize, makeQuestion } from './drill';
+import { DegQuality, Question, Tally, chordOf, choicesFor, harmonize, makeQuestion } from './drill';
 
 type RunMode = 'sprint' | 'serie';
 const SPRINT_MS = 60_000;
-const SERIE_N = 20;
 
 interface RunRecord {
   correct: number;
@@ -49,103 +45,17 @@ const known = (a: Answer) => a.ok && !a.guessed;
 
 const degKey = (q: Question) => `${q.degree.triad ? 'T' : q.key.mode === 'major' ? 'M' : 'm'}:${q.degree.roman}`;
 const symOf = (q: DegQuality) => QUALITIES[q].sym;
-const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
-  !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 
 /** Degrés dans l'ordre, pour les statistiques. */
-const DEG_ORDER = [...MAJOR_TRIADS.map((d) => ({ id: 'T:' + d.roman, label: d.roman + ' (3 sons)' })), ...MAJOR.map((d) => ({ id: 'M:' + d.roman, label: d.roman })), ...MINOR.map((d) => ({ id: 'm:' + d.roman, label: d.roman + ' (mineur)' }))];
 
 function add(t: Timed, k: string, ok: boolean, ms: number): Timed {
   const b = t[k] ?? { c: 0, t: 0, ms: 0 };
   return { ...t, [k]: { c: b.c + (ok ? 1 : 0), t: b.t + 1, ms: b.ms + ms } };
 }
 
-export function Tonalite() {
-  const [saved, setSaved] = useState<Saved>(() => load('tonalite', DEFAULT));
-  const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup');
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [newRecord, setNewRecord] = useState(false);
-  useEffect(() => save('tonalite', saved), [saved]);
-
-  const finish = (list: Answer[], complete: boolean) => {
-    const { level, mode } = saved;
-    const res: RunRecord = { correct: list.filter(known).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
-    const rk = `${level}-${mode}`;
-    const rec = complete && res.total > 0 && better(res, saved.records[rk], mode);
-    setNewRecord(rec);
-    setAnswers(list);
-    setSaved((s) => {
-      let { items, byDeg, byKey } = s;
-      list.forEach((a) => {
-        const it = items[a.q.id] ?? { c: 0, t: 0 };
-        items = { ...items, [a.q.id]: { c: it.c + (known(a) ? 1 : 0), t: it.t + 1 } };
-        byDeg = add(byDeg, degKey(a.q), known(a), a.ms);
-        byKey = add(byKey, keyName(a.q.key), known(a), a.ms);
-      });
-      return { ...s, items, byDeg, byKey, records: rec ? { ...s.records, [rk]: res } : s.records };
-    });
-    setPhase('done');
-  };
-
-  if (phase === 'play') return <Play saved={saved} onFinish={finish} />;
-  if (phase === 'done') return <Result saved={saved} answers={answers} newRecord={newRecord} onAgain={() => setPhase('play')} onSetup={() => setPhase('setup')} />;
-  return <Setup saved={saved} setSaved={setSaved} onStart={() => setPhase('play')} />;
-}
-
-// ---------------------------------------------------------------- Réglages
-
-function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: Saved) => Saved) => void; onStart: () => void }) {
-  const { level, mode } = saved;
-  const rec = saved.records[`${level}-${mode}`];
-  const degs = DEG_ORDER.filter((d) => saved.byDeg[d.id]);
-  const keys = Object.entries(saved.byKey)
-    .filter(([, v]) => v.t >= 3)
-    .map(([k, v]) => ({ k, v, score: v.c / v.t - v.ms / v.t / 20000 }))
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 4);
-  return (
-    <div class="screen">
-      <TopBar title="Accords" />
-      <p class="intro">Une tonalité et une note : quel accord ? En D majeur, F♯ → {level === 0 ? 'mineur (F♯m)' : 'm7 (F♯m7)'}.</p>
-      <LevelPicker exo="tonalite" levels={LEVELS} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
-      <SprintOptions mode={mode} n={SERIE_N} what="questions" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
-      <StartButton onClick={onStart} />
-      <p class="muted small">
-        Record : {rec ? (mode === 'sprint' ? `${rec.correct} justes sur ${rec.total}` : `${rec.correct}/${rec.total} en ${fmtSec(rec.ms)}`) : 'aucun pour l’instant'}.
-      </p>
-      <details class="help">
-        <summary>Le truc à retenir</summary>
-        <p class="small">
-          <b>Débutant, 3 sons</b> : <span class="mono">majeur, mineur, mineur, majeur, majeur, mineur, diminué</span> (I à VII). En C : C Dm Em F G Am B°.
-        </p>
-        <p class="small">
-          <b>Majeur</b> : <span class="mono">Δ7 m7 m7 Δ7 7 m7 ø7</span> (I à VII).
-        </p>
-        <p class="small">
-          <b>Mineur</b> : <span class="mono">m7 ø7 Δ7 m7 7 Δ7 7</span>, plus <span class="mono">°7</span> sur la sensible (VII). Le V est 7, pas m7 : c’est la
-          sensible du mineur harmonique.
-        </p>
-      </details>
-      {degs.length ? (
-        <section>
-          <h2 class="label">Réussite par degré</h2>
-          <StatBars rows={degs.map((d) => ({ label: d.label, c: saved.byDeg[d.id].c, t: saved.byDeg[d.id].t, value: valueOf(saved.byDeg[d.id]) }))} />
-        </section>
-      ) : null}
-      {keys.length ? (
-        <section>
-          <h2 class="label">Tonalités à travailler</h2>
-          <StatBars rows={keys.map(({ k, v }) => ({ label: k.endsWith('m') ? `${k.slice(0, -1)} mineur` : `${k} majeur`, c: v.c, t: v.t, value: valueOf(v) }))} />
-        </section>
-      ) : null}
-    </div>
-  );
-}
-const valueOf = (v: { c: number; t: number; ms: number }) => `${Math.round((v.c / v.t) * 100)} % · ${fmtSec(v.ms / v.t)}`;
-
 // ---------------------------------------------------------------- Partie
 
-function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void }) {
+function Play({ saved, onFinish, total }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void; total: number }) {
   const { level, mode } = saved;
   const tally = useRef<Tally>({ ...saved.items });
   const [q, setQ] = useState<Question>(() => makeQuestion(level, tally.current));
@@ -164,7 +74,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     setQ((p) => makeQuestion(level, tally.current, Math.random, p.id));
     qStart.current = performance.now();
   };
-  const over = (n: number) => (mode === 'serie' && n >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
+  const over = (n: number) => (mode === 'serie' && n >= total) || (mode === 'sprint' && spent.current >= SPRINT_MS);
 
   const choose = (choice: DegQuality) => {
     if (current) return;
@@ -192,7 +102,6 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     else next();
   };
 
-  const correct = answers.filter(known).length;
   const row = harmonize(q.key, !!q.degree.triad);
   return (
     <div class="screen play-screen">
@@ -201,7 +110,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(level)} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {Math.min(total, answers.length + (current ? 0 : 1))}/{total}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -261,65 +170,22 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   );
 }
 
-// ---------------------------------------------------------------- Résultat
+// ---------------------------------------------------------------- Lancement direct
 
-function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
-  const correct = answers.filter(known).length;
-  const ms = answers.reduce((s, a) => s + a.ms, 0);
-  const wrong = answers.filter((a) => !known(a));
-  const per = DEG_ORDER.map((d) => {
-    const l = answers.filter((a) => degKey(a.q) === d.id);
-    return { ...d, n: l.length, c: l.filter(known).length, ms: l.reduce((s, a) => s + a.ms, 0) };
-  }).filter((x) => x.n);
-  return (
-    <div class="screen">
-      <TopBar title="Résultat" onBack={onSetup} />
-      <div class="result">
-        <div>
-          <b>
-            {correct}
-            <small>/{answers.length}</small>
-          </b>
-          <span>justes</span>
-        </div>
-        <div>
-          <b>{answers.length ? fmtSec(ms / answers.length) : '—'}</b>
-          <span>par réponse</span>
-        </div>
-        <div>
-          <b>{fmtSec(ms)}</b>
-          <span>de réflexion</span>
-        </div>
-      </div>
-      {newRecord ? <p class="banner ok">Nouveau record, {levelName(saved.level).toLowerCase()}.</p> : null}
-      <StatBars rows={per.map((x) => ({ label: x.label, c: x.c, t: x.n, value: `${x.c}/${x.n} · ${fmtSec(x.ms / x.n)}` }))} />
-      <div class="row-actions">
-        <button class="btn primary" onClick={onAgain}>
-          Rejouer
-        </button>
-        <button class="btn" onClick={onSetup}>
-          Réglages
-        </button>
-      </div>
-      {wrong.length ? (
-        <section>
-          <h2 class="label">À revoir</h2>
-          <div class="list">
-            {wrong.map((a, i) => (
-              <div class="mistake" key={i}>
-                <span class="small muted">En {keyLabel(a.q.key)}</span>
-                <b>
-                  {noteName(a.q.root)}
-                  {symOf(a.q.answer)} · {a.q.degree.roman}
-                </b>
-                <span class="small">
-                  {a.ok ? 'juste, mais deviné' : <>tu as répondu <span class="bad">{symOf(a.choice)}</span></>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-    </div>
-  );
+/** Une série de questions au niveau fixé par le parcours. */
+export function TonaliteRun({ level, total, onExit }: { level: number; total: number; onExit: () => void }) {
+  const [saved] = useState<Saved>(() => ({ ...load('tonalite', DEFAULT), level, mode: 'serie' }));
+  const finish = (list: Answer[], complete: boolean) => {
+    const s = load('tonalite', DEFAULT);
+    let { items, byDeg, byKey } = s;
+    list.forEach((a) => {
+      const it = items[a.q.id] ?? { c: 0, t: 0 };
+      items = { ...items, [a.q.id]: { c: it.c + (known(a) ? 1 : 0), t: it.t + 1 } };
+      byDeg = add(byDeg, degKey(a.q), known(a), a.ms);
+      byKey = add(byKey, keyName(a.q.key), known(a), a.ms);
+    });
+    save('tonalite', { ...s, items, byDeg, byKey });
+    if (!complete) onExit();
+  };
+  return <Play saved={saved} onFinish={finish} total={total} />;
 }

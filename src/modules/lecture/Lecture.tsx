@@ -6,29 +6,17 @@ import { audio, now, piano } from '../../core/audio/engine';
 import { MIC_MESSAGES, micSettings, readNote, startMic, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { NoteTracker } from '../../core/listen/tracker';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
-import { TopBar } from '../../ui/Screen';
-import { Segmented } from '../../ui/Segmented';
-import { Field, LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
-import { StatBars } from '../../ui/StatBars';
-import { Clock, fmtSec } from '../../ui/Clock';
+import { report } from '../../core/events';
+import { Clock } from '../../ui/Clock';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { Staff } from '../../ui/Staff';
-import { MicPill } from '../../ui/MicPill';
 import { SpeakerIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
-import { CLEF_LABEL, LETTER_CHOICES, explainNote, LEVELS, Question, keyIsRight, makeQuestion, nameIsRight, playedVerdict, solfegeName } from './reading';
+import { CLEF_LABEL, LETTER_CHOICES, explainNote, Question, keyIsRight, makeQuestion, nameIsRight, playedVerdict, solfegeName } from './reading';
 
 type RunMode = 'sprint' | 'serie';
 type AnswerMode = 'clavier' | 'noms' | 'piano';
 const SPRINT_MS = 60_000;
-const SERIE_N = 20;
-const ANSWER_LABEL: Record<AnswerMode, string> = { clavier: 'Clavier', noms: 'Nom', piano: 'Au piano' };
-const ANSWER_SUB: Record<AnswerMode, string> = {
-  clavier: 'Touche la note sur le clavier (octave libre).',
-  noms: 'Choisis le nom de la note (au niveau 4, avec dièse ou bémol).',
-  piano: 'Joue la note sur ton piano, à la bonne octave : le micro vérifie.'
-};
 
 interface RunRecord {
   correct: number;
@@ -57,116 +45,13 @@ interface Answer {
 }
 const known = (a: Answer) => a.ok && !a.guessed;
 
-const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
-  !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 const fullName = (w: Written) => `${writtenName(w)} · ${solfegeName(w)}`;
 const PLAIN = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 const midiName = (m: number) => PLAIN[mod(m, 12)] + (Math.floor(m / 12) - 1);
 
-export function Lecture() {
-  const [saved, setSaved] = useState<Saved>(() => load('lecture', DEFAULT));
-  const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup');
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [newRecord, setNewRecord] = useState(false);
-  useEffect(() => save('lecture', saved), [saved]);
-  useMicRelease();
-
-  const finish = (list: Answer[], complete: boolean) => {
-    const { level, mode, answer } = saved;
-    const res: RunRecord = { correct: list.filter(known).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
-    const rk = `${level}-${mode}-${answer}`;
-    const rec = complete && res.total > 0 && better(res, saved.records[rk], mode);
-    setNewRecord(rec);
-    setAnswers(list);
-    setSaved((s) => {
-      const byItem = { ...s.byItem };
-      list.forEach((a) => {
-        const b = byItem[a.q.id] ?? { c: 0, t: 0, ms: 0 };
-        byItem[a.q.id] = { c: b.c + (known(a) ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
-      });
-      return { ...s, byItem, records: rec ? { ...s.records, [rk]: res } : s.records };
-    });
-    setPhase('done');
-  };
-
-  if (phase === 'play') return <Play saved={saved} onFinish={finish} />;
-  if (phase === 'done') return <Result saved={saved} answers={answers} newRecord={newRecord} onAgain={() => setPhase('play')} onSetup={() => setPhase('setup')} />;
-  return <Setup saved={saved} setSaved={setSaved} onStart={() => setPhase('play')} />;
-}
-
-// ---------------------------------------------------------------- Réglages
-
-/** Réussite et temps moyen d'une liste de notes. */
-function sum(entries: [string, { c: number; t: number; ms: number }][]) {
-  return entries.reduce((s, [, v]) => ({ c: s.c + v.c, t: s.t + v.t, ms: s.ms + v.ms }), { c: 0, t: 0, ms: 0 });
-}
-const valueOf = (v: { c: number; t: number; ms: number }) => `${Math.round((v.c / v.t) * 100)} % · ${fmtSec(v.ms / v.t)}`;
-
-function Setup({ saved, setSaved, onStart }: { saved: Saved; setSaved: (f: (s: Saved) => Saved) => void; onStart: () => void }) {
-  const { level, mode, answer } = saved;
-  const rec = saved.records[`${level}-${mode}-${answer}`];
-  const entries = Object.entries(saved.byItem);
-  const clefs = (['G', 'F'] as const)
-    .map((c) => ({ c, v: sum(entries.filter(([k]) => k.startsWith(c + ':'))) }))
-    .filter((x) => x.v.t);
-  const weak = entries
-    .filter(([, v]) => v.t >= 2)
-    .map(([k, v]) => ({ k, v, score: v.c / v.t - v.ms / v.t / 10000 }))
-    .sort((a, b) => a.score - b.score)
-    .slice(0, 5)
-    .filter((x) => x.v.c < x.v.t || x.v.ms / x.v.t > 2000);
-  const start = async () => {
-    // Au piano : le micro s'ouvre sur ce geste (obligatoire sur iPhone).
-    if (answer === 'piano') await startMic();
-    onStart();
-  };
-  return (
-    <div class="screen">
-      <TopBar title="Notes" actions={answer === 'piano' ? <MicPill /> : undefined} />
-      <p class="intro">Une note s’affiche sur la portée : trouve-la le plus vite possible.</p>
-      <LevelPicker exo="lecture" levels={LEVELS} base={1} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
-      <Field label="Répondre">
-        <Segmented
-          label="Répondre"
-          value={answer}
-          onChange={(v) => setSaved((s) => ({ ...s, answer: v }))}
-          options={(Object.keys(ANSWER_LABEL) as AnswerMode[]).map((a) => ({ value: a, label: ANSWER_LABEL[a], sub: ANSWER_SUB[a] }))}
-        />
-      </Field>
-      <SprintOptions mode={mode} n={SERIE_N} what="notes" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
-      <StartButton onClick={start} />
-      <p class="muted small">
-        Record : {rec ? (mode === 'sprint' ? `${rec.correct} justes sur ${rec.total}` : `${rec.correct}/${rec.total} en ${fmtSec(rec.ms)}`) : 'aucun pour l’instant'}.
-      </p>
-      <details class="help">
-        <summary>Les repères</summary>
-        <p class="small">
-          <b>Clé de sol</b> : lignes <span class="mono">E G B D F</span> (mi sol si ré fa), interlignes <span class="mono">F A C E</span>. Le sol est sur la 2e ligne.
-        </p>
-        <p class="small">
-          <b>Clé de fa</b> : lignes <span class="mono">G B D F A</span> (sol si ré fa la), interlignes <span class="mono">A C E G</span>. Le fa est sur la 4e ligne.
-        </p>
-        <p class="small">Le do central (C4) est sur la 1re ligne supplémentaire, sous la clé de sol comme au-dessus de la clé de fa.</p>
-      </details>
-      {clefs.length ? (
-        <section>
-          <h2 class="label">Réussite par clé</h2>
-          <StatBars rows={clefs.map((x) => ({ label: x.c === 'G' ? 'Clé de sol' : 'Clé de fa', c: x.v.c, t: x.v.t, value: valueOf(x.v) }))} />
-        </section>
-      ) : null}
-      {weak.length ? (
-        <section>
-          <h2 class="label">Notes à travailler</h2>
-          <StatBars rows={weak.map(({ k, v }) => ({ label: `${k.slice(2)} · ${k[0] === 'G' ? 'clé de sol' : 'clé de fa'}`, c: v.c, t: v.t, value: valueOf(v) }))} />
-        </section>
-      ) : null}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------- Partie
 
-function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void }) {
+function Play({ saved, onFinish, total }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void; total: number }) {
   const { level, mode, answer } = saved;
   const tally = useRef({ ...saved.byItem });
   const [q, setQ] = useState<Question>(() => makeQuestion(level, tally.current));
@@ -203,7 +88,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     ignoreUntil.current = performance.now() + 300;
     tracker.current.reset();
   };
-  const over = (n: number) => (mode === 'serie' && n >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
+  const over = (n: number) => (mode === 'serie' && n >= total) || (mode === 'sprint' && spent.current >= SPRINT_MS);
 
   const settle = (ok: boolean, given: string) => {
     if (current || done.current) return;
@@ -217,7 +102,10 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     setCurrent(a);
     // Au piano, les mains restent sur le clavier : l'explication s'affiche puis on enchaîne seul.
     // Ailleurs, elle reste jusqu'au tap, même si c'est juste.
-    if (answer === 'piano') timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), 1800);
+    if (answer === 'piano') {
+      report({ type: 'answer', exo: 'lecture', level: level - 1, ok, ms });
+      timer.current = window.setTimeout(() => (over(list.length) ? end(list) : next()), 1800);
+    }
   };
   const proceed = (guessed: boolean) => {
     const lastA = answers[answers.length - 1];
@@ -270,7 +158,6 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     piano(q.midi, now() + 0.02, 1.2, 0.6);
   };
 
-  const correct = answers.filter(known).length;
   const target = mod(q.midi, 12) + 60;
   const marks: Record<number, Mark> = {};
   const labels: Record<number, string> = {};
@@ -286,7 +173,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(level - 1)} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {Math.min(total, answers.length + (current ? 0 : 1))}/{total}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -380,64 +267,21 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   );
 }
 
-// ---------------------------------------------------------------- Résultat
+// ---------------------------------------------------------------- Lancement direct
 
-function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
-  const correct = answers.filter(known).length;
-  const ms = answers.reduce((s, a) => s + a.ms, 0);
-  const wrong = answers.filter((a) => !known(a));
-  const per = (['treble', 'bass'] as const)
-    .map((c) => {
-      const l = answers.filter((a) => a.q.clef === c);
-      return { c, n: l.length, ok: l.filter(known).length, ms: l.reduce((s, a) => s + a.ms, 0) };
-    })
-    .filter((x) => x.n);
-  return (
-    <div class="screen">
-      <TopBar title="Résultat" onBack={onSetup} />
-      <div class="result">
-        <div>
-          <b>
-            {correct}
-            <small>/{answers.length}</small>
-          </b>
-          <span>justes</span>
-        </div>
-        <div>
-          <b>{answers.length ? fmtSec(ms / answers.length) : '—'}</b>
-          <span>par note</span>
-        </div>
-        <div>
-          <b>{fmtSec(ms)}</b>
-          <span>au total</span>
-        </div>
-      </div>
-      {newRecord ? <p class="banner ok">Nouveau record, {levelName(saved.level - 1).toLowerCase()}.</p> : null}
-      <StatBars rows={per.map((x) => ({ label: CLEF_LABEL[x.c], c: x.ok, t: x.n, value: `${x.ok}/${x.n} · ${fmtSec(x.ms / x.n)}` }))} />
-      <div class="row-actions">
-        <button class="btn primary" onClick={onAgain}>
-          Rejouer
-        </button>
-        <button class="btn" onClick={onSetup}>
-          Réglages
-        </button>
-      </div>
-      {wrong.length ? (
-        <section>
-          <h2 class="label">À revoir</h2>
-          <div class="list">
-            {wrong.map((a, i) => (
-              <div class="mistake" key={i}>
-                <span class="small muted">{CLEF_LABEL[a.q.clef]}</span>
-                <b>{fullName(a.q.note)}</b>
-                <span class="small">
-                  {a.guessed ? 'juste, mais deviné' : <>tu as donné <span class="bad">{a.given}</span></>}
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-    </div>
-  );
+/** Une série de notes à lire, au réglage fixé par le parcours. complete=false : l'élève a arrêté. */
+export function LectureRun({ level, answer, total, onExit }: { level: number; answer: AnswerMode; total: number; onExit: () => void }) {
+  useMicRelease();
+  const [saved] = useState<Saved>(() => ({ ...load('lecture', DEFAULT), level, answer, mode: 'serie' }));
+  const finish = (list: Answer[], complete: boolean) => {
+    const s = load('lecture', DEFAULT);
+    const byItem = { ...s.byItem };
+    list.forEach((a) => {
+      const b = byItem[a.q.id] ?? { c: 0, t: 0, ms: 0 };
+      byItem[a.q.id] = { c: b.c + (known(a) ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
+    });
+    save('lecture', { ...s, byItem });
+    if (!complete) onExit();
+  };
+  return <Play saved={saved} onFinish={finish} total={total} />;
 }

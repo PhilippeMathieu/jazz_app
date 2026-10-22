@@ -9,7 +9,7 @@ import { noteName } from '../../core/theory/notes';
 import { audio, now, playChord } from '../../core/audio/engine';
 import { displayVoicing } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { Segmented } from '../../ui/Segmented';
 import { Field } from '../../ui/Setup';
 import { PlayIcon } from '../../ui/icons';

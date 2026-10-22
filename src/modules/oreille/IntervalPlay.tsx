@@ -3,11 +3,10 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { noteName } from '../../core/theory/notes';
 import { audio, now, piano, silence } from '../../core/audio/engine';
 import { confusions, recordAnswer } from '../../core/confusions';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { Keyboard } from '../../ui/Keyboard';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
-import { levelShort } from '../../ui/Setup';
 import { IV_LEVELS, IntervalQuestion, IvDir, explainInterval, intervalById, intervalDiff, makeIntervalDuel, makeIntervalQuestion } from './intervals';
 import { Tally } from './questions';
 
@@ -94,7 +93,7 @@ export function IntervalPlay({
           Arrêter
         </button>
         <span class="play-meta">
-          Intervalles · {q.choices ? 'mes confusions' : levelShort(level)} · {session.c}/{session.t}
+          Intervalles · {q.choices ? 'mes confusions · ' : ''}{session.c}/{session.t}
           {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
         </span>
       </header>

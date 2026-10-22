@@ -47,7 +47,7 @@ export function Micro() {
   const heard = ch ? PCS.filter((_, i) => ch.chroma[i] >= LIMITS.present) : [];
   return (
     <div class="screen">
-      <TopBar title="Micro" actions={<MicPill />} />
+      <TopBar title="Micro" back="/reglages" actions={<MicPill />} />
       <p class="intro">Téléphone sur le pupitre, micro (bas de l’iPhone) vers le piano. Joue une note, puis un accord.</p>
       {st !== 'on' ? <p class="muted">{st === 'off' ? 'Active le micro avec le bouton en haut à droite.' : MIC_MESSAGES[st]}</p> : null}
       {st === 'on' ? (

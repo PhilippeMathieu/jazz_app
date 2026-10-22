@@ -1,45 +1,61 @@
-import { useRoute } from './ui/router';
-import { Home } from './Home';
+// Les écrans : le parcours (accueil, étape, leçon, exercice), l'accès libre (morceaux, clavier) et les réglages.
+import { useRoute, go } from './ui/router';
+import { Home } from './parcours/Home';
+import { StepView } from './parcours/StepView';
+import { ActivityView } from './parcours/ActivityView';
+import { Settings } from './parcours/Settings';
+import { STEPS, stepById } from './parcours/steps';
+import { loadParcours, nextInStep } from './parcours/progress';
+import { pathOf } from './parcours/ui';
+import { LessonView } from './modules/cours/Cours';
+import { TipsView } from './modules/cours/Tips';
+import { OreilleRun, OreilleMode } from './modules/oreille/Oreille';
 import { ChartList } from './modules/grilles/ChartList';
 import { ChartView } from './modules/grilles/ChartView';
 import { Import } from './modules/grilles/Import';
-import { Oreille } from './modules/oreille/Oreille';
-import { Phrases } from './modules/phrases/Phrases';
-import { Express } from './modules/express/Express';
-import { Tonalite } from './modules/tonalite/Tonalite';
-import { Lecture } from './modules/lecture/Lecture';
-import { CoursList, LessonView } from './modules/cours/Cours';
-import { TipsView } from './modules/cours/Tips';
 import { Clavier } from './modules/clavier/Clavier';
-import { Rythme } from './modules/rythme/Rythme';
-import { Progres } from './modules/progres/Progres';
-import { Flash } from './modules/flash/Flash';
 import { Micro } from './modules/micro/Micro';
+import { Calibrate } from './modules/reglages/Calibrate';
+import { RythmeRun } from './modules/rythme/Rythme';
 import { chartById } from './library/charts';
+import { lessonById } from './modules/cours/lessons';
 
 export function App() {
   const [page, a, b] = useRoute();
-  if (page === 'grilles' || page === 'impro') {
-    // Anciennes adresses « impro/gammes/<grille> » : la grille s'ouvre en mode Gammes ou Guide tones.
-    const c = page === 'impro' && b ? chartById(b) : undefined;
-    if (c) return <ChartView key={c.id + a} chart={c} initialMode={a === 'guide' ? 'guide' : 'gammes'} />;
-    return <ChartList />;
+  if (page === 'etape' && a) return <StepView key={a} id={a} />;
+  if (page === 'x' && a) return <ActivityView id={a} />;
+  if (page === 'lecon' && a && b) {
+    const step = stepById(a);
+    const lessonIdx = step ? step.lessons.indexOf(b) : -1;
+    if (step && lessonById(b))
+      return (
+        <LessonView
+          key={b}
+          id={b}
+          where={`Étape ${STEPS.indexOf(step) + 1} · leçon ${lessonIdx + 1}/${step.lessons.length}`}
+          onBack={() => go(`/etape/${a}`)}
+          // Leçon lue : la suite de l'étape (la leçon suivante, ou le premier exercice).
+          onDone={() => {
+            const next = nextInStep(loadParcours(), step);
+            go(next ? pathOf(next) : `/etape/${a}`);
+          }}
+        />
+      );
   }
+  if (page === 'revoir' && (a === 'rythme' || a === 'style')) return <RythmeRun key={a} exercise={a === 'rythme' ? 'oreille' : 'style'} level={1} duel onExit={() => go('/')} />;
+  if (page === 'revoir' && a) return <OreilleRun key={a} mode={a as OreilleMode} level={4} duel onExit={() => go('/')} />;
+  if (page === 'astuces') return <TipsView onBack={() => history.back()} />;
+  if (page === 'morceaux') return <ChartList />;
   if (page === 'importer') return <Import />;
   if (page === 'grille') {
     const c = a ? chartById(a) : undefined;
     return c ? <ChartView key={c.id + (b ?? '')} chart={c} initialMode={b === 'analyser' ? 'analyser' : undefined} /> : <ChartList />;
   }
-  if (page === 'express') return <Express key={a ?? ''} preset={a} />;
-  if (page === 'cours') return a === 'astuces' ? <TipsView /> : a ? <LessonView key={a} id={a} /> : <CoursList />;
   if (page === 'clavier') return <Clavier />;
-  if (page === 'progres') return <Progres />;
-  if (page === 'rythme') return <Rythme key={(a ?? '') + (b ?? '')} piano={a === 'piano'} preset={a && a !== 'piano' ? { exercise: a, level: b && b !== 'confusions' ? Number(b) - 1 : -1, confusions: b === 'confusions' } : undefined} />;
-  if (page === 'lecture') return <Lecture />;
-  if (page === 'tonalite') return <Tonalite />;
-  if (page === 'oreille') return <Oreille key={(a ?? '') + (b ?? '')} preset={a} focus={b === 'confusions'} />;
-  if (page === 'flash') return <Flash key={a ?? ''} preset={a} />;
-  if (page === 'phrases') return <Phrases />;
-  if (page === 'micro') return <Micro />;
+  if (page === 'reglages') {
+    if (a === 'micro') return <Micro />;
+    if (a === 'decalage') return <Calibrate key={b} input={b === 'ecran' ? 'tap' : 'mic'} onDone={() => go('/reglages')} />;
+    return <Settings />;
+  }
   return <Home />;
 }

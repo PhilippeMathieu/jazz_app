@@ -4,106 +4,43 @@ import { JSX } from 'preact';
 import { Chord, chordSymbol, degreeLabel, parseChord } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
 import { SeqVoicing, playSequence, sequenceVoicings } from '../../core/audio/play';
-import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { TopBar } from '../../ui/Screen';
 import { Keyboard, Mark } from '../../ui/Keyboard';
-import { ChevronIcon, PlayIcon, StopIcon } from '../../ui/icons';
-import { go } from '../../ui/router';
-import { Block, LESSONS, Lesson, PARTS, lessonById } from './lessons';
-import { TIPS } from './tips';
+import { PlayIcon, StopIcon } from '../../ui/icons';
+import { Block, lessonById } from './lessons';
 import { RhythmGrid, useCursor } from '../../ui/RhythmGrid';
 import { rhythmById } from '../../core/rhythm/patterns';
 import { playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
 import { GROOVES, StyleId } from '../../core/rhythm/styles';
-
-interface Progress {
-  read: string[];
-}
-export const coursProgress = () => load<Progress>('cours', { read: [] });
-export const nextLesson = (p: Progress) => LESSONS.find((l) => !p.read.includes(l.id));
 
 /** « **gras** » → <b>. */
 function rich(text: string) {
   return text.split('**').map((part, i) => (i % 2 ? <b key={i}>{part}</b> : part));
 }
 
-// ---------------------------------------------------------------- Liste
-
-export function CoursList() {
-  const p = coursProgress();
-  const next = nextLesson(p);
-  return (
-    <div class="screen">
-      <TopBar title="Cours" back="/" />
-      <p class="intro">
-        {LESSONS.length} leçons de 3 à 5 minutes, chacune avec des exemples à écouter, un mini-quiz et un exercice pour pratiquer. {p.read.length}/{LESSONS.length} lues.
-      </p>
-      {next ? (
-        <a class="resume" href={`#/cours/${next.id}`}>
-          <span class="row-main">
-            <span class="label">{p.read.length ? 'Leçon suivante' : 'Commencer'}</span>
-            <span class="row-title">{next.title}</span>
-          </span>
-          <ChevronIcon />
-        </a>
-      ) : null}
-      <a class="row plain" href="#/cours/astuces">
-        <span class="row-main">
-          <span class="row-title">Astuces d’enchaînement</span>
-          <span class="row-sub">{TIPS.length} réflexes de conduite des voix, à écouter dans toutes les tonalités</span>
-        </span>
-        <ChevronIcon />
-      </a>
-      {PARTS.map((part) => (
-        <section key={part.title}>
-          <h2 class="label">{part.title}</h2>
-          <div class="list">
-            {part.lessons.map((l) => (
-              <a key={l.id} class="row" href={`#/cours/${l.id}`}>
-                <span class="row-main">
-                  <span class="row-title">{l.title}</span>
-                  <span class="row-sub">{l.sub}</span>
-                </span>
-                {p.read.includes(l.id) ? <span class="tag done">Lu</span> : <span class="tag">{l.minutes} min</span>}
-              </a>
-            ))}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------- Leçon
 
-export function LessonView({ id }: { id: string }) {
+/** Une leçon. « J'ai compris » la compte comme lue (le parcours l'enregistre), puis onDone. */
+export function LessonView({ id, where, onBack, onDone }: { id: string; where: string; onBack: () => void; onDone: () => void }) {
   const lesson = lessonById(id);
-  if (!lesson) return <CoursList />;
-  const idx = LESSONS.indexOf(lesson);
-  const next = LESSONS[idx + 1] as Lesson | undefined;
+  if (!lesson) return null;
   const done = () => {
-    const p = coursProgress();
-    if (!p.read.includes(lesson.id)) {
-      const read = [...p.read, lesson.id];
-      save('cours', { read });
-      report({ type: 'lesson', id: lesson.id, all: LESSONS.every((l) => read.includes(l.id)) });
-    }
-    go(next ? `/cours/${next.id}` : '/cours');
+    report({ type: 'lesson', id: lesson.id });
+    onDone();
   };
   return (
     <div class="screen lesson">
-      <TopBar title={lesson.title} back="/cours" />
+      <TopBar title={lesson.title} onBack={onBack} />
       <p class="intro">
-        Leçon {idx + 1}/{LESSONS.length} · {lesson.minutes} min · {lesson.sub}
+        {where} · {lesson.minutes} min · {lesson.sub}
       </p>
       {lesson.blocks.map((b, i) => (
         <BlockView key={`${lesson.id}-${i}`} b={b} />
       ))}
       <button class="btn primary block" onClick={done}>
-        {next ? `J’ai compris · leçon suivante` : 'J’ai compris · retour aux cours'}
+        J’ai compris
       </button>
-      {next ? <p class="muted small">Ensuite : {next.title}.</p> : null}
     </div>
   );
 }
@@ -152,22 +89,6 @@ function BlockView({ b }: { b: Block }): JSX.Element {
       return <RhythmDemo id={b.id} label={b.label} compare={b.compare} tempo={b.tempo} />;
     case 'grooves':
       return <GroovesDemo styles={b.styles} label={b.label} />;
-    case 'go':
-      return (
-        <section>
-          <h2 class="label">Pour pratiquer</h2>
-          <div class="list">
-            {b.links.map((l) => (
-              <a key={l.href + l.label} class="row" href={l.href}>
-                <span class="row-main">
-                  <span class="row-title">{l.label}</span>
-                </span>
-                <ChevronIcon />
-              </a>
-            ))}
-          </div>
-        </section>
-      );
   }
 }
 
@@ -261,6 +182,7 @@ function RhythmDemo({ id, label, compare, tempo = 100 }: { id: string; label?: s
   );
 }
 
+/** Quelques mesures de chaque style, avec ce qu'il faut entendre. */
 /** Quelques mesures de chaque style, avec ce qu'il faut entendre. */
 function GroovesDemo({ styles, label }: { styles: StyleId[]; label?: string }) {
   const [playing, setPlaying] = useState<StyleId | null>(null);

@@ -1,25 +1,18 @@
 // Analyse express : réglages, partie chronométrée, résultat.
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { chordSymbol } from '../../core/theory/chords';
 import { keyLabel } from '../../core/chart/model';
 import { playSequence } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
-import { TopBar } from '../../ui/Screen';
-import { ComponentChildren } from 'preact';
-import { Field, LevelPicker, SprintOptions, StartButton, levelName, levelShort } from '../../ui/Setup';
-import { Segmented } from '../../ui/Segmented';
-import { Reharm } from './Reharm';
-import { StatBars } from '../../ui/StatBars';
+import { report } from '../../core/events';
 import { SpeakerIcon } from '../../ui/icons';
-import { Clock, fmtSec } from '../../ui/Clock';
+import { Clock } from '../../ui/Clock';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { ChordKeys } from '../../ui/ChordKeys';
-import { LEVELS, QTYPE_LABEL, QType, Question, Seq, Tally, isRight, makeRound } from './drill';
+import { Question, Seq, Tally, isRight, makeRound } from './drill';
 
 type RunMode = 'sprint' | 'serie';
 const SPRINT_MS = 60_000;
-const SERIE_N = 20;
 
 interface RunRecord {
   correct: number;
@@ -48,102 +41,12 @@ interface Answer {
 /** Réponse vraiment sue. */
 const known = (a: Answer) => a.ok && !a.guessed;
 
-const fmt = fmtSec;
-const better = (a: RunRecord, b: RunRecord | undefined, mode: RunMode) =>
-  !b || a.correct > b.correct || (a.correct === b.correct && (mode === 'serie' ? a.ms < b.ms : a.total < b.total));
 
 const playSeq = (seq: Seq) => playSequence(seq.chords.map((c) => c.chord));
 
-/** preset : « reharm » ouvre directement la réharmonisation. */
-export function Express({ preset }: { preset?: string }) {
-  const [saved, setSaved] = useState<Saved>(() => {
-    const x = load('express', DEFAULT);
-    return preset === 'reharm' || preset === 'analyse' ? { ...x, exercise: preset } : x;
-  });
-  const [phase, setPhase] = useState<'setup' | 'play' | 'done'>('setup');
-  const [answers, setAnswers] = useState<Answer[]>([]);
-  const [newRecord, setNewRecord] = useState(false);
-  useEffect(() => save('express', saved), [saved]);
-
-  const finish = (list: Answer[], complete: boolean) => {
-    const { level, mode } = saved;
-    const res: RunRecord = { correct: list.filter(known).length, total: list.length, ms: list.reduce((s, a) => s + a.ms, 0) };
-    const key = `${level}-${mode}`;
-    const rec = complete && res.total > 0 && better(res, saved.records[key], mode);
-    setNewRecord(rec);
-    setAnswers(list);
-    setSaved((s) => {
-      const byType = { ...s.byType };
-      const byTemplate = { ...s.byTemplate };
-      list.forEach((a) => {
-        const b = byType[a.q.type] ?? { c: 0, t: 0, ms: 0 };
-        byType[a.q.type] = { c: b.c + (known(a) ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
-        const id = a.q.seq.template.id;
-        const tt = byTemplate[id] ?? { c: 0, t: 0 };
-        byTemplate[id] = { c: tt.c + (known(a) ? 1 : 0), t: tt.t + 1 };
-      });
-      return { ...s, byType, byTemplate, records: rec ? { ...s.records, [key]: res } : s.records };
-    });
-    setPhase('done');
-  };
-
-  const exerciseField = (
-    <Field label="Exercice">
-      <Segmented
-        cards
-        cols={2}
-        label="Exercice"
-        value={saved.exercise}
-        onChange={(exercise) => setSaved((s) => ({ ...s, exercise }))}
-        options={[
-          { value: 'analyse', label: 'Analyser', sub: 'Degrés, ii–V, tonalité : vite' },
-          { value: 'reharm', label: 'Réharmoniser', sub: 'SubV, dominantes, diminués, ii–V' }
-        ]}
-      />
-    </Field>
-  );
-  if (saved.exercise === 'reharm') return <Reharm header={exerciseField} />;
-  if (phase === 'play') return <Play saved={saved} onFinish={finish} />;
-  if (phase === 'done') return <Result saved={saved} answers={answers} newRecord={newRecord} onAgain={() => setPhase('play')} onSetup={() => setPhase('setup')} />;
-  return <Setup saved={saved} setSaved={setSaved} onStart={() => setPhase('play')} header={exerciseField} />;
-}
-
-// ---------------------------------------------------------------- Réglages
-
-function Setup({ saved, setSaved, onStart, header }: { saved: Saved; setSaved: (f: (s: Saved) => Saved) => void; onStart: () => void; header: ComponentChildren }) {
-  const { level, mode } = saved;
-  const rec = saved.records[`${level}-${mode}`];
-  const types = (Object.keys(QTYPE_LABEL) as QType[]).filter((t) => saved.byType[t]);
-  return (
-    <div class="screen">
-      <TopBar title="Enchaînements" />
-      <p class="intro">Une suite d’accords s’affiche : trois questions dessus (degrés, ii–V, tonalité…), le plus vite possible.</p>
-      {header}
-      <LevelPicker exo="express" levels={LEVELS} value={level} onChange={(v) => setSaved((s) => ({ ...s, level: v }))} />
-      <SprintOptions mode={mode} n={SERIE_N} what="questions" onChange={(v) => setSaved((s) => ({ ...s, mode: v }))} />
-      <StartButton onClick={onStart} />
-      <p class="muted small">
-        Record : {rec ? (mode === 'sprint' ? `${rec.correct} justes sur ${rec.total}` : `${rec.correct}/${rec.total} en ${fmt(rec.ms)}`) : 'aucun pour l’instant'}. Le chrono
-        s’arrête pendant les explications.
-      </p>
-      {types.length ? (
-        <section>
-          <h2 class="label">Réussite par type de question</h2>
-          <StatBars
-            rows={types.map((t) => {
-              const b = saved.byType[t];
-              return { label: QTYPE_LABEL[t], c: b.c, t: b.t, value: `${Math.round((b.c / b.t) * 100)} % · ${fmt(b.ms / b.t)}` };
-            })}
-          />
-        </section>
-      ) : null}
-    </div>
-  );
-}
-
 // ---------------------------------------------------------------- Partie
 
-function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void }) {
+function Play({ saved, onFinish, total }: { saved: Saved; onFinish: (a: Answer[], complete: boolean) => void; total: number }) {
   const { level, mode } = saved;
   const stats = { types: saved.byType, templates: saved.byTemplate };
   const [queue, setQueue] = useState<Question[]>(() => makeRound(level, Math.random, stats));
@@ -162,7 +65,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
     setQueue((qq) => (qq.length > 1 ? qq.slice(1) : makeRound(level, Math.random, stats)));
     qStart.current = performance.now();
   };
-  const over = (n: number) => (mode === 'serie' && n >= SERIE_N) || (mode === 'sprint' && spent.current >= SPRINT_MS);
+  const over = (n: number) => (mode === 'serie' && n >= total) || (mode === 'sprint' && spent.current >= SPRINT_MS);
 
   const q = queue[0];
   const choose = (choice: string) => {
@@ -186,7 +89,6 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
 
   if (!q) return null;
   const long = q.type === 'pattern' || q.type === 'key' || q.type === 'scale';
-  const correct = answers.filter(known).length;
   const alsoOk = current?.ok && current.choice !== q.answer;
   return (
     <div class="screen play-screen">
@@ -195,7 +97,7 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(level)} · {mode === 'sprint' ? `${correct} justes` : `${answers.length + (current ? 0 : 1)}/${SERIE_N}`}
+          {Math.min(total, answers.length + (current ? 0 : 1))}/{total}
         </span>
         <Clock limitMs={mode === 'sprint' ? SPRINT_MS : undefined} spent={spent} qStart={qStart} paused={!!current} onTimeout={() => end(answers)} />
       </header>
@@ -247,66 +149,24 @@ function Play({ saved, onFinish }: { saved: Saved; onFinish: (a: Answer[], compl
   );
 }
 
-// ---------------------------------------------------------------- Résultat
+// ---------------------------------------------------------------- Lancement direct
 
-function Result({ saved, answers, newRecord, onAgain, onSetup }: { saved: Saved; answers: Answer[]; newRecord: boolean; onAgain: () => void; onSetup: () => void }) {
-  const correct = answers.filter(known).length;
-  const ms = answers.reduce((s, a) => s + a.ms, 0);
-  const wrong = answers.filter((a) => !known(a));
-  const per = (Object.keys(QTYPE_LABEL) as QType[])
-    .map((t) => {
-      const l = answers.filter((a) => a.q.type === t);
-      return { t, n: l.length, c: l.filter(known).length, ms: l.reduce((s, a) => s + a.ms, 0) };
-    })
-    .filter((x) => x.n);
-  return (
-    <div class="screen">
-      <TopBar title="Résultat" onBack={onSetup} />
-      <div class="result">
-        <div>
-          <b>
-            {correct}
-            <small>/{answers.length}</small>
-          </b>
-          <span>justes</span>
-        </div>
-        <div>
-          <b>{answers.length ? fmt(ms / answers.length) : '—'}</b>
-          <span>par réponse</span>
-        </div>
-        <div>
-          <b>{fmt(ms)}</b>
-          <span>de réflexion</span>
-        </div>
-      </div>
-      {newRecord ? <p class="banner ok">Nouveau record, {levelName(saved.level).toLowerCase()}.</p> : null}
-      <StatBars rows={per.map((x) => ({ label: QTYPE_LABEL[x.t], c: x.c, t: x.n, value: `${x.c}/${x.n} · ${fmt(x.ms / x.n)}` }))} />
-      <div class="row-actions">
-        <button class="btn primary" onClick={onAgain}>
-          Rejouer
-        </button>
-        <button class="btn" onClick={onSetup}>
-          Réglages
-        </button>
-      </div>
-      {wrong.length ? (
-        <section>
-          <h2 class="label">À revoir</h2>
-          <div class="list">
-            {wrong.map((a, i) => (
-              <div class="mistake" key={i}>
-                <span class="mono small muted">{a.q.seq.chords.map((c) => chordSymbol(c.chord)).join('  ')}</span>
-                <b>{a.q.prompt}</b>
-                <span class="small">
-                  {a.ok ? <span class="muted">deviné : </span> : <span class="bad">{a.choice} → </span>}
-                  <span class="good">{a.q.answer}</span>
-                </span>
-                <span class="muted small">{a.q.explain}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-    </div>
-  );
+/** Une série de questions d'analyse au niveau fixé par le parcours. */
+export function ExpressRun({ level, total, onExit }: { level: number; total: number; onExit: () => void }) {
+  const [saved] = useState<Saved>(() => ({ ...load('express', DEFAULT), level, mode: 'serie' }));
+  const finish = (list: Answer[], complete: boolean) => {
+    const s = load('express', DEFAULT);
+    const byType = { ...s.byType };
+    const byTemplate = { ...s.byTemplate };
+    list.forEach((a) => {
+      const b = byType[a.q.type] ?? { c: 0, t: 0, ms: 0 };
+      byType[a.q.type] = { c: b.c + (known(a) ? 1 : 0), t: b.t + 1, ms: b.ms + a.ms };
+      const id = a.q.seq.template.id;
+      const tt = byTemplate[id] ?? { c: 0, t: 0 };
+      byTemplate[id] = { c: tt.c + (known(a) ? 1 : 0), t: tt.t + 1 };
+    });
+    save('express', { ...s, byType, byTemplate });
+    if (!complete) onExit();
+  };
+  return <Play saved={saved} onFinish={finish} total={total} />;
 }

@@ -5,12 +5,11 @@ import { mod, pcOf } from '../../core/theory/notes';
 import { keyLabel } from '../../core/chart/model';
 import { audio, now, piano, playChord, silence } from '../../core/audio/engine';
 import { confusions, recordAnswer } from '../../core/confusions';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { Keyboard } from '../../ui/Keyboard';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
 import { notesMarks } from '../../ui/keyboardMarks';
-import { levelShort } from '../../ui/Setup';
 import { FULL_TONAL, FullAnswer, FullQuestion, itemOfAnswer, judgeFull, makeFullDuel, makeFullQuestion, pcNameIn } from './full';
 import { Tally, earVoicing } from './questions';
 
@@ -121,7 +120,7 @@ export function FullPlay({
           Arrêter
         </button>
         <span class="play-meta">
-          Accord entier · {q.duel ? 'mes confusions' : levelShort(level)} · {session.c}/{session.t}
+          Accord entier · {q.duel ? 'mes confusions · ' : ''}{session.c}/{session.t}
         </span>
       </header>
       <section class="ear-stage">

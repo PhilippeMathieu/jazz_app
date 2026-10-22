@@ -51,7 +51,7 @@ export function Import() {
 
   return (
     <div class="screen">
-      <TopBar title="Importer une grille" back="/grilles" />
+      <TopBar title="Importer une grille" back="/morceaux" />
       <p class="intro">Colle les accords d’un morceau, avec ou sans paroles : Ultimate Guitar, ChordPro ou texte libre.</p>
       <details class="help">
         <summary>Copie bloquée dans l’appli ?</summary>

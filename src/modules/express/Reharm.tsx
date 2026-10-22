@@ -1,18 +1,14 @@
 // Réharmoniser : une grille simple, une technique à appliquer (ou à reconnaître) ; avant / après à écouter.
-import { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Chord, chordSymbol } from '../../core/theory/chords';
 import { keyLabel } from '../../core/chart/model';
 import { audio, silence } from '../../core/audio/engine';
 import { playSequence } from '../../core/audio/play';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
-import { TopBar } from '../../ui/Screen';
-import { LevelPicker, StartButton, levelShort } from '../../ui/Setup';
-import { StatBars } from '../../ui/StatBars';
+import { report } from '../../core/events';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
-import { REHARM_LEVELS, RQuestion, RTYPE_LABEL, RType, makeReharm } from './reharm';
+import { RQuestion, RType, makeReharm } from './reharm';
 
 interface Saved {
   level: number;
@@ -20,28 +16,11 @@ interface Saved {
 }
 const DEFAULT: Saved = { level: 0, items: {} };
 
-export function Reharm({ header }: { header: ComponentChildren }) {
-  const [s, setS] = useState<Saved>(() => load('reharm', DEFAULT));
-  const [running, setRunning] = useState(false);
-  useEffect(() => save('reharm', s), [s]);
-  if (running) return <Play s={s} setS={setS} onStop={() => setRunning(false)} />;
-  const types = REHARM_LEVELS[s.level].types;
-  return (
-    <div class="screen">
-      <TopBar title="Enchaînements" />
-      <p class="intro">Une grille simple et une technique : SubV, dominante secondaire, diminué de passage, ii–V ajouté. Tu choisis les accords, puis tu écoutes avant et après.</p>
-      {header}
-      <LevelPicker exo="reharm" levels={REHARM_LEVELS.map((l) => ({ name: l.name, desc: l.desc }))} value={s.level} onChange={(level) => setS({ ...s, level })} />
-      <StartButton onClick={() => (audio(), setRunning(true))} />
-      {types.some((t) => s.items[t]) ? (
-        <section>
-          <h2 class="label">Réussite, {levelShort(s.level).toLowerCase()}</h2>
-          <StatBars rows={types.map((t) => ({ label: RTYPE_LABEL[t], c: s.items[t]?.c ?? 0, t: s.items[t]?.t ?? 0 }))} />
-        </section>
-      ) : null}
-      <p class="muted small">La leçon « Réharmoniser » (Cours) explique les techniques. Pour les entendre sur un morceau : Morceaux, vue Degrés, où l’analyse les repère.</p>
-    </div>
-  );
+/** Réharmoniser, au niveau fixé par le parcours. */
+export function ReharmRun({ level, onExit }: { level: number; onExit: () => void }) {
+  const [s, setS] = useState<Saved>(() => ({ ...load('reharm', DEFAULT), level }));
+  useEffect(() => save('reharm', { ...load('reharm', DEFAULT), items: s.items }), [s]);
+  return <Play s={s} setS={setS} onStop={onExit} />;
 }
 
 function Grid({ chords, focus, label }: { chords: Chord[]; focus?: number[]; label: string }) {
@@ -117,7 +96,7 @@ function Play({ s, setS, onStop }: { s: Saved; setS: (f: (x: Saved) => Saved) =>
           Arrêter
         </button>
         <span class="play-meta">
-          Réharmoniser · {levelShort(s.level)} · {session.c}/{session.t}
+          Réharmoniser · {session.c}/{session.t}
         </span>
       </header>
       <section class="ear-stage">

@@ -4,7 +4,7 @@ import { Chord, chordOnPc, chordSymbol, rootPc } from '../../core/theory/chords'
 import { mod } from '../../core/theory/notes';
 import { ImprovPlan } from '../../core/analysis/improv';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { Rng, seeded, shuffle } from '../../core/random';
 import { Segmented } from '../../ui/Segmented';
 
@@ -48,10 +48,11 @@ interface Best {
   best: number[];
 }
 
-export function useMemoire(chartId: string, plan: ImprovPlan, firsts: number[], active: boolean) {
+/** initialLevel : niveau imposé (par le parcours), sinon le dernier choisi pour ce morceau. */
+export function useMemoire(chartId: string, plan: ImprovPlan, firsts: number[], active: boolean, initialLevel?: number) {
   const n = plan.flat.length;
   const store = `memoire:${chartId}`;
-  const [level, setLevelState] = useState(() => load<{ level: number }>(`${store}:lv`, { level: 0 }).level);
+  const [level, setLevelState] = useState(() => initialLevel ?? load<{ level: number }>(`${store}:lv`, { level: 0 }).level);
   const [seed, setSeed] = useState(1);
   const [answers, setAnswers] = useState<Map<number, boolean>>(new Map());
   const [current, setCurrent] = useState<number | null>(null);
@@ -86,7 +87,9 @@ export function useMemoire(chartId: string, plan: ImprovPlan, firsts: number[], 
     const nx = nextOpen(current + 1, next);
     setCurrent(nx);
     if (nx === null) {
-      const score = [...next.values()].filter(Boolean).length / order.length;
+      const okN = [...next.values()].filter(Boolean).length;
+      report({ type: 'memoire', chart: chartId, level, ok: okN, total: order.length });
+      const score = okN / order.length;
       if (score > (best.best[level] ?? 0)) {
         const b = { best: Object.assign([...best.best], { [level]: score }) };
         setBest(b);

@@ -1,63 +1,52 @@
-// Toasts de récompense (étoile, niveau ouvert, badge, défi, objectif, grade), avec un petit carillon.
+// Petits messages en haut de l'écran : exercice validé, étape terminée, objectif du jour atteint.
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { EXOS, Reward, loadGame, onReward } from '../core/game';
 import { now, piano } from '../core/audio/engine';
 
-const text = (r: Reward): [string, string] => {
-  switch (r.kind) {
-    case 'star':
-      return ['★'.repeat(r.stars) + '☆'.repeat(3 - r.stars), `${EXOS[r.exo]?.name ?? r.exo}, niveau ${r.level + 1}`];
-    case 'unlock':
-      return ['Niveau ouvert', `${EXOS[r.exo]?.name ?? r.exo} : niveau ${r.level + 1}`];
-    case 'badge':
-      return [`Badge : ${r.badge.name}`, r.badge.desc];
-    case 'challenge':
-      return ['Défi relevé', `${r.text} · +${r.xp} points`];
-    case 'goal':
-      return ['Objectif du jour atteint', '+50 points · la série continue'];
-    case 'grade':
-      return ['Nouveau grade', r.name];
-  }
-};
+export interface Toast {
+  kind: 'ok' | 'step' | 'goal';
+  title: string;
+  sub?: string;
+}
+const listeners = new Set<(t: Toast) => void>();
+/** Affiche un message (et un petit carillon). */
+export function toast(t: Toast) {
+  listeners.forEach((f) => f(t));
+}
 
-/** Quelques notes aiguës, très douces (désactivables dans Progression). */
-function chime(kind: Reward['kind']) {
+function chime(kind: Toast['kind']) {
   const t = now() + 0.02;
-  const notes = kind === 'grade' || kind === 'badge' ? [72, 76, 79, 84] : kind === 'star' ? [79, 84] : [84];
+  const notes = kind === 'step' ? [72, 76, 79, 84] : kind === 'goal' ? [79, 84] : [84];
   notes.forEach((m, i) => piano(m, t + i * 0.09, 0.5, 0.28));
 }
 
-export function RewardToasts() {
-  const [list, setList] = useState<{ id: number; r: Reward }[]>([]);
+export function Toasts() {
+  const [list, setList] = useState<{ id: number; t: Toast }[]>([]);
   const seq = useRef(0);
-  useEffect(
-    () =>
-      onReward((r) => {
-        const id = ++seq.current;
-        setList((l) => [...l.slice(-2), { id, r }]);
-        if (loadGame().fx) {
-          try {
-            chime(r.kind);
-          } catch {
-            /* son indisponible */
-          }
-        }
-        setTimeout(() => setList((l) => l.filter((x) => x.id !== id)), 3200);
-      }),
-    []
-  );
+  useEffect(() => {
+    const f = (t: Toast) => {
+      const id = ++seq.current;
+      setList((l) => [...l.slice(-2), { id, t }]);
+      try {
+        chime(t.kind);
+      } catch {
+        /* son indisponible */
+      }
+      setTimeout(() => setList((l) => l.filter((x) => x.id !== id)), 3200);
+    };
+    listeners.add(f);
+    return () => {
+      listeners.delete(f);
+    };
+  }, []);
   if (!list.length) return null;
   return (
     <div class="toasts" aria-live="polite">
-      {list.map(({ id, r }) => {
-        const [title, sub] = text(r);
-        return (
-          <div key={id} class={'toast ' + r.kind}>
-            <b>{title}</b>
-            <span>{sub}</span>
-          </div>
-        );
-      })}
+      {list.map(({ id, t }) => (
+        <div key={id} class={'toast ' + t.kind}>
+          <b>{t.title}</b>
+          {t.sub ? <span>{t.sub}</span> : null}
+        </div>
+      ))}
     </div>
   );
 }

@@ -14,7 +14,7 @@ export function MicPill({ onChange, echo }: { onChange?: (on: boolean) => void; 
       aria-label={on ? 'Couper le micro' : 'Écouter mon piano au micro'}
       title={failed ? MIC_MESSAGES[st] : undefined}
       onClick={async () => {
-        if (failed) return go('/micro');
+        if (failed) return go('/reglages/micro');
         if (on) {
           stopMic();
           onChange?.(false);

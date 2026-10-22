@@ -1,27 +1,27 @@
 // Rythme : tenir le tempo, lire et taper un rythme, reconnaître un rythme ou un style.
+// Chaque exercice se lance directement (RythmeRun), avec son niveau ; le décalage se mesure au premier lancement.
 import { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { RHYTHMS, RHYTHM_LEVELS, RPattern, countOf, rhythmById, rhythmsOf } from '../../core/rhythm/patterns';
 import { calibrate, countInHits, drift, scoreTiming, tolerance, TimingResult } from '../../core/rhythm/timing';
 import { GROOVES, STYLE_ORDER, StyleId } from '../../core/rhythm/styles';
 import { playClicks, playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
+import { offsetOf, saveOffset } from '../../core/rhythm/offset';
 import { audio, now } from '../../core/audio/engine';
 import { startMic, useMicRelease, useMicState } from '../../core/listen/mic';
 import { load, save } from '../../core/storage';
 import { shuffle, weightedPick } from '../../core/random';
 import { TopBar } from '../../ui/Screen';
-import { Segmented } from '../../ui/Segmented';
-import { Field, LevelPicker, MoreOptions, StartButton, levelShort } from '../../ui/Setup';
-import { MicPill } from '../../ui/MicPill';
+import { StartButton } from '../../ui/Setup';
 import { CountIn, GridLegend, RhythmGrid, HitMark, useBeatClock, useCursor } from '../../ui/RhythmGrid';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { PlayIcon } from '../../ui/icons';
 import { Input, useHits } from './input';
-import { Domain, Pair, clearConfusions, confusionWeight, confusions, recordAnswer, rivalsOf } from '../../core/confusions';
-import { ConfirmButton } from '../../ui/ConfirmButton';
-import { report } from '../../core/game';
+import { Pair, confusionWeight, confusions, recordAnswer, rivalsOf } from '../../core/confusions';
+import { report } from '../../core/events';
 
-type Exercise = 'tempo' | 'taper' | 'oreille' | 'style';
+export type RythmeExercise = 'tempo' | 'taper' | 'oreille' | 'style';
+type Exercise = RythmeExercise;
 type Tally = Record<string, { c: number; t: number }>;
 interface Saved {
   exercise: Exercise;
@@ -31,14 +31,12 @@ interface Saved {
   tempo: Record<string, number>;
   variant: number;
   keepTempo: number;
-  /** Décalage mesuré (ms) par façon de jouer. */
-  offsets: Record<string, number>;
   patterns: Tally;
   styles: Tally;
   /** Reconnaître : tout, ou seulement les paires confondues. */
   focus?: 'all' | 'confusions';
 }
-const DEFAULT: Saved = { exercise: 'tempo', input: 'tap', level: 0, tempo: {}, variant: 0, keepTempo: 80, offsets: {}, patterns: {}, styles: {}, focus: 'all' };
+const DEFAULT: Saved = { exercise: 'tempo', input: 'tap', level: 0, tempo: {}, variant: 0, keepTempo: 80, patterns: {}, styles: {}, focus: 'all' };
 const LEVEL_TEMPO = [80, 80, 90, 100, 70, 100];
 
 const EXERCISES: { value: Exercise; label: string; sub: string; how: string[] }[] = [
@@ -114,180 +112,64 @@ const BARS = 8;
 
 type SetSaved = (p: Partial<Saved>) => void;
 
-/** piano : on écoute le micro. preset : exercice et niveau ouverts depuis une leçon (#/rythme/taper/3). */
-export function Rythme({ piano, preset }: { piano?: boolean; preset?: { exercise: string; level: number; confusions?: boolean } }) {
+/** Comment se passe l'exercice, en 3 phrases. */
+export const rythmeHow = (exercise: Exercise) => EXERCISES.find((e) => e.value === exercise)?.how ?? [];
+/** Nom du niveau : variante de « Tenir le tempo », ou niveau de rythme. */
+export const rythmeLevelName = (exercise: Exercise, level: number) =>
+  exercise === 'tempo' ? VARIANTS[level]?.name ?? '' : exercise === 'style' ? '' : RHYTHM_LEVELS[level]?.label ?? '';
+
+/**
+ * Un exercice de rythme, lancé directement. level : variante (tenir le tempo) ou niveau de rythme.
+ * input : écran ou micro (au piano). duel : seulement les rythmes ou styles confondus, deux par deux.
+ */
+export function RythmeRun({ exercise, level, input = 'tap', duel, onExit }: { exercise: Exercise; level: number; input?: Input; duel?: boolean; onExit: () => void }) {
   const [saved, setSaved] = useState<Saved>(() => {
-    const s: Saved = { ...DEFAULT, ...load('rythme', DEFAULT) };
-    if (piano) s.input = 'mic';
-    const ex = EXERCISES.find((e) => e.value === preset?.exercise);
-    if (ex && preset) {
-      s.exercise = ex.value;
-      const max = ex.value === 'tempo' ? VARIANTS.length : RHYTHM_LEVELS.length;
-      if (preset.level >= 0 && preset.level < max) {
-        if (ex.value === 'tempo') s.variant = preset.level;
-        else s.level = preset.level;
-      }
-    }
-    if (preset?.confusions) s.focus = 'confusions';
-    if (s.variant >= VARIANTS.length) s.variant = 0;
+    const s: Saved = { ...load('rythme', DEFAULT), exercise, input, focus: duel ? 'confusions' : 'all' };
+    if (exercise === 'tempo') s.variant = Math.max(0, Math.min(VARIANTS.length - 1, level));
+    else s.level = Math.max(0, Math.min(RHYTHM_LEVELS.length - 1, level));
     return s;
   });
-  const [phase, setPhase] = useState<'setup' | 'calibrate' | 'play'>('setup');
-  const [afterCal, setAfterCal] = useState<'setup' | 'play'>('setup');
+  const timed = exercise === 'tempo' || exercise === 'taper';
+  const [calibrating, setCalibrating] = useState(() => timed && offsetOf(input) === undefined);
   useEffect(() => save('rythme', saved), [saved]);
   useEffect(() => () => stopPlayback(), []);
   useMicRelease();
   const set: SetSaved = (p) => setSaved((s) => ({ ...s, ...p }));
 
-  if (phase === 'calibrate')
+  if (calibrating)
     return (
       <Calibrate
-        input={saved.input}
+        input={input}
+        first
         onDone={(ms) => {
-          set({ offsets: { ...saved.offsets, [saved.input]: ms } });
-          setPhase(afterCal);
+          saveOffset(input, ms);
+          setCalibrating(false);
         }}
-        onCancel={() => setPhase('setup')}
+        onCancel={onExit}
       />
     );
-  if (phase === 'play') {
-    const back = () => setPhase('setup');
-    if (saved.exercise === 'taper') return <TapRhythm saved={saved} set={set} onBack={back} />;
-    if (saved.exercise === 'tempo') return <KeepTime saved={saved} set={set} onBack={back} />;
-    if (saved.exercise === 'oreille') return <EarRhythm saved={saved} set={set} onBack={back} />;
-    return <EarStyle saved={saved} set={set} onBack={back} />;
-  }
+  if (exercise === 'taper') return <TapRhythm saved={saved} set={set} onBack={onExit} />;
+  if (exercise === 'tempo') return <KeepTime saved={saved} set={set} onBack={onExit} />;
+  if (exercise === 'oreille') return <EarRhythm saved={saved} set={set} onBack={onExit} />;
+  return <EarStyle saved={saved} set={set} onBack={onExit} />;
+}
+
+/** Réglage du décalage seul (depuis les réglages). */
+export function CalibrateOffset({ input, onDone }: { input: Input; onDone: () => void }) {
+  useMicRelease();
   return (
-    <Setup
-      saved={saved}
-      set={set}
-      onStart={() => setPhase('play')}
-      onCalibrate={(then) => {
-        setAfterCal(then);
-        setPhase('calibrate');
+    <Calibrate
+      input={input}
+      onDone={(ms) => {
+        saveOffset(input, ms);
+        onDone();
       }}
+      onCancel={onDone}
     />
   );
 }
 
-// ---------------------------------------------------------------- Réglages
-
-function Setup({ saved, set, onStart, onCalibrate }: { saved: Saved; set: SetSaved; onStart: () => void; onCalibrate: (then: 'setup' | 'play') => void }) {
-  const timed = saved.exercise === 'taper' || saved.exercise === 'tempo';
-  const offset = saved.offsets[saved.input];
-  const ex = EXERCISES.find((e) => e.value === saved.exercise)!;
-  const earDomain: Domain | null = saved.exercise === 'style' ? 'style' : saved.exercise === 'oreille' ? 'rythme' : null;
-  const pairs = earDomain ? confusions(earDomain) : [];
-  const duel = saved.focus === 'confusions' && pairs.length > 0;
-  const what = saved.exercise === 'style' ? 'styles' : 'rythmes';
-  const start = async () => {
-    audio();
-    if (timed && saved.input === 'mic') await startMic({ echo: true });
-    if (timed && offset === undefined) onCalibrate('play');
-    else onStart();
-  };
-  return (
-    <div class="screen">
-      <TopBar title="Rythme" actions={timed && saved.input === 'mic' ? <MicPill echo /> : undefined} />
-      <p class="intro">Le placement, le tempo et les styles. Au casque dans le métro, ou au piano avec le micro.</p>
-      <Field label="Exercice">
-        <Segmented cards cols={2} label="Exercice" value={saved.exercise} onChange={(exercise) => set({ exercise })} options={EXERCISES} />
-      </Field>
-      <ol class="howto">
-        {ex.how.map((h) => (
-          <li key={h}>{h}</li>
-        ))}
-      </ol>
-      {saved.exercise === 'tempo' ? <LevelPicker exo="rythme-tempo" levels={VARIANTS.map((v) => ({ name: v.name, desc: v.hint }))} value={saved.variant} onChange={(variant) => set({ variant })} /> : null}
-      {earDomain && pairs.length ? (
-        <Field label="Questions">
-          <Segmented
-            label="Questions"
-            value={duel ? 'confusions' : 'all'}
-            onChange={(focus) => set({ focus })}
-            options={[
-              { value: 'all', label: saved.exercise === 'style' ? 'Tous les styles' : 'Tout le niveau', sub: `Ce que tu confonds revient plus souvent.` },
-              { value: 'confusions', label: `Mes confusions (${pairs.length})`, sub: `Seulement les ${what} que tu confonds, à départager deux par deux.` }
-            ]}
-          />
-        </Field>
-      ) : null}
-      {(saved.exercise === 'taper' || saved.exercise === 'oreille') && !duel ? (
-        <LevelPicker exo={saved.exercise === 'taper' ? 'rythme-taper' : 'rythme-oreille'} levels={RHYTHM_LEVELS.map((l) => ({ name: l.label, desc: l.desc }))} value={saved.level} onChange={(level) => set({ level })} />
-      ) : null}
-      {timed ? (
-        <Field label="Répondre">
-          <Segmented
-            label="Répondre"
-            value={saved.input}
-            onChange={(input) => set({ input })}
-            options={[
-              { value: 'tap', label: 'Sur l’écran', sub: 'Tape la grande zone avec un doigt, au casque de préférence.' },
-              { value: 'mic', label: 'Au piano', sub: 'Joue une note ou un accord à chaque coup : le micro mesure. Mets un écouteur, sinon il entend le métronome.' }
-            ]}
-          />
-        </Field>
-      ) : null}
-      {timed ? (
-        <MoreOptions summary={(saved.exercise === 'tempo' ? `${saved.keepTempo} BPM · ` : '') + (offset === undefined ? 'réglage du décalage à faire' : 'décalage réglé')}>
-          {saved.exercise === 'tempo' ? <TempoStepper value={saved.keepTempo} onChange={(keepTempo) => set({ keepTempo })} /> : null}
-          <p class="muted small">
-            {offset === undefined
-              ? 'Chaque téléphone a un petit retard entre le son et l’écran. Un réglage de 10 secondes le mesure ; il se lance au premier exercice. '
-              : `Décalage mesuré : ${offset} ms, corrigé automatiquement. `}
-            <button class="linkbtn inline" onClick={() => onCalibrate('setup')}>
-              {offset === undefined ? 'Le faire maintenant' : 'Refaire le réglage'}
-            </button>
-          </p>
-        </MoreOptions>
-      ) : null}
-      <StartButton onClick={start} />
-      {earDomain ? (
-        pairs.length ? (
-          <section>
-            <h2 class="label">Tu confonds</h2>
-            <div class="pairs">
-              {pairs.slice(0, 6).map((p) => (
-                <div key={p.a + p.b} class="pair">
-                  <b>
-                    {nameOf(earDomain, p.a)} ↔ {nameOf(earDomain, p.b)}
-                  </b>
-                  <span class="muted small">
-                    {p.err} erreur{p.err > 1 ? 's' : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <ConfirmButton label="Oublier ces confusions" confirm="Toucher encore pour confirmer" onConfirm={() => (clearConfusions(earDomain), set({ focus: 'all' }))} />
-          </section>
-        ) : (
-          <p class="muted small">Quand tu confonds deux {what}, l’appli s’en souvient : ils reviennent plus souvent, et tu pourras t’entraîner sur eux seuls.</p>
-        )
-      ) : null}
-    </div>
-  );
-}
-
-const nameOf = (d: Domain, k: string) => (d === 'style' ? GROOVES[k as StyleId]?.name ?? k : RHYTHMS.find((r) => r.id === k)?.name ?? k);
-
-function TempoStepper({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <div class="tempo-row">
-      <span class="label">Tempo</span>
-      <div class="stepper">
-        <button aria-label="Plus lent" onClick={() => onChange(Math.max(40, value - 4))}>
-          −
-        </button>
-        <span>
-          {value} <small>BPM</small>
-        </span>
-        <button aria-label="Plus rapide" onClick={() => onChange(Math.min(260, value + 4))}>
-          +
-        </button>
-      </div>
-    </div>
-  );
-}
+// ---------------------------------------------------------------- Petits éléments
 
 function TempoMini({ value, onChange, disabled }: { value: number; onChange: (v: number) => void; disabled?: boolean }) {
   return (
@@ -410,7 +292,7 @@ function Verdict({ r, tol, what, extra, devs }: { r: TimingResult; tol: number; 
 
 // ---------------------------------------------------------------- Réglage du décalage
 
-function Calibrate({ input, onDone, onCancel }: { input: Input; onDone: (ms: number) => void; onCancel: () => void }) {
+function Calibrate({ input, first, onDone, onCancel }: { input: Input; first?: boolean; onDone: (ms: number) => void; onCancel: () => void }) {
   const [phase, setPhase] = useState<'ready' | 'run' | 'fail' | 'bleed' | 'done'>('ready');
   const [ms, setMs] = useState(0);
   const clicks = useRef<number[]>([]);
@@ -445,7 +327,7 @@ function Calibrate({ input, onDone, onCancel }: { input: Input; onDone: (ms: num
     <div class="screen play-screen">
       <TopBar title="Réglage (10 secondes)" onBack={onCancel} />
       <p class="intro">
-        Le téléphone a un petit retard entre le son et l’écran{input === 'mic' ? ' (et le micro)' : ''}. Pour le mesurer : après le décompte, {what} pile sur chacun des 8 clics.
+        {first ? 'Une seule fois, avant le premier exercice : ' : ''}le téléphone a un petit retard entre le son et l’écran{input === 'mic' ? ' (et le micro)' : ''}. Pour le mesurer : après le décompte, {what} pile sur chacun des 8 clics.
       </p>
       {phase === 'run' ? (
         clock.count ? (
@@ -540,7 +422,7 @@ function TapRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
     setPhase('take');
     timer.current = window.setTimeout(
       () => {
-        const r = scoreTiming(t.targets, hits.hits.current, tol, saved.offsets[saved.input] ?? 0);
+        const r = scoreTiming(t.targets, hits.hits.current, tol, offsetOf(saved.input) ?? 0);
         const m = marksOf(p, r, tol);
         const ok = r.good === t.targets.length && r.extra <= 1;
         setResult({ r, ...m, ok, bleed: saved.input === 'mic' && countInHits(hits.hits.current, t.start, 60 / tempo) >= 2 });
@@ -584,7 +466,7 @@ function TapRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(level)} · {tempo} BPM
+          {RHYTHM_LEVELS[level].label} · {tempo} BPM
         </span>
         <TempoMini value={tempo} onChange={(v) => set({ tempo: { ...saved.tempo, [level]: v } })} disabled={busy} />
       </header>
@@ -710,11 +592,10 @@ function KeepTime({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
     setPhase('take');
     timer.current = window.setTimeout(
       () => {
-        const r = scoreTiming(targets, hits.hits.current, tol, saved.offsets[saved.input] ?? 0);
+        const r = scoreTiming(targets, hits.hits.current, tol, offsetOf(saved.input) ?? 0);
         setResult({ r, drift: drift(r.matches, (spb * 4) / v.taps.length), bleed: saved.input === 'mic' && countInHits(hits.hits.current, start, spb) >= 2 });
         const ratio = r.matches.length ? r.good / r.matches.length : 0;
         report({ type: 'answer', exo: 'rythme-tempo', level: saved.variant, ok: ratio >= 0.9 && r.extra <= 2, ms: BARS * 4 * spb * 1000 });
-        report({ type: 'tempo', level: saved.variant, ratio });
         setPhase('done');
       },
       (start - now() + BARS * 4 * spb + 0.4) * 1000
@@ -752,7 +633,7 @@ function KeepTime({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
           Arrêter
         </button>
         <span class="play-meta">
-          {levelShort(saved.variant)} · {tempo} BPM
+          {tempo} BPM
         </span>
         <TempoMini value={tempo} onChange={(keepTempo) => set({ keepTempo })} disabled={phase === 'take'} />
       </header>
@@ -870,7 +751,7 @@ function EarRhythm({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack
           Arrêter
         </button>
         <span class="play-meta">
-          {q.duel ? 'Mes confusions' : levelShort(level)} · {score.c}/{score.t}
+          {q.duel ? 'Mes confusions' : RHYTHM_LEVELS[level].label} · {score.c}/{score.t}
         </span>
         <span />
       </header>

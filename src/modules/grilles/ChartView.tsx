@@ -9,7 +9,7 @@ import { SCALES } from '../../core/theory/scales';
 import { audio, now, playChord } from '../../core/audio/engine';
 import { displayVoicing } from '../../core/audio/voicing';
 import { load, save } from '../../core/storage';
-import { report } from '../../core/game';
+import { report } from '../../core/events';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
@@ -26,13 +26,14 @@ import { ListenButtons, useListen, withActive } from '../../ui/Listen';
 import { AnalyserForm, AnalyserHint, AnalyserPanel, useAnalyser } from './Analyser';
 import { MemoirePanel, useMemoire } from './Memoire';
 
-type Mode = ListenMode | 'analyser' | 'memoire';
+export type Mode = ListenMode | 'analyser' | 'memoire';
 type Listen = ReturnType<typeof useListening>;
 const LIVE_LO = 55;
 const LIVE_HI = 79;
 const MODES: Mode[] = ['analyse', 'analyser', 'gammes', 'guide', 'memoire'];
 
-export function ChartView({ chart: original, initialMode }: { chart: Chart; initialMode?: Mode }) {
+/** onBack : retour (au parcours) au lieu de la liste des morceaux ; memLevel : niveau de mémoire imposé. */
+export function ChartView({ chart: original, initialMode, onBack, memLevel }: { chart: Chart; initialMode?: Mode; onBack?: () => void; memLevel?: number }) {
   const [view, setView] = useState(() => {
     const v = load('grille-view', { mode: 'analyse', showRomans: true });
     return initialMode ? { ...v, mode: initialMode } : v;
@@ -54,7 +55,7 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
   const an = useAnalyser(original.id, plan, chart.beatsPerBar, shift);
   // Premier accord de chaque ligne : reste visible au niveau « 3/4 » de la mémoire.
   const firsts = useMemo(() => rows.map((r) => (byBar.get(r.bars[0]) ?? [])[0]).filter((x): x is number => x !== undefined), [rows, byBar]);
-  const mem = useMemoire(original.id, plan, firsts, mode === 'memoire');
+  const mem = useMemoire(original.id, plan, firsts, mode === 'memoire', memLevel);
   const pos = player.pos;
   const n = plan.flat.length;
   const sel = selected !== null && selected < n ? selected : null;
@@ -136,7 +137,8 @@ export function ChartView({ chart: original, initialMode }: { chart: Chart; init
       <div class="screen with-player">
         <TopBar
           title={chart.title}
-          back="/grilles"
+          back={onBack ? undefined : '/morceaux'}
+          onBack={onBack}
           actions={
             <>
               <button class="icon-btn" aria-label="Mode pupitre" onClick={() => setStand(true)}>
