@@ -8,7 +8,6 @@ import { STEPS, stepById } from './parcours/steps';
 import { loadParcours, nextInStep } from './parcours/progress';
 import { pathOf } from './parcours/ui';
 import { LessonView } from './modules/cours/Cours';
-import { TipsView } from './modules/cours/Tips';
 import { OreilleRun, OreilleMode } from './modules/oreille/Oreille';
 import { ChartList } from './modules/grilles/ChartList';
 import { ChartView } from './modules/grilles/ChartView';
@@ -44,17 +43,6 @@ export function App() {
   }
   if (page === 'revoir' && (a === 'rythme' || a === 'style')) return <RythmeRun key={a} exercise={a === 'rythme' ? 'oreille' : 'style'} level={1} duel onExit={() => go('/')} />;
   if (page === 'revoir' && a) return <OreilleRun key={a} mode={a as OreilleMode} level={4} duel onExit={() => go('/')} />;
-  if (page === 'astuces') {
-    const step = a ? stepById(a) : undefined;
-    return (
-      <TipsView
-        key={a ?? ''}
-        ids={step?.tips}
-        where={step ? `Étape ${STEPS.indexOf(step) + 1} · ${step.title}` : undefined}
-        onBack={() => (step ? go(`/etape/${step.id}`) : history.back())}
-      />
-    );
-  }
   if (page === 'morceaux') return <ChartList />;
   if (page === 'importer') return <Import />;
   if (page === 'grille') {

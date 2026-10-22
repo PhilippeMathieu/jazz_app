@@ -8,7 +8,7 @@ import { chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
 import { load } from '../../core/storage';
 import { report } from '../../core/events';
-import { listenOnsets, micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
+import { listenOnsets, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { Ev, backingBar, schedule } from '../../core/rhythm/play';
 import { countInHits, tendency, tolerance } from '../../core/rhythm/timing';
 import { TPB } from '../../core/rhythm/patterns';
@@ -59,7 +59,6 @@ function Run({ s, onEnd }: { s: Saved; onEnd: () => void }) {
   const onsets = useRef<number[]>([]);
   const snaps = useRef<Snapshot[]>([]);
   const unlisten = useRef<(() => void) | null>(null);
-  const gate = useRef(micSettings().gate);
   useWakeLock(true);
   const key = keyFor('iiVI', tonicOf(k));
   const spb = 60 / s.tempo;
@@ -114,7 +113,6 @@ function Run({ s, onEnd }: { s: Saved; onEnd: () => void }) {
     if (!demo && listening) {
       onsets.current = [];
       snaps.current = [];
-      gate.current = micSettings().gate;
       unlisten.current = listenOnsets((t) => onsets.current.push(t));
     }
     timers.current.push(
@@ -141,7 +139,7 @@ function Run({ s, onEnd }: { s: Saved; onEnd: () => void }) {
   useMicLoop(
     listening && (phase === 'count' || phase === 'play'),
     () => {
-      const r = readChord(gate.current);
+      const r = readChord();
       if (r?.analysis) snaps.current.push({ t: now(), chroma: r.analysis.chroma, soft: r.analysis.soft });
     },
     60

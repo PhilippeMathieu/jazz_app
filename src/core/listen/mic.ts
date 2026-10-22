@@ -4,6 +4,7 @@ import { audio } from '../audio/engine';
 import { load, save } from '../storage';
 import { PitchResult, analyzeChordBuffer, rms, yin } from './detect';
 import { onsetDetector } from './onset';
+import { floorOf, gainFor, gateFor } from './level';
 
 export type MicState = 'off' | 'asking' | 'on' | 'denied' | 'unsupported' | 'error';
 
@@ -11,8 +12,12 @@ let stream: MediaStream | null = null;
 let nodes: AudioNode[] = [];
 let chordAn: AnalyserNode | null = null;
 let monoAn: AnalyserNode | null = null;
-let source: MediaStreamAudioSourceNode | null = null;
+let source: AudioNode | null = null;
 let sinkNode: GainNode | null = null;
+/** Amplification du micro (voir level.ts) et mesure du niveau brut. */
+let preGain: GainNode | null = null;
+let rawAn: AnalyserNode | null = null;
+let levelTimer = 0;
 let onsetNode: AudioNode | null = null;
 const onsetListeners = new Set<(t: number) => void>();
 /** Module d'attaques chargé (une fois par contexte audio). */
@@ -34,11 +39,51 @@ function setSession(type: 'playback' | 'play-and-record') {
 }
 
 export interface MicSettings {
-  /** Seuil de niveau (RMS) sous lequel on considère qu'il n'y a pas de son. */
-  gate: number;
+  /** Sensibilité : 1 par défaut ; plus haut, le seuil de silence descend. */
+  sens: number;
 }
-export const micSettings = (): MicSettings => load('micro', { gate: 0.006 });
-export const saveMicSettings = (s: MicSettings) => save('micro', s);
+export const micSettings = (): MicSettings => load('micro', { sens: 1 });
+let sens = micSettings().sens;
+export const saveMicSettings = (s: MicSettings) => {
+  save('micro', s);
+  sens = s.sens;
+  updateLevel();
+};
+
+// ---------------------------------------------------------------- Niveau : bruit de fond, gain, seuil
+
+const LEVELS = 150; // 15 s de mesures, toutes les 100 ms
+const rawLevels: number[] = [];
+const rawBuf = new Float32Array(2048);
+const level = { floor: 0, gain: 30, gate: gateFor(0, 30) };
+/** Mesure qui démarre : le gain par défaut (téléphone typique), corrigé dès 0,4 s de mesures. */
+
+/** Seuil de silence actuel (après amplification) : sous ce niveau, pas de note. */
+export const micGate = () => level.gate;
+/** Bruit de fond mesuré (brut), amplification appliquée, seuil : pour l'écran Micro. */
+export const micLevel = () => ({ ...level });
+
+function updateLevel() {
+  if (rawLevels.length < 4) return;
+  const floor = floorOf(rawLevels);
+  const gain = gainFor(floor);
+  // Le gain ne change que s'il s'écarte nettement (± 25 %), et en douceur : pas de saut de niveau pendant le jeu.
+  if (preGain && Math.abs(Math.log(gain / level.gain)) > 0.22) {
+    preGain.gain.setTargetAtTime(gain, preGain.context.currentTime, 0.3);
+    level.gain = gain;
+  }
+  level.floor = floor;
+  level.gate = gateFor(floor, level.gain, sens);
+  if (onsetNode instanceof AudioWorkletNode) onsetNode.port.postMessage(level.gate);
+}
+
+function measureLevel() {
+  if (!rawAn) return;
+  rawAn.getFloatTimeDomainData(rawBuf);
+  rawLevels.push(rms(rawBuf));
+  if (rawLevels.length > LEVELS) rawLevels.shift();
+  updateLevel();
+}
 
 let pending: Promise<boolean> | null = null;
 /** Incrémenté à chaque arrêt : une ouverture en cours devenue obsolète se referme d'elle-même. */
@@ -86,7 +131,15 @@ async function open(): Promise<boolean> {
     // Appel, Siri, autre appli : le micro est coupé par le système.
     s.getAudioTracks().forEach((t) => (t.onended = () => stopMic()));
     const src = ctx.createMediaStreamSource(s);
-    // Accords : signal brut, grande fenêtre (≈ 0,35 s) pour séparer les notes graves.
+    // Niveau brut (bruit de fond), puis amplification : tout le reste écoute le signal amplifié.
+    rawAn = ctx.createAnalyser();
+    rawAn.fftSize = 2048;
+    src.connect(rawAn);
+    const pre = ctx.createGain();
+    pre.gain.value = level.gain;
+    src.connect(pre);
+    preGain = pre;
+    // Accords : signal non filtré, grande fenêtre (≈ 0,35 s) pour séparer les notes graves.
     chordAn = ctx.createAnalyser();
     chordAn.fftSize = 16384;
     chordAn.smoothingTimeConstant = 0;
@@ -103,15 +156,20 @@ async function open(): Promise<boolean> {
     // Certains navigateurs ne font tourner un nœud que s'il mène à la sortie : on le relie à un volume nul.
     const sink = ctx.createGain();
     sink.gain.value = 0;
-    src.connect(chordAn);
-    src.connect(hp);
+    pre.connect(chordAn);
+    pre.connect(hp);
     hp.connect(lp);
     lp.connect(monoAn);
     chordAn.connect(sink);
     monoAn.connect(sink);
+    rawAn.connect(sink);
     sink.connect(ctx.destination);
-    nodes = [src, hp, lp, chordAn, monoAn, sink];
-    source = src;
+    nodes = [src, rawAn, pre, hp, lp, chordAn, monoAn, sink];
+    source = pre;
+    rawSource = src;
+    rawLevels.length = 0;
+    clearInterval(levelTimer);
+    levelTimer = window.setInterval(measureLevel, 100);
     sinkNode = sink;
     setState('on');
     if (onsetListeners.size) void ensureOnsets();
@@ -130,6 +188,10 @@ export function stopMic() {
   onsetNode?.disconnect();
   onsetNode = null;
   source = sinkNode = null;
+  rawSource = null;
+  preGain = null;
+  rawAn = null;
+  clearInterval(levelTimer);
   nodes = [];
   stream = null;
   chordAn = monoAn = null;
@@ -141,7 +203,7 @@ const monoBuf = new Float32Array(2048);
 let chordBuf = new Float32Array(16384);
 
 /** Dernière fenêtre courte : niveau et note détectée (rien sous le seuil). */
-export function readMono(gate = 0): { level: number; pitch: PitchResult | null } | null {
+export function readMono(gate = level.gate): { level: number; pitch: PitchResult | null } | null {
   if (!monoAn) return null;
   monoAn.getFloatTimeDomainData(monoBuf);
   const level = rms(monoBuf);
@@ -153,13 +215,67 @@ const noteBuf = new Float32Array(3072);
  * Note seule sur toute la tessiture (jusqu'à C2) : fin de la grande fenêtre, signal non filtré.
  * Plus lent que readMono mais juste dans les graves (lecture en clé de fa).
  */
-export function readNote(gate = 0): { level: number; pitch: PitchResult | null } | null {
+export function readNote(gate = level.gate): { level: number; pitch: PitchResult | null } | null {
   if (!chordAn) return null;
   if (chordBuf.length !== chordAn.fftSize) chordBuf = new Float32Array(chordAn.fftSize);
   chordAn.getFloatTimeDomainData(chordBuf);
   noteBuf.set(chordBuf.subarray(chordBuf.length - noteBuf.length));
   const level = rms(noteBuf);
   return { level, pitch: level > Math.max(gate, 1e-5) ? yin(noteBuf, chordAn.context.sampleRate, 60, 2200) : null };
+}
+
+// ---------------------------------------------------------------- Enregistrement de diagnostic
+
+let rawSource: MediaStreamAudioSourceNode | null = null;
+
+/** Enregistre le signal brut du micro (avant amplification) pendant `seconds` secondes. */
+export function recordRaw(seconds: number, onProgress?: (s: number) => void): Promise<{ data: Float32Array; sampleRate: number } | null> {
+  if (!rawSource || !sinkNode) return Promise.resolve(null);
+  const ctx = rawSource.context as AudioContext;
+  const total = Math.round(seconds * ctx.sampleRate);
+  const data = new Float32Array(total);
+  let filled = 0;
+  const sp = ctx.createScriptProcessor(4096, 1, 1);
+  const sink = sinkNode;
+  rawSource.connect(sp);
+  sp.connect(sink);
+  return new Promise((done) => {
+    sp.onaudioprocess = (e) => {
+      const ch = e.inputBuffer.getChannelData(0);
+      const n = Math.min(ch.length, total - filled);
+      data.set(ch.subarray(0, n), filled);
+      filled += n;
+      onProgress?.(filled / ctx.sampleRate);
+      if (filled >= total || !rawSource) {
+        sp.disconnect();
+        rawSource?.disconnect(sp);
+        sp.onaudioprocess = null;
+        done(filled ? { data: data.subarray(0, filled), sampleRate: ctx.sampleRate } : null);
+      }
+    };
+  });
+}
+
+/** WAV 32 bits flottants, mono : le signal tel quel, même très faible. */
+export function wavOf(data: Float32Array, sampleRate: number): Blob {
+  const buf = new ArrayBuffer(44 + data.length * 4);
+  const v = new DataView(buf);
+  const str = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  str(0, 'RIFF');
+  v.setUint32(4, 36 + data.length * 4, true);
+  str(8, 'WAVE');
+  str(12, 'fmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 3, true); // flottant IEEE
+  v.setUint16(22, 1, true);
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 4, true);
+  v.setUint16(32, 4, true);
+  v.setUint16(34, 32, true);
+  str(36, 'data');
+  v.setUint32(40, data.length * 4, true);
+  for (let i = 0; i < data.length; i++) v.setFloat32(44 + i * 4, data[i], true);
+  return new Blob([buf], { type: 'audio/wav' });
 }
 
 // ---------------------------------------------------------------- Attaques (rythme)
@@ -178,7 +294,7 @@ registerProcessor('onsets', OnsetProcessor);`;
 async function loadWorklet(ctx: AudioContext): Promise<boolean> {
   if (!ctx.audioWorklet) return false;
   workletReady ??= (async () => {
-    const url = URL.createObjectURL(new Blob([WORKLET(micSettings().gate)], { type: 'application/javascript' }));
+    const url = URL.createObjectURL(new Blob([WORKLET(level.gate)], { type: 'application/javascript' }));
     try {
       await ctx.audioWorklet.addModule(url);
       return true;
@@ -198,7 +314,7 @@ async function ensureOnsets() {
   if (await loadWorklet(ctx)) {
     if (!source || !sinkNode || onsetNode) return; // micro coupé entre-temps
     const node = new AudioWorkletNode(ctx, 'onsets');
-    node.port.postMessage(micSettings().gate);
+    node.port.postMessage(level.gate);
     node.port.onmessage = (e) => emit(e.data as number);
     source.connect(node);
     node.connect(sinkNode);
@@ -207,12 +323,11 @@ async function ensureOnsets() {
     // Repli pour les navigateurs sans AudioWorklet.
     const sp = ctx.createScriptProcessor(256, 1, 1);
     const d = onsetDetector(ctx.sampleRate);
-    const gate = micSettings().gate;
     sp.onaudioprocess = (e) => {
       const ch = e.inputBuffer.getChannelData(0);
       const t0 = ctx.currentTime - 256 / ctx.sampleRate;
       for (let i = 0; i < 256; i += 128) {
-        const t = d(ch.subarray(i, i + 128), t0 + i / ctx.sampleRate, gate);
+        const t = d(ch.subarray(i, i + 128), t0 + i / ctx.sampleRate, level.gate);
         if (t >= 0) emit(t);
       }
     };
@@ -236,7 +351,7 @@ export function listenOnsets(f: (t: number) => void): () => void {
 }
 
 /** Dernière grande fenêtre : niveau, chroma et note grave (null sous le seuil). */
-export function readChord(gate = 0) {
+export function readChord(gate = level.gate) {
   if (!chordAn) return null;
   if (chordBuf.length !== chordAn.fftSize) chordBuf = new Float32Array(chordAn.fftSize);
   chordAn.getFloatTimeDomainData(chordBuf);

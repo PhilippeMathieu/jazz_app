@@ -9,6 +9,7 @@ import { TopBar } from '../../ui/Screen';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { PlayIcon, StopIcon } from '../../ui/icons';
 import { Block, lessonById } from './lessons';
+import { TipCard } from './Tips';
 import { RhythmGrid, useCursor } from '../../ui/RhythmGrid';
 import { rhythmById } from '../../core/rhythm/patterns';
 import { playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
@@ -89,6 +90,8 @@ function BlockView({ b }: { b: Block }): JSX.Element {
       return <RhythmDemo id={b.id} label={b.label} compare={b.compare} tempo={b.tempo} />;
     case 'grooves':
       return <GroovesDemo styles={b.styles} label={b.label} />;
+    case 'astuce':
+      return <TipCard id={b.id} />;
   }
 }
 

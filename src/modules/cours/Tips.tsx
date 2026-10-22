@@ -1,5 +1,5 @@
-// Astuces d'enchaînement : comment une note de la main droite passe d'un accord au suivant.
-// Chaque astuce : la règle en mots, les accords avec la note jouée et son mouvement, un clavier, l'écoute.
+// Astuces d'enchaînement, dans les leçons : comment une note de la main droite passe d'un accord au suivant.
+// La règle en mots, les accords avec la note jouée et son mouvement, un clavier (accord en gris, note en jaune), l'écoute.
 import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { chordSymbol, degreeLabel } from '../../core/theory/chords';
@@ -7,33 +7,17 @@ import { keyLabel } from '../../core/chart/model';
 import { isBlackKey } from '../../core/theory/notes';
 import { audio, now, piano, playChord } from '../../core/audio/engine';
 import { sequenceVoicings } from '../../core/audio/play';
-import { TopBar } from '../../ui/Screen';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { PlayIcon } from '../../ui/icons';
 import { TIPS, Tip, anotherKey, chordPcs, motion, realize, shortOf } from './tips';
 
-/** Les astuces d'une étape (ou toutes). */
-export function TipsView({ ids, where, onBack }: { ids?: string[]; where?: string; onBack: () => void }) {
-  const tips = ids ? ids.map((id) => TIPS.find((t) => t.id === id)).filter((t): t is Tip => !!t) : TIPS;
-  return (
-    <div class="screen lesson">
-      <TopBar title="Astuces d’enchaînement" onBack={onBack} />
-      {where ? <p class="muted small">{where}</p> : null}
-      <div class="ls-tip">
-        <p class="ls-p">
-          Pour passer d’un accord au suivant, une note de la main droite <b>reste</b> ou <b>glisse d’un demi-ton</b>. Écoute, puis joue : main gauche l’accord, main droite
-          la note en jaune.
-        </p>
-      </div>
-      {tips.map((t, i) => (
-        <TipCard key={t.id} tip={t} n={i + 1} />
-      ))}
-      <p class="muted small">« Autre tonalité » : la même astuce marche partout. Ces astuces sont facultatives, elles ne comptent pas pour finir l’étape.</p>
-    </div>
-  );
+/** Une astuce, dans une leçon. */
+export function TipCard({ id }: { id: string }) {
+  const tip = TIPS.find((t) => t.id === id);
+  return tip ? <TipBody tip={tip} /> : null;
 }
 
-function TipCard({ tip, n }: { tip: Tip; n: number }) {
+function TipBody({ tip }: { tip: Tip }) {
   const [pc, setPc] = useState(0);
   const r = useMemo(() => realize(tip, pc), [tip, pc]);
   const voicings = useMemo(() => sequenceVoicings(r.chords, 'shell'), [r]);
@@ -98,8 +82,8 @@ function TipCard({ tip, n }: { tip: Tip; n: number }) {
   return (
     <article class="tip">
       <div class="tip-head">
-        <span class="tip-n">{n}</span>
-        <h2 class="tip-title">{tip.title}</h2>
+        <span class="label">Astuce d’enchaînement</span>
+        <h3 class="tip-title">{tip.title}</h3>
       </div>
       <p class="ls-p">{tip.rule}</p>
       <div class="tip-ex">

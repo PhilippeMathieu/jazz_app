@@ -287,8 +287,8 @@
 .ls-quiz .choice { font-family: var(--body); font-weight: 500; font-size: 16px; min-height: 52px; }
 
 .tip { background: var(--surface); border-radius: var(--r-lg); padding: var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
-.tip-head { display: flex; align-items: flex-start; gap: var(--s3); }
-.tip-n { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-family: var(--mono); font-weight: 600; font-size: var(--t-sec); display: grid; place-items: center; margin-top: 1px; }
+.tip-head { display: flex; flex-direction: column; gap: 2px; }
+.tip-head .label { margin: 0; color: var(--accent); }
 .tip-title { font-size: 18px; font-weight: 600; line-height: 1.3; }
 .tip .ls-p { font-size: 16px; }
 .tip-ex { display: flex; flex-direction: column; gap: var(--s2); border-top: 1px solid var(--line); padding-top: var(--s3); }
@@ -662,7 +662,6 @@
 .check.assumed { border-color: var(--ok); border-style: dashed; }
 .check.now { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px var(--bg); }
 .list .row .check { margin-right: 2px; }
-.check-none { width: 20px; flex: none; margin-right: 2px; }
 
 /* ---------------------------------------------------------------- Parcours : étape, exercice */
 .step-title { margin: 0; font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 0.95; text-transform: uppercase; }

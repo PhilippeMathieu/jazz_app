@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { ImprovPlan, NoteClass, classifyNote, isGuideTone } from '../../core/analysis/improv';
 import { degreeLabel, spellInChord } from '../../core/theory/chords';
-import { micSettings, readChord, readMono, useMicLoop, useMicState } from '../../core/listen/mic';
+import { micGate, readChord, readMono, useMicLoop, useMicState } from '../../core/listen/mic';
 import { NoteTracker } from '../../core/listen/tracker';
 import { checkComping } from '../../core/listen/comping';
 import { Position } from '../../core/player/player';
@@ -35,8 +35,7 @@ const emptyResult = (): ChordResult => ({ hits: [], compOk: 0, compHeard: 0 });
 export function useListening(mode: ListenMode, plan: ImprovPlan, pos: Position | null, beatsPerBar = 4) {
   const mic = useMicState();
   const active = mic === 'on' && !!pos;
-  const tracker = useRef(new NoteTracker(micSettings().gate));
-  const gate = useRef(micSettings().gate);
+  const tracker = useRef(new NoteTracker());
   const hist = useRef<{ t: number; chord: number; chorus: number; beat: number }[]>([]);
   const [results, setResults] = useState<Record<string, ChordResult>>({});
   const [done, setDone] = useState<string[]>([]);
@@ -50,8 +49,7 @@ export function useListening(mode: ListenMode, plan: ImprovPlan, pos: Position |
     setDone([]);
     setLast(null);
     hist.current = [];
-    gate.current = micSettings().gate;
-    tracker.current = new NoteTracker(gate.current);
+    tracker.current = new NoteTracker();
   }, [playing, mode]);
 
   // Position : un repère par temps ; à chaque changement d'accord, l'accord précédent est « terminé ».
@@ -75,9 +73,9 @@ export function useListening(mode: ListenMode, plan: ImprovPlan, pos: Position |
 
   // Main droite : une note à la fois.
   useMicLoop(active && mode !== 'analyse', () => {
-    const m = readMono(gate.current);
+    const m = readMono();
     if (!m) return;
-    const ev = tracker.current.push(m.pitch, m.level, performance.now());
+    const ev = tracker.current.push(m.pitch, m.level, performance.now(), micGate());
     if (!ev) return;
     // Confirmée ~0,1 s après l'attaque : on l'attribue à l'accord joué à ce moment-là.
     const h = at(ev.t - 120);
@@ -100,7 +98,7 @@ export function useListening(mode: ListenMode, plan: ImprovPlan, pos: Position |
   useMicLoop(active && mode === 'analyse', () => {
     const h = hist.current[hist.current.length - 1];
     if (!h || performance.now() - h.t > 2000) return;
-    const r = readChord(gate.current);
+    const r = readChord();
     if (!r?.analysis) return;
     const ck = checkComping(r.analysis.chroma, plan.flat[h.chord].chord, plan.scales[h.chord].scale, r.analysis.soft);
     update(`${h.chorus}:${h.chord}`, (x) => ({ ...x, compHeard: x.compHeard + 1, compOk: x.compOk + (ck.ok ? 1 : 0) }));

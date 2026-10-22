@@ -3,6 +3,7 @@ import { STEPS, activityById } from './steps';
 import { Parcours, nextInStep, nextItem, pianoWaiting, stepState } from './progress';
 import { RHYTHM_LEVELS, rhythmsOf } from '../core/rhythm/patterns';
 import { TIPS } from '../modules/cours/tips';
+import { LESSONS } from '../modules/cours/lessons';
 import { offsetOf, saveOffset } from '../core/rhythm/offset';
 
 // Stockage en mémoire (tests sous Node).
@@ -34,8 +35,9 @@ describe('parcours : contenu', () => {
       }
     }
   });
-  it('chaque astuce d’enchaînement est dans une étape, une seule fois', () => {
-    const used = STEPS.flatMap((s) => s.tips ?? []);
+  it('chaque astuce d’enchaînement est dans une leçon du parcours, une seule fois', () => {
+    const inParcours = new Set(STEPS.flatMap((s) => s.lessons));
+    const used = LESSONS.filter((l) => inParcours.has(l.id)).flatMap((l) => l.blocks.flatMap((b) => (b.t === 'astuce' ? [b.id] : [])));
     expect(used.sort()).toEqual(TIPS.map((t) => t.id).sort());
   });
   it('du rythme à chaque étape', () => {

@@ -7,7 +7,7 @@ import { VoicingType, lhVoicing } from '../../core/audio/voicing';
 import { audio, now, piano, playChord } from '../../core/audio/engine';
 import { ListenButtons, useListen, withActive } from '../../ui/Listen';
 import { LIMITS } from '../../core/listen/detect';
-import { micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
+import { readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { load, save } from '../../core/storage';
 import { TopBar } from '../../ui/Screen';
 import { Segmented } from '../../ui/Segmented';
@@ -63,7 +63,7 @@ function NameIt() {
   useMicLoop(
     listening,
     () => {
-      const r = readChord(micSettings().gate)?.analysis;
+      const r = readChord()?.analysis;
       if (!r || r.lowest === null) {
         recent.current = [];
         setHeard((h) => (h.length ? [] : h));

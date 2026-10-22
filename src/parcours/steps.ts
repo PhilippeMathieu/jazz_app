@@ -56,8 +56,6 @@ export interface Step {
   aim: string;
   lessons: string[];
   activities: Activity[];
-  /** Astuces d'enchaînement (facultatives) qui s'appuient sur ce que l'étape enseigne. */
-  tips?: string[];
 }
 
 const Q10 = { kind: 'answers', n: 10, min: 8 } as const;
@@ -126,7 +124,6 @@ export const STEPS: Step[] = [
     title: 'Le ii–V–I',
     aim: 'Reconnaître le ii–V–I partout : à la lecture, à l’oreille, dans la basse.',
     lessons: ['tonalite', 'iiVI'],
-    tips: ['7-3', '3-7', 'triton'],
     activities: [
       A('i-ton', 'Les accords de la tonalité', 'En 4 sons : IΔ7, IIm7, V7…', 'metro', { kind: 'tonalite', level: 1 }),
       A('i-exp', 'Analyser des enchaînements', 'Degrés, ii–V, tonalité', 'metro', { kind: 'express', level: 1 }, { kind: 'answers', n: 12, min: 10 }),
@@ -141,8 +138,7 @@ export const STEPS: Step[] = [
     id: 'voicings',
     title: 'Voicings et guide tones',
     aim: 'Jouer les ii–V–I sans fondamentale (A et B) dans les 12 tonalités, entendre l’accord entier.',
-    lessons: ['voicings'],
-    tips: ['13-3'],
+    lessons: ['voicings', 'guide-tones'],
     activities: [
       A('v-full', 'Accord entier', 'Fondamentale et nature, dans la tonalité', 'metro', { kind: 'full', level: 1 }),
       A('v-iv', 'Les 12 intervalles', 'À l’oreille, en montant', 'metro', { kind: 'iv', level: 2 }),
@@ -157,7 +153,6 @@ export const STEPS: Step[] = [
     title: 'Lire une grille : le blues',
     aim: 'Analyser, retenir et accompagner un blues jazz en rythme.',
     lessons: ['blues', 'turnarounds', 'comping'],
-    tips: ['turn-chrom', 'dim-passage'],
     activities: [
       A('b-analyse', 'Analyser le Blues en F', 'Repérer les ii–V et les dominantes', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'analyser' }, { kind: 'analyse', ratio: 0.8 }),
       A('b-mem', 'Le Blues en F de mémoire', 'La moitié des accords cachés', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'memoire', memLevel: 1 }, { kind: 'memoire', ratio: 0.8 }),
@@ -175,7 +170,6 @@ export const STEPS: Step[] = [
     title: 'Le mineur et les dominantes secondaires',
     aim: 'Le ii–V–i mineur, les dominantes qui mènent à chaque accord. Reconnaître les styles : swing, bossa, latin…',
     lessons: ['iiVim', 'secondaires', 'backdoor', 'styles'],
-    tips: ['cascade', '5-b9', 'mineur-b9', 'backdoor', 'iv-ivm'],
     activities: [
       A('m-exp', 'Analyser : mineur et dominantes', 'Degrés, ii–V, 9 ou ♭9', 'metro', { kind: 'express', level: 2 }, { kind: 'answers', n: 12, min: 10 }),
       A('m-arm', 'Armures et relatif mineur', 'Dièses et bémols mélangés, majeur ou mineur', 'metro', { kind: 'armures', level: 3 }),
@@ -192,7 +186,6 @@ export const STEPS: Step[] = [
     title: 'Substitutions et couleurs',
     aim: 'SubV, diminués de passage, tensions, et les voicings à deux mains qui vont avec.',
     lessons: ['subv', 'reharm', 'tensions', 'deux-mains'],
-    tips: ['subv'],
     activities: [
       A('s-subv', 'Le SubV', 'D♭7 à la place de G7', 'metro', { kind: 'reharm', level: 0 }),
       A('s-dim', 'Diminués et ii–V', 'Diminués de passage, ii–V du SubV', 'metro', { kind: 'reharm', level: 3 }),
@@ -210,8 +203,7 @@ export const STEPS: Step[] = [
     id: 'impro',
     title: 'Improviser sur les accords',
     aim: 'Une gamme par accord, du vocabulaire sur ii–V–I, et le standard joué de mémoire.',
-    lessons: ['gammes', 'clave'],
-    tips: ['arpege-3', 'approche', 'enclosure'],
+    lessons: ['gammes', 'vocabulaire', 'clave'],
     activities: [
       A('im-exp', 'Une gamme par accord', 'Analyse et gammes', 'metro', { kind: 'express', level: 3 }, { kind: 'answers', n: 12, min: 10 }),
       A('im-mem', 'Autumn Leaves de mémoire', 'Toute la grille cachée', 'metro', { kind: 'chart', chart: 'autumn-leaves', mode: 'memoire', memLevel: 3 }, { kind: 'memoire', ratio: 0.8 }),

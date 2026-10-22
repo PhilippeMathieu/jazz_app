@@ -5,7 +5,7 @@ import { keyLabel } from '../../core/chart/model';
 import { pick } from '../../core/random';
 import { load, save } from '../../core/storage';
 import { report } from '../../core/events';
-import { micSettings, readMono, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
+import { micGate, readMono, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { NoteTracker } from '../../core/listen/tracker';
 import { plainName } from '../../core/theory/notes';
 import { MicPill } from '../../ui/MicPill';
@@ -62,7 +62,7 @@ function Run({ s, line, setS, onEnd }: { s: Saved; line: Line; setS: (f: Saved) 
   const mic = useMicState();
   const listening = mic === 'on';
   const timers = useRef<number[]>([]);
-  const tracker = useRef(new NoteTracker(micSettings().gate));
+  const tracker = useRef(new NoteTracker());
   const lastNote = useRef(0);
   const started = useRef(0);
   const doneRef = useRef(s.done);
@@ -87,7 +87,7 @@ function Run({ s, line, setS, onEnd }: { s: Saved; line: Line; setS: (f: Saved) 
     silence();
     setCur(-1);
     setPhase('answer');
-    tracker.current = new NoteTracker(micSettings().gate);
+    tracker.current = new NoteTracker();
     lastNote.current = 0;
     started.current = performance.now();
     if (s.backing) playCall(phrase, s.tempo, { phrase: false, backing: true, countIn: true });
@@ -129,9 +129,9 @@ function Run({ s, line, setS, onEnd }: { s: Saved; line: Line; setS: (f: Saved) 
     listening && phase === 'answer',
     () => {
       const t = performance.now();
-      const r = readMono(tracker.current.gate);
+      const r = readMono();
       if (r) {
-        const ev = tracker.current.push(r.pitch, r.level, t);
+        const ev = tracker.current.push(r.pitch, r.level, t, micGate());
         if (ev) {
           lastNote.current = t;
           setPlayed((pl) => {

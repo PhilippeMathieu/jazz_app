@@ -21,13 +21,13 @@ export class NoteTracker {
   ) {}
 
   /** Renvoie un événement quand une nouvelle note est confirmée. */
-  push(pitch: PitchResult | null, level: number, t: number): NoteEvent | null {
-    const attack = level > this.lastLevel * 1.8 && level > this.gate * 2;
+  push(pitch: PitchResult | null, level: number, t: number, gate = this.gate): NoteEvent | null {
+    const attack = level > this.lastLevel * 1.8 && level > gate * 2;
     this.lastLevel = level;
-    if (level < this.gate || !pitch || pitch.clarity < this.minClarity || Math.abs(pitch.midi - Math.round(pitch.midi)) > 0.4) {
+    if (level < gate || !pitch || pitch.clarity < this.minClarity || Math.abs(pitch.midi - Math.round(pitch.midi)) > 0.4) {
       this.candidate = null;
       this.count = 0;
-      if (level < this.gate && ++this.silent >= 2) this.current = null;
+      if (level < gate && ++this.silent >= 2) this.current = null;
       return null;
     }
     this.silent = 0;

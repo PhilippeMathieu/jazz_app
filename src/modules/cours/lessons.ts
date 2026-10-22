@@ -15,7 +15,9 @@ export type Block =
   /** Un rythme en cases, à écouter (compare : en swing puis en croches droites). */
   | { t: 'rhythm'; id: string; label?: string; compare?: boolean; tempo?: number }
   /** Des styles à écouter, avec leurs indices. */
-  | { t: 'grooves'; styles: StyleId[]; label?: string };
+  | { t: 'grooves'; styles: StyleId[]; label?: string }
+  /** Une astuce d'enchaînement : la note de la main droite qui reste ou glisse, à écouter et à voir (tips.ts). */
+  | { t: 'astuce'; id: string };
 
 const tempoOf = (id: StyleId) => `${GROOVES[id].tempo[0]}–${GROOVES[id].tempo[1]}`;
 
@@ -488,7 +490,7 @@ export const PARTS: Part[] = [
         id: 'iiVim',
         title: 'Le ii–V–i mineur',
         sub: 'ø7, 7♭9, m6',
-        minutes: 4,
+        minutes: 6,
         blocks: [
           {
             t: 'p',
@@ -505,6 +507,9 @@ export const PARTS: Part[] = [
           },
           { t: 'chords', label: 'Autumn Leaves, mesures 1 à 8', chords: ['Cm7', 'F7', 'Bbmaj7', 'Ebmaj7', 'Am7b5', 'D7b9', 'Gm6'], romans: ['IIm7', 'V7', 'IΔ7', 'IVΔ7', 'IIø7', 'V7♭9', 'Im6'], gap: 1 },
           { t: 'tip', text: '**ø7 → 7♭9 → m6** : dès que tu vois un ø7, un mineur arrive.' },
+          { t: 'h', text: 'La ♭9, d’une note à l’autre' },
+          { t: 'astuce', id: '5-b9' },
+          { t: 'astuce', id: 'mineur-b9' },
           {
             t: 'quiz',
             q: 'Le ii–V–i en A mineur, c’est…',
@@ -525,7 +530,7 @@ export const PARTS: Part[] = [
         id: 'turnarounds',
         title: 'Les turnarounds',
         sub: 'I – VI – II – V et ses variantes',
-        minutes: 4,
+        minutes: 6,
         blocks: [
           {
             t: 'p',
@@ -541,6 +546,9 @@ export const PARTS: Part[] = [
             text: 'Dans les rhythm changes, le turnaround tourne en boucle sur les mesures 1–2 et 3–4 : B♭6 G7 Cm7 F7.'
           },
           { t: 'tip', text: 'Deux dernières mesures d’une grille, quatre accords qui descendent par quintes : turnaround.' },
+          { t: 'h', text: 'Faire chanter le turnaround' },
+          { t: 'astuce', id: 'turn-chrom' },
+          { t: 'astuce', id: 'dim-passage' },
           {
             t: 'quiz',
             q: 'I – VI – II – V en F :',
@@ -554,7 +562,7 @@ export const PARTS: Part[] = [
         id: 'secondaires',
         title: 'Les dominantes secondaires',
         sub: 'V7/II, V7/V, V7/VI…',
-        minutes: 4,
+        minutes: 5,
         blocks: [
           {
             t: 'p',
@@ -581,6 +589,8 @@ export const PARTS: Part[] = [
             text: 'Enchaînées, elles forment des **dominantes en cascade** : D7 G7 C7 F7 dans le pont des rhythm changes, ou E7 A7 D7 G7 vers C.'
           },
           { t: 'chords', label: 'Cascade', chords: ['E7', 'A7', 'D7', 'G7', 'Cmaj7'], gap: 1 },
+          { t: 'h', text: 'Une ligne qui descend toute seule' },
+          { t: 'astuce', id: 'cascade' },
           {
             t: 'quiz',
             q: 'En C, D7 est…',
@@ -601,7 +611,7 @@ export const PARTS: Part[] = [
         id: 'subv',
         title: 'La substitution tritonique',
         sub: 'SubV : D♭7 à la place de G7',
-        minutes: 4,
+        minutes: 5,
         blocks: [
           {
             t: 'p',
@@ -614,6 +624,8 @@ export const PARTS: Part[] = [
             text: 'Pour improviser sur D♭7 en SubV, joue **lydien ♭7** (D♭ E♭ F G A♭ B♭ C♭). Ce sont les mêmes notes que la gamme altérée de G.'
           },
           { t: 'tip', text: 'Un **7 qui descend d’un demi-ton** sur sa résolution = SubV.' },
+          { t: 'h', text: 'Au clavier' },
+          { t: 'astuce', id: 'subv' },
           {
             t: 'quiz',
             q: 'Le SubV de D7, c’est…',
@@ -634,7 +646,7 @@ export const PARTS: Part[] = [
         id: 'backdoor',
         title: 'Backdoor et emprunts au mineur',
         sub: 'IVm7, ♭VII7',
-        minutes: 3,
+        minutes: 5,
         blocks: [
           {
             t: 'p',
@@ -647,6 +659,9 @@ export const PARTS: Part[] = [
           },
           { t: 'chords', chords: ['Fm7', 'Bb7', 'Cmaj7'], romans: ['IVm7', '♭VII7', 'IΔ7'], gap: 1.3 },
           { t: 'tip', text: 'Un **accord mineur sur le IV** d’un morceau majeur = emprunt. Un 7 un ton sous le I = backdoor.' },
+          { t: 'h', text: 'Une note qui glisse' },
+          { t: 'astuce', id: 'backdoor' },
+          { t: 'astuce', id: 'iv-ivm' },
           {
             t: 'quiz',
             q: 'La cadence backdoor vers G, c’est…',
@@ -758,6 +773,38 @@ export const PARTS: Part[] = [
             choices: ['C E G B', 'E G B D', 'B D E G', 'E B D G'],
             answer: 1,
             explain: '3-5-7-9 : E G B D.'
+          }
+        ]
+      },
+      {
+        id: 'guide-tones',
+        title: 'Les guide tones',
+        sub: 'La 3ce et la 7e, d’un accord à l’autre',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Les **guide tones** sont la **3ce** et la **7e** de chaque accord : ce sont elles qui disent s’il est majeur, mineur ou de dominante. D’un accord au suivant, elles bougent très peu : elles **restent**, ou **glissent d’un demi-ton**.'
+          },
+          { t: 'astuce', id: '7-3' },
+          { t: 'astuce', id: '3-7' },
+          { t: 'astuce', id: 'triton' },
+          { t: 'p', text: 'Avec une contrebasse, on ajoute des couleurs au-dessus, sans casser ce mouvement : la 9 sur les accords mineurs et majeurs, la 13 sur les dominantes.' },
+          { t: 'astuce', id: '13-3' },
+          { t: 'tip', text: 'Exercice : sur une grille, joue seulement la 3ce ou la 7e de chaque accord, sur le 1er temps, en bougeant le moins possible. Tu entends la grille sans la basse.' },
+          {
+            t: 'quiz',
+            q: 'Am7 → D7 : la 7e de Am7 (G) descend d’un demi-ton. Elle arrive sur…',
+            choices: ['F♯, la 3ce de D7', 'F, la 7e de D7', 'A, la 5te de D7', 'C, la 7e de D7'],
+            answer: 0,
+            explain: 'G moins un demi-ton = F♯, la 3ce de D7 (D F♯ A C).'
+          },
+          {
+            t: 'quiz',
+            q: 'Dans G7, quelles notes forment le triton qui se résout sur Cmaj7 ?',
+            choices: ['B et F', 'G et D', 'D et A♭', 'C et F♯'],
+            answer: 0,
+            explain: 'La 3ce (B) et la 7e (F) : B monte sur C, F descend sur E.'
           }
         ]
       },
@@ -937,6 +984,36 @@ export const PARTS: Part[] = [
             choices: ['40', '80', '160', '320'],
             answer: 1,
             explain: '2 clics par mesure de 4 temps : la moitié du tempo, 80.'
+          }
+        ]
+      },
+      {
+        id: 'vocabulaire',
+        title: 'Construire une ligne',
+        sub: 'Arpèges, approches, encadrements',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Improviser, c’est d’abord **viser les notes de l’accord** sur les temps forts. Trois outils pour y arriver avec style : l’arpège qui part de la 3ce, la note d’approche un demi-ton en dessous, et l’encadrement.'
+          },
+          { t: 'astuce', id: 'arpege-3' },
+          { t: 'astuce', id: 'approche' },
+          { t: 'astuce', id: 'enclosure' },
+          { t: 'tip', text: 'Les phrases de cette étape (au piano) utilisent ces trois outils : écoute-les, rejoue-les, puis transpose.' },
+          {
+            t: 'quiz',
+            q: 'Arpège à partir de la 3ce sur Em7 :',
+            choices: ['G B D F♯', 'E G B D', 'B D F♯ A', 'G B D E'],
+            answer: 0,
+            explain: '3ce, 5te, 7e, 9 de Em7 : G, B, D, F♯.'
+          },
+          {
+            t: 'quiz',
+            q: 'Pour encadrer A, on joue :',
+            choices: ['B♭, G♯, puis A', 'G, B, puis A', 'A, A, puis A', 'C, E, puis A'],
+            answer: 0,
+            explain: 'La note un demi-ton au-dessus (B♭), celle un demi-ton en dessous (G♯), puis A.'
           }
         ]
       },

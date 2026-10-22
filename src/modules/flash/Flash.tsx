@@ -7,7 +7,7 @@ import { TWO_HANDS, UPPER_STRUCTURES, VoicingType, bassRoot, lhVoicing, twoHands
 import { load, save } from '../../core/storage';
 import { report } from '../../core/events';
 import { checkChord, LIMITS } from '../../core/listen/detect';
-import { micSettings, readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
+import { readChord, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { Keyboard } from '../../ui/Keyboard';
 import { CloseIcon } from '../../ui/icons';
 import { useWakeLock } from '../../ui/wakeLock';
@@ -89,7 +89,6 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
   const history = useRef<boolean[]>([]);
   const best = useRef<{ missing: number[]; extra: number[]; score: number; lowest: number | null } | null>(null);
   const cur = useRef<{ L: Item[]; k: number; v: number[] } | null>(null);
-  const gate = useRef(micSettings().gate);
   useWakeLock(true);
 
   const clear = () => {
@@ -170,7 +169,7 @@ function Run({ s, onEnd }: { s: FlashSettings; onEnd: () => void }) {
   useMicLoop(listening && !revealed && !paused, () => {
     const c = cur.current;
     if (!c || performance.now() - shownAt.current < 400) return;
-    const r = readChord(gate.current)?.analysis;
+    const r = readChord()?.analysis;
     if (!r) {
       setLive((l) => (l.length ? [] : l));
       return;

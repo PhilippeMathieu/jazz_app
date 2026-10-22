@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { mod } from '../../core/theory/notes';
 import { Written, writtenName } from '../../core/theory/staff';
 import { audio, now, piano } from '../../core/audio/engine';
-import { MIC_MESSAGES, micSettings, readNote, startMic, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
+import { MIC_MESSAGES, micGate, readNote, startMic, useMicLoop, useMicRelease, useMicState } from '../../core/listen/mic';
 import { NoteTracker } from '../../core/listen/tracker';
 import { load, save } from '../../core/storage';
 import { report } from '../../core/events';
@@ -123,15 +123,15 @@ function Play({ saved, onFinish, total }: { saved: Saved; onFinish: (a: Answer[]
 
   // ---- Au piano
   const micState = useMicState();
-  const tracker = useRef(new NoteTracker(micSettings().gate));
+  const tracker = useRef(new NoteTracker());
   const ignoreUntil = useRef(performance.now() + 300);
   useMicLoop(
     answer === 'piano' && !current,
     () => {
-      const r = readNote(tracker.current.gate);
+      const r = readNote();
       if (!r) return;
       const t = performance.now();
-      const ev = tracker.current.push(r.pitch, r.level, t);
+      const ev = tracker.current.push(r.pitch, r.level, t, micGate());
       if (!ev || t < ignoreUntil.current) return;
       const v = playedVerdict(q, ev.midi);
       if (v === 'ok') settle(!missed.current, missed.current ?? midiName(ev.midi));
