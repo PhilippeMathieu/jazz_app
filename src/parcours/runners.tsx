@@ -28,7 +28,7 @@ export function renderRun(run: Run, total: number, onExit: () => void, where: Wh
     case 'reharm':
       return <ReharmRun level={run.level} onExit={onExit} />;
     case 'ear':
-      return <OreilleRun mode={run.mode} level={run.level} pair={run.pair} onExit={onExit} />;
+      return <OreilleRun mode={run.mode} level={run.level} set={run.set} onExit={onExit} />;
     case 'full':
     case 'iv':
     case 'bass':

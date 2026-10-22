@@ -1,6 +1,6 @@
 import { PROGRESSIONS } from '../../core/theory/progressions';
 import { describe, expect, it } from 'vitest';
-import { checkBuild, earVoicing, makeEarQuestion } from './questions';
+import { checkBuild, earVoicing, makeEarQuestion, makeSetQuestion } from './questions';
 import { chordPcs, parseChord } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
 import { seeded } from '../../core/random';
@@ -54,5 +54,36 @@ describe('oreille', () => {
       if (p.mode !== 'prog') throw new Error();
       for (const c of p.chords) expect(['maj', 'min', 'dim']).toContain(c.chord.quality);
     }
+  });
+  it('natures imposées : toujours les mêmes boutons, jamais 4 fois de suite la même réponse', () => {
+    const rng = seeded(4);
+    const five = ['maj7', '7', 'm7', 'm7b5', 'dim7'];
+    const recent: string[] = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < 300; i++) {
+      const q = makeSetQuestion(['maj7', '7'], 1, {}, recent, [], rng);
+      if (q.mode !== 'ear') throw new Error();
+      expect(q.choices).toEqual(['maj7', '7']);
+      recent.push(q.q);
+      expect(recent.slice(-4).every((x) => x === recent[recent.length - 1]) && recent.length >= 4).toBe(false);
+    }
+    for (let i = 0; i < 200; i++) {
+      const q = makeSetQuestion(five, 1, {}, [], [], rng);
+      if (q.mode !== 'ear') throw new Error();
+      expect(q.choices).toEqual(five);
+      expect(q.c.chord.quality).toBe(q.q);
+      seen.add(q.q);
+    }
+    expect([...seen].sort()).toEqual([...five].sort());
+  });
+  it('natures imposées : les ratées reviennent plus souvent', () => {
+    const rng = seeded(8);
+    const tally = { 'ear:m7b5': { c: 0, t: 10 }, 'ear:dim7': { c: 10, t: 10 } };
+    let hard = 0;
+    for (let i = 0; i < 400; i++) {
+      const q = makeSetQuestion(['m7b5', 'dim7'], 1, tally, [], [], rng);
+      if (q.mode === 'ear' && q.q === 'm7b5') hard++;
+    }
+    expect(hard).toBeGreaterThan(240);
   });
 });

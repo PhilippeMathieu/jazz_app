@@ -10,13 +10,15 @@ import { PlayIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { notesMarks } from '../../ui/keyboardMarks';
 import { HINTS, PROG_LEVELS, QUALITY_LEVELS, qualityDiff } from './data';
-import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, makeEarQuestion, makePairQuestion, progChords } from './questions';
+import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, makeEarQuestion, makeSetQuestion, progChords } from './questions';
 import { FullPlay } from './FullChord';
 import { IntervalPlay } from './IntervalPlay';
 import { BassPlay } from './BassPlay';
 import { intervalById } from './intervals';
 import { changeText, changes, pairCue } from './pairs';
 
+/** Rappel de la méthode, quand il y a plus de deux accords à départager. */
+const METHOD = 'La 3ce : clair ou sombre ? La 7e : au repos ou qui tire ? Sombre et qui tire : la 5te, stable ou instable ?';
 /** Les accords de 4 sons de base : on dit quelle note change de l'un à l'autre. */
 const FOUR = ['maj7', 'm7', '7', 'm7b5', 'dim7'];
 import { Domain, Pair, confusions, recordAnswer } from '../../core/confusions';
@@ -56,9 +58,9 @@ const EXERCISES: { value: Exercise; label: string; sub: string }[] = [
 
 /**
  * Un exercice d'oreille, au niveau fixé par le parcours. duel : seulement les paires que l'élève confond
- * (si l'exercice le permet et qu'il en a). pair : deux natures d'accord à départager, toujours les mêmes.
+ * (si l'exercice le permet et qu'il en a). set : les natures d'accord proposées (2 à 5), toujours les mêmes boutons.
  */
-export function OreilleRun({ mode, level, duel = false, pair, onExit }: { mode: Exercise; level: number; duel?: boolean; pair?: [string, string]; onExit: () => void }) {
+export function OreilleRun({ mode, level, duel = false, set, onExit }: { mode: Exercise; level: number; duel?: boolean; set?: string[]; onExit: () => void }) {
   const [stats, setStats] = useState<Stats>(() => {
     const s = load('oreille', DEFAULT);
     return { ...s, mode, lv: { ...s.lv, [mode]: level }, focus: duel && duelable(mode) ? 'confusions' : 'all' };
@@ -89,7 +91,7 @@ export function OreilleRun({ mode, level, duel = false, pair, onExit }: { mode: 
   if (mode === 'iv') return <IntervalPlay level={lv} items={stats.items} duelMode={confused && confusions('intervalle').length > 0} onRecord={single('iv' + lv)} onStop={onExit} />;
   if (mode === 'bass') return <BassPlay level={lv} items={stats.items} onRecord={(r) => recordMany('bass' + lv, r)} onGuess={(l) => regrade('bass' + lv, l)} onStop={onExit} />;
   if (mode === 'full') return <FullPlay level={lv} items={stats.items} duelMode={confused && confusions('degre').length > 0} onRecord={single('full' + lv)} onStop={onExit} />;
-  return <EarPlay stats={stats} setStats={setStats} mode={mode} pair={mode === 'ear' ? pair : undefined} onStop={onExit} />;
+  return <EarPlay stats={stats} setStats={setStats} mode={mode} set={mode === 'ear' ? set : undefined} onStop={onExit} />;
 }
 
 /** Les confusions de l'élève, par exercice d'oreille (pour proposer de les départager). */
@@ -118,10 +120,10 @@ export function progDiff(truth: string, other: string, wrong: boolean): string {
   return `Ce qui change : ${changes.join(' ; ')}.${same ? ` Le reste est identique (${same} accord${same > 1 ? 's' : ''}).` : ''}`;
 }
 
-/** Question suivante : deux natures imposées, duel sur une paire confondue, ou tout le niveau (confusions plus fréquentes). */
-function nextQuestion(stats: Stats, mode: EarMode, level: number, last?: string, pair?: [string, string], recent: string[] = []): EarQuestion {
-  if (pair) return makePairQuestion(pair, level, recent);
+/** Question suivante : natures imposées, duel sur une paire confondue, ou tout le niveau (confusions plus fréquentes). */
+function nextQuestion(stats: Stats, mode: EarMode, level: number, last?: string, set?: string[], recent: string[] = []): EarQuestion {
   const pairs: Pair[] = mode === 'build' ? [] : confusions(domainOf(mode));
+  if (set) return makeSetQuestion(set, level, stats.items, recent, pairs);
   if (stats.focus === 'confusions' && mode !== 'build') {
     const d = makeDuelQuestion(mode, pairs, level, last);
     if (d) return d;
@@ -129,13 +131,13 @@ function nextQuestion(stats: Stats, mode: EarMode, level: number, last?: string,
   return makeEarQuestion(mode, level, stats.items, last, Math.random, pairs);
 }
 
-function EarPlay({ stats, setStats, mode, pair, onStop }: { stats: Stats; setStats: SetStats; mode: EarMode; pair?: [string, string]; onStop: () => void }) {
+function EarPlay({ stats, setStats, mode, set, onStop }: { stats: Stats; setStats: SetStats; mode: EarMode; set?: string[]; onStop: () => void }) {
   const level = clampLv(stats.lv[mode]);
   const last = useRef<string | undefined>(undefined);
-  /** Réponses justes des dernières questions (paire imposée : pas plus de 3 fois la même). */
+  /** Réponses justes des dernières questions (natures imposées : pas plus de 3 fois la même). */
   const truths = useRef<string[]>([]);
-  const [q, setQ] = useState<EarQuestion>(() => nextQuestion(stats, mode, level, undefined, pair));
-  const duel = !!((q.mode === 'ear' && q.choices) || (q.mode === 'prog' && stats.focus === 'confusions' && q.choices.length === 2));
+  const [q, setQ] = useState<EarQuestion>(() => nextQuestion(stats, mode, level, undefined, set));
+  const duel = !!((q.mode === 'ear' && q.choices?.length === 2) || (q.mode === 'prog' && stats.focus === 'confusions' && q.choices.length === 2));
   const [answer, setAnswer] = useState<string | null>(null);
   const [ok, setOk] = useState<boolean | null>(null);
   const [sel, setSel] = useState<number[]>([]);
@@ -174,7 +176,7 @@ function EarPlay({ stats, setStats, mode, pair, onStop }: { stats: Stats; setSta
   const fresh = (m: EarMode, l: number, autoplay: boolean) => {
     stop();
     if (q.mode === 'ear') truths.current = [...truths.current, q.q].slice(-3);
-    const nq = nextQuestion(stats, m, l, last.current, pair, truths.current);
+    const nq = nextQuestion(stats, m, l, last.current, set, truths.current);
     qStart.current = performance.now();
     last.current = nq.mode === 'prog' ? nq.id : nq.q;
     setQ(nq);
@@ -332,7 +334,7 @@ function EarPlay({ stats, setStats, mode, pair, onStop }: { stats: Stats; setSta
           Arrêter
         </button>
         <span class="play-meta">
-          {pair ? `${qualSym(pair[0])} ou ${qualSym(pair[1])}` : EXERCISES.find((e) => e.value === mode)?.label} · {duel && !pair ? 'mes confusions · ' : ''}
+          {set ? set.map(qualSym).join(set.length === 2 ? ' ou ' : ' · ') : EXERCISES.find((e) => e.value === mode)?.label} · {duel && !set ? 'mes confusions · ' : ''}
           {session.c}/{session.t}
           {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
         </span>
@@ -361,6 +363,7 @@ function EarPlay({ stats, setStats, mode, pair, onStop }: { stats: Stats; setSta
           </div>
         )}
         <h2 class="prompt">{PROMPT[mode]}</h2>
+        {set && set.length > 2 && !answered ? <p class="muted small">{METHOD}</p> : null}
         {answered ? (
           <div class="fb">
             {q.mode === 'ear' ? (
@@ -402,6 +405,27 @@ function EarPlay({ stats, setStats, mode, pair, onStop }: { stats: Stats; setSta
           </div>
         ) : null}
         {compare}
+        {answered && set && set.length > 2 && q.mode === 'ear' ? (
+          <div class="compare">
+            <span class="label">Les {set.length} sur {noteName(q.c.chord.root)}, pour comparer</span>
+            <div class="chips text">
+              {set.map((k) => (
+                <button
+                  key={k}
+                  class="chip"
+                  aria-pressed={k === q.q}
+                  onClick={() => {
+                    audio();
+                    stop();
+                    playChord(earVoicing(chordOnPc(rootPc(q.c.chord), k), 1, () => 0), now() + 0.05, 2, 0.6);
+                  }}
+                >
+                  {chordSymbol({ root: q.c.chord.root, quality: k })}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {kb}
       </section>
 

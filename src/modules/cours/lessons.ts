@@ -19,7 +19,9 @@ export type Block =
   /** Une astuce d'enchaînement : la note de la main droite qui reste ou glisse, à écouter et à voir (tips.ts). */
   | { t: 'astuce'; id: string }
   /** Deux natures d'accord côte à côte : la note qui change, à voir et à entendre. */
-  | { t: 'pair'; a: string; b: string };
+  | { t: 'pair'; a: string; b: string }
+  /** Plusieurs natures à la suite, de l'une à l'autre une note baisse (maj7 → 7 → m7 → ø7 → °7). */
+  | { t: 'chain'; chain: string[] };
 
 const tempoOf = (id: StyleId) => `${GROOVES[id].tempo[0]}–${GROOVES[id].tempo[1]}`;
 
@@ -398,9 +400,9 @@ export const PARTS: Part[] = [
       },
       {
         id: 'comparer',
-        title: 'Comparer les accords deux à deux',
-        sub: 'maj7, 7, m7, ø7, °7 : une note change à la fois',
-        minutes: 6,
+        title: 'Comparer les accords de 4 sons',
+        sub: 'Deux à deux, puis les 5 ensemble',
+        minutes: 7,
         blocks: [
           {
             t: 'p',
@@ -423,6 +425,12 @@ export const PARTS: Part[] = [
           { t: 'pair', a: 'maj7', b: 'm7' },
           { t: 'pair', a: 'm7', b: 'm7b5' },
           { t: 'pair', a: 'm7b5', b: 'dim7' },
+          { t: 'h', text: 'Les 5 ensemble' },
+          {
+            t: 'p',
+            text: 'Écoute maintenant la chaîne entière, sur la même fondamentale : à chaque pas, une note baisse, et l’accord s’assombrit et se tend un peu plus. Le but de l’étape : reconnaître n’importe lequel des 5, seul.'
+          },
+          { t: 'chain', chain: ['maj7', '7', 'm7', 'm7b5', 'dim7'] },
           {
             t: 'tip',
             text: 'Pour reconnaître un accord, écoute dans l’ordre : **la 3ce** (clair ou sombre ?), puis **la 7e** (au repos ou qui tire ?). Si c’est sombre et que ça tire : **la 5te** est-elle stable (m7) ou instable (ø7, °7) ?'
@@ -447,6 +455,13 @@ export const PARTS: Part[] = [
             choices: ['La 7e baisse : B♭ → B𝄫 (= A)', 'La 3ce baisse : E♭ → E𝄫', 'La 5te monte : G♭ → G', 'On ajoute une 9e'],
             answer: 0,
             explain: 'ø7 et °7 ne diffèrent que par la 7e : mineure dans ø7, diminuée (un demi-ton plus bas) dans °7.'
+          },
+          {
+            t: 'quiz',
+            q: 'Sombre, qui tire, la 5te instable, mais une 7e encore « normale » :',
+            choices: ['ø7', '°7', 'm7', '7'],
+            answer: 0,
+            explain: 'Sombre : 3ce mineure. 5te baissée : ø7 ou °7. 7e mineure (pas diminuée) : ø7.'
           }
         ]
       },

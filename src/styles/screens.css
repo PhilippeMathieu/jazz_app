@@ -706,3 +706,7 @@
 .pair-btns { flex-wrap: wrap; }
 .pair-btns .btn.on { border-color: var(--accent); color: var(--accent); }
 .pair-cue { border-left: 3px solid var(--accent); padding-left: var(--s3); }
+.chain-demo { display: flex; flex-direction: column; gap: var(--s2); }
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.chain .btn.on { border-color: var(--accent); color: var(--accent); }
+.chain-step { font-family: var(--mono); font-size: 10.5px; color: var(--accent); white-space: nowrap; }

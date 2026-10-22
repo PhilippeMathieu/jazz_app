@@ -15,7 +15,7 @@ export type Run =
   | { kind: 'armures'; level: number }
   | { kind: 'express'; level: number }
   | { kind: 'reharm'; level: number }
-  | { kind: 'ear'; mode: 'ear' | 'build' | 'prog'; level: number; pair?: [string, string] }
+  | { kind: 'ear'; mode: 'ear' | 'build' | 'prog'; level: number; set?: string[] }
   | { kind: 'full'; level: number }
   | { kind: 'iv'; level: number }
   | { kind: 'bass'; level: number }
@@ -62,6 +62,10 @@ const Q10 = { kind: 'answers', n: 10, min: 8 } as const;
 /** Rythme : 3 passages de 8 mesures, 2 réussis ; ou 5 rythmes tapés, 3 réussis. */
 const T3: Goal = { kind: 'answers', n: 3, min: 2, takes: true };
 const T5: Goal = { kind: 'answers', n: 5, min: 3, takes: true };
+/** Oreille, natures imposées : 10 justes sur 12 (à deux réponses, le hasard ne suffit pas). */
+const S12: Goal = { kind: 'answers', n: 12, min: 10 };
+/** Les 5 accords de 4 sons, dans l'ordre de la chaîne : de l'un au suivant, une note baisse d'un demi-ton. */
+const FIVE = ['maj7', '7', 'm7', 'm7b5', 'dim7'];
 const A = (id: string, title: string, sub: string, where: Where, run: Run, goal: Goal = Q10, optional = false): Activity => ({ id, title, sub, where, run, goal, optional });
 
 export const STEPS: Step[] = [
@@ -108,20 +112,23 @@ export const STEPS: Step[] = [
   {
     id: 'quatre',
     title: 'Les accords de 4 sons',
-    aim: 'Construire et reconnaître maj7, m7, 7, ø7 et °7 : les accords du jazz. Sentir les croches swing.',
+    aim: 'Construire maj7, 7, m7, ø7 et °7, et les reconnaître à l’oreille : deux à deux, puis les 5 ensemble. Sentir les croches swing.',
     lessons: ['construire', 'caracteres', 'comparer', 'swing'],
     activities: [
       A('q-build', 'Construire maj7, m7, 7', 'Un symbole, tu touches ses 4 notes', 'metro', { kind: 'ear', mode: 'build', level: 1 }),
-      A('q-p1', 'maj7 ou 7 ?', 'Deux à deux : seule la 7e change', 'metro', { kind: 'ear', mode: 'ear', level: 1, pair: ['maj7', '7'] }, { kind: 'answers', n: 12, min: 10 }),
-      A('q-p2', '7 ou m7 ?', 'Deux à deux : seule la 3ce change', 'metro', { kind: 'ear', mode: 'ear', level: 1, pair: ['7', 'm7'] }, { kind: 'answers', n: 12, min: 10 }),
-      A('q-ear', 'maj7, m7 ou 7 ?', 'À l’oreille, les trois', 'metro', { kind: 'ear', mode: 'ear', level: 1 }),
       A('q-arm', 'Armures : les bémols', 'De F (1 ♭) à C♭ (7 ♭)', 'metro', { kind: 'armures', level: 2 }),
-      A('q-p4', 'm7 ou ø7 ?', 'Deux à deux : seule la 5te change', 'metro', { kind: 'ear', mode: 'ear', level: 1, pair: ['m7', 'm7b5'] }, { kind: 'answers', n: 12, min: 10 }),
-      A('q-p5', 'ø7 ou °7 ?', 'Deux à deux : seule la 7e change', 'metro', { kind: 'ear', mode: 'ear', level: 1, pair: ['m7b5', 'dim7'] }, { kind: 'answers', n: 12, min: 10 }),
-      A('q-ear2', '+ ø7 et °7', 'À l’oreille, les 5 natures', 'metro', { kind: 'ear', mode: 'ear', level: 2 }),
+      // À l'oreille, progressivement : deux à deux, puis 3, 4 et les 5 ensemble.
+      A('q-p1', 'maj7 ou 7 ?', '2 accords : seule la 7e change', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', '7'] }, S12),
+      A('q-p2', '7 ou m7 ?', '2 accords : seule la 3ce change', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['7', 'm7'] }, S12),
+      A('q-ear', 'maj7, 7 ou m7 ?', 'Les 3 ensemble', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', '7', 'm7'] }, S12),
+      A('q-p4', 'm7 ou ø7 ?', '2 accords : seule la 5te change', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['m7', 'm7b5'] }, S12),
+      A('q-s4', 'maj7, 7, m7 ou ø7 ?', 'Les 4 ensemble', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', '7', 'm7', 'm7b5'] }, S12),
+      A('q-p5', 'ø7 ou °7 ?', '2 accords : seule la 7e change', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['m7b5', 'dim7'] }, S12),
+      A('q-ear2', 'Les 5 accords', 'maj7, 7, m7, ø7 ou °7 : le but de l’étape', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: FIVE }, { kind: 'answers', n: 15, min: 12 }),
       A('r-croches', 'Taper des croches swing', 'Longue-courte : « dou-ba »', 'metro', { kind: 'rythme', exercise: 'taper', level: 1 }, T5),
       A('q-piano', 'Shells : 1, 3, 7', 'Au piano, main gauche', 'piano', { kind: 'flash', type: 'shell', order: 'random', level: 2 }),
-      A('q-p3', 'maj7 ou m7 ?', 'Deux à deux : la 3ce et la 7e changent', 'metro', { kind: 'ear', mode: 'ear', level: 1, pair: ['maj7', 'm7'] }, { kind: 'answers', n: 12, min: 10 }, true)
+      A('q-p3', 'maj7 ou m7 ?', '2 accords : la 3ce et la 7e changent', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', 'm7'] }, S12, true),
+      A('q-ear5r', 'Les 5, renversés', 'Les mêmes accords, la basse n’est plus toujours la fondamentale', 'metro', { kind: 'ear', mode: 'ear', level: 3, set: FIVE }, { kind: 'answers', n: 15, min: 12 }, true)
     ]
   },
   {

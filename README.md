@@ -15,7 +15,7 @@ Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'acc
 | 1 | Notes et intervalles | 2 | 4 (+1) |
 | 2 | Les accords de 3 sons | 1 | 4 |
 | 3 | La gamme et ses accords | 3 | 6 (+1) |
-| 4 | Les accords de 4 sons | 4 | 10 (+1) |
+| 4 | Les accords de 4 sons | 4 | 11 (+2) |
 | 5 | Le ii–V–I | 2 | 7 |
 | 6 | Voicings et guide tones | 2 | 6 |
 | 7 | Lire une grille : le blues | 3 | 6 (+3) |
@@ -23,7 +23,7 @@ Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'acc
 | 9 | Substitutions et couleurs | 4 | 7 (+3) |
 | 10 | Improviser sur les accords | 3 | 7 (+3) |
 
-28 leçons, 64 exercices (35 dans le métro, 18 au piano, 11 de rythme), 13 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
+28 leçons, 65 exercices (36 dans le métro, 18 au piano, 11 de rythme), 14 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
 
 Chaque étape : **Comprendre** (leçons de 3 à 5 min, exemples à écouter et à voir au clavier, mini-quiz), **Dans le métro** (sans piano, d'une main, écouteurs), **Au piano** (le micro valide ; sans micro, on peut valider soi-même), **Rythme**, **Pour aller plus loin**.
 
@@ -32,7 +32,7 @@ Chaque exercice a un **objectif** chiffré, affiché avant et pendant : « 8 jus
 Ce que contiennent les exercices :
 - **Notes** : lire en clé de sol ou de fa, toucher la note au clavier ou la jouer au piano (le micro vérifie l'octave).
 - **Armures** : l’armure ↔ la tonalité (3 ♯ → A majeur), dièses puis bémols, relatif mineur, citer les altérations dans l’ordre.
-- **Comparer deux à deux** (étape 4) : maj7 → 7 → m7 → ø7 → °7, une seule note baisse d’un demi-ton à chaque fois. Leçon « Comparer les accords deux à deux » : pour chaque paire, la note qui change (« la 7e : B → B♭ »), les deux accords à écouter (l’un, l’autre, l’un puis l’autre), un clavier (note qui change en jaune, celle de l’autre accord en pointillés), comment l’entendre, autre fondamentale. Exercices d’oreille par paire (maj7 ou 7, 7 ou m7, m7 ou ø7, ø7 ou °7, et maj7 ou m7 en option), 10 justes sur 12, avant les exercices à 3 et 5 natures ; après chaque réponse, la note qui change sur la fondamentale de la question.
+- **Les 5 accords de 4 sons à l’oreille** (étape 4), progressivement : maj7 → 7 → m7 → ø7 → °7, une seule note baisse d’un demi-ton à chaque fois. Leçon « Comparer les accords de 4 sons » : chaque paire (la note qui change, « la 7e : B → B♭ », l’un / l’autre / l’un puis l’autre, clavier avec la note qui change en jaune et celle de l’autre accord en pointillés, comment l’entendre), puis les 5 ensemble (la chaîne sur une même fondamentale, à la suite ou un par un) et la méthode d’écoute (3ce, 7e, puis 5te). Exercices, boutons toujours dans l’ordre de la chaîne : maj7 ou 7 → 7 ou m7 → les 3 → m7 ou ø7 → les 4 → ø7 ou °7 → **les 5** (12 justes sur 15), puis les 5 renversés en option. Après chaque réponse : la note qui change, et les accords de l’exercice sur la même fondamentale pour comparer.
 - **Accords** : construire un accord au clavier ; quel accord sur ce degré ; majeur/mineur puis maj7, m7, 7, ø7, °7 à l'oreille ; l'accord entier (fondamentale et nature) dans une tonalité.
 - **Intervalles et basse** à l'oreille : intervalles, degrés de la ligne de basse (I, IV, V… jusqu'à la walking bass).
 - **Enchaînements** : analyse (degrés, ii–V, tonalité, 9 ou ♭9, gammes) ; reconnaître un enchaînement à l'oreille ; réharmoniser (SubV, dominantes secondaires, diminués de passage, ii–V du SubV, reconnaître la technique à l'écoute).

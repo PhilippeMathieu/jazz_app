@@ -40,6 +40,13 @@ describe('parcours : contenu', () => {
     const used = LESSONS.filter((l) => inParcours.has(l.id)).flatMap((l) => l.blocks.flatMap((b) => (b.t === 'astuce' ? [b.id] : [])));
     expect(used.sort()).toEqual(TIPS.map((t) => t.id).sort());
   });
+  it('étape 4 : à l’oreille, de 2 accords jusqu’aux 5 ensemble', () => {
+    const sets = STEPS.find((s) => s.id === 'quatre')!.activities.filter((a) => !a.optional && a.run.kind === 'ear' && a.run.set).map((a) => (a.run.kind === 'ear' ? a.run.set!.length : 0));
+    expect(sets[0]).toBe(2);
+    expect(sets).toContain(3);
+    expect(sets).toContain(4);
+    expect(sets[sets.length - 1]).toBe(5);
+  });
   it('du rythme à chaque étape', () => {
     for (const s of STEPS) expect(s.activities.some((a) => a.run.kind === 'rythme' && !a.optional)).toBe(true);
   });

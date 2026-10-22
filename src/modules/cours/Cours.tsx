@@ -10,7 +10,7 @@ import { Keyboard, Mark } from '../../ui/Keyboard';
 import { PlayIcon, StopIcon } from '../../ui/icons';
 import { Block, lessonById } from './lessons';
 import { TipCard } from './Tips';
-import { PairDemo } from './PairDemo';
+import { ChainDemo, PairDemo } from './PairDemo';
 import { RhythmGrid, useCursor } from '../../ui/RhythmGrid';
 import { rhythmById } from '../../core/rhythm/patterns';
 import { playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
@@ -95,6 +95,8 @@ function BlockView({ b }: { b: Block }): JSX.Element {
       return <TipCard id={b.id} />;
     case 'pair':
       return <PairDemo a={b.a} b={b.b} />;
+    case 'chain':
+      return <ChainDemo chain={b.chain} />;
   }
 }
 

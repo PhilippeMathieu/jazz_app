@@ -80,14 +80,19 @@ export function makeDuelQuestion(mode: 'ear' | 'prog', pairs: Pair[], level: num
 }
 
 /**
- * Deux natures à départager, toujours les mêmes (dans cet ordre sur les boutons), sur une fondamentale au hasard.
- * Pas plus de 3 fois de suite la même réponse.
+ * Natures imposées (de 2 à 5), toujours les mêmes boutons dans le même ordre, sur une fondamentale au hasard.
+ * Les ratées et les confusions reviennent plus souvent ; jamais plus de 3 fois de suite la même réponse.
+ * level : la forme jouée (1 état fondamental, 3 renversements, 4 sans fondamentale).
  */
-export function makePairQuestion(pair: [string, string], level: number, recent: string[] = [], rng: Rng = Math.random): EarQuestion {
+export function makeSetQuestion(set: string[], level: number, tally: Tally = {}, recent: string[] = [], pairs: Pair[] = [], rng: Rng = Math.random): EarQuestion {
   const run = recent.slice(-3);
-  const truth = run.length === 3 && run.every((x) => x === run[0]) ? pair.find((x) => x !== run[0])! : pair[rng() < 0.5 ? 0 : 1];
+  const banned = run.length === 3 && run.every((x) => x === run[0]) ? run[0] : null;
+  const pool = set.filter((x) => x !== banned);
+  // À deux réponses, pas de pénalité pour la dernière : sinon l'alternance se devine.
+  const last = set.length > 2 ? recent[recent.length - 1] : undefined;
+  const truth = weightedPick(pool, (k) => weight(tally, 'ear:' + k, k, pairs, last), rng);
   const c = chordOnPc(rndInt(12, rng), truth);
-  return { mode: 'ear', q: truth, c: { chord: c, notes: earVoicing(c, Math.max(1, level), rng) }, choices: [...pair] };
+  return { mode: 'ear', q: truth, c: { chord: c, notes: earVoicing(c, Math.max(1, level), rng) }, choices: [...set] };
 }
 
 /**
