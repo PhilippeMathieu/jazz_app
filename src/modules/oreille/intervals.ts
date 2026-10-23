@@ -11,20 +11,22 @@ export interface Interval {
   steps: number;
   name: string;
   short: string;
-  /** Repère : le début d'un air connu, en montant. */
+  /** Repère : le début d'un air connu, en montant (des chants d'église quand il y en a un sûr). */
   song?: string;
+  /** Repère en descendant. */
+  down?: string;
   /** Où on le trouve dans les accords ; {a} = note grave, {b} = note aiguë. */
   jazz: string;
 }
 
 export const INTERVALS: Interval[] = [
   { id: '2m', semis: 1, steps: 1, name: 'seconde mineure', short: '2de m', song: 'Les Dents de la mer (début)', jazz: '{b} est la ♭9 de {a}7♭9 ; c’est aussi l’approche chromatique, la plus courante des notes de passage.' },
-  { id: '2M', semis: 2, steps: 1, name: 'seconde majeure', short: '2de M', song: 'Frère Jacques (début)', jazz: '{b} est la 9e de {a}maj9 ; un pas de gamme.' },
-  { id: '3m', semis: 3, steps: 2, name: 'tierce mineure', short: '3ce m', song: 'Greensleeves (début)', jazz: '{b} est la tierce de {a}m7 : la couleur mineure.' },
-  { id: '3M', semis: 4, steps: 2, name: 'tierce majeure', short: '3ce M', song: 'Oh When the Saints (début)', jazz: '{b} est la tierce de {a}maj7 et de {a}7 : la couleur majeure.' },
-  { id: '4', semis: 5, steps: 3, name: 'quarte juste', short: '4te', song: '« Mon beau sapin » (début : « Mon beau »)', jazz: '{b} est la 11e de {a}m11 ; les voicings en quartes (So What) empilent cet intervalle.' },
+  { id: '2M', semis: 2, steps: 1, name: 'seconde majeure', short: '2de M', song: 'Douce nuit (début : sol → la)', down: 'Douce nuit (2e et 3e notes : la → sol)', jazz: '{b} est la 9e de {a}maj9 ; un pas de gamme.' },
+  { id: '3m', semis: 3, steps: 2, name: 'tierce mineure', short: '3ce m', song: 'Ô viens, ô viens, Emmanuel (Veni Emmanuel, début) ; Les anges dans nos campagnes (après les 3 notes répétées)', down: 'Douce nuit (3e et 4e notes : sol → mi)', jazz: '{b} est la tierce de {a}m7 : la couleur mineure.' },
+  { id: '3M', semis: 4, steps: 2, name: 'tierce majeure', short: '3ce M', song: 'Adoro te devote (début) ; Salve Regina, ton simple (début)', jazz: '{b} est la tierce de {a}maj7 et de {a}7 : la couleur majeure.' },
+  { id: '4', semis: 5, steps: 3, name: 'quarte juste', short: '4te', song: 'Il est né le divin Enfant (début) ; Ave Maria de Lourdes (début du couplet)', down: 'Adeste fideles (2e → 3e note)', jazz: '{b} est la 11e de {a}m11 ; les voicings en quartes (So What) empilent cet intervalle.' },
   { id: 'tri', semis: 6, steps: 4, name: 'triton', short: 'triton', song: 'Maria, de West Side Story (début)', jazz: '{b} est la ♭5 de {a}ø7 ; c’est aussi l’écart entre la 3ce et la 7e de tout accord de dominante.' },
-  { id: '5', semis: 7, steps: 4, name: 'quinte juste', short: '5te', song: 'Ah ! vous dirai-je, maman (do-do-sol)', jazz: '{b} est la quinte de {a} ; la contrebasse y va souvent au 3e temps.' },
+  { id: '5', semis: 7, steps: 4, name: 'quinte juste', short: '5te', song: 'La Marche des Rois, « De bon matin » (début) ; Ah ! vous dirai-je, maman (do-do-sol)', jazz: '{b} est la quinte de {a} ; la contrebasse y va souvent au 3e temps.' },
   { id: '6m', semis: 8, steps: 5, name: 'sixte mineure', short: '6te m', song: 'The Entertainer de Scott Joplin (mi → do aigu)', jazz: '{b} est la ♭13 de {a}7♭13, une note altérée.' },
   { id: '6M', semis: 9, steps: 5, name: 'sixte majeure', short: '6te M', song: 'My Bonnie Lies over the Ocean (début)', jazz: '{b} est la 6te de {a}6 et la 13e de {a}13.' },
   { id: '7m', semis: 10, steps: 6, name: 'septième mineure', short: '7e m', song: 'Somewhere, de West Side Story (début)', jazz: '{b} est la 7e de {a}7 et de {a}m7.' },
@@ -108,7 +110,8 @@ export function explainInterval(q: IntervalQuestion): string[] {
   const b = noteName(q.b);
   const notes = q.dir === 'down' ? `${b} → ${a}` : q.dir === 'harm' ? `${a} et ${b}` : `${a} → ${b}`;
   const out = [`${notes}, ${DIR_TEXT[q.dir]} : ${q.iv.semis} demi-ton${q.iv.semis > 1 ? 's' : ''}.`, q.iv.jazz.replace(/\{a\}/g, a).replace(/\{b\}/g, b)];
-  if (q.iv.song) out.push(`Repère, en montant : ${q.iv.song}.`);
+  if (q.dir === 'down' && q.iv.down) out.push(`Repère, en descendant : ${q.iv.down}.`);
+  else if (q.iv.song) out.push(`Repère, en montant : ${q.iv.song}.`);
   return out;
 }
 

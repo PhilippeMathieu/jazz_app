@@ -143,6 +143,10 @@ export const PARTS: Part[] = [
             })
           },
           { t: 'p', text: 'Le nombre entre parenthèses : les demi-tons. Le nom compte les notes : C D E, 3 notes, c’est une **tierce** ; mineure (3 demi-tons) ou majeure (4).' },
+          {
+            t: 'p',
+            text: 'En descendant : **Douce nuit** donne la 2de majeure (2e et 3e notes, la → sol) puis la 3ce mineure (sol → mi) ; **Adeste fideles**, la quarte (2e → 3e note). Le triton, lui, est absent des chants d’église anciens : on l’appelait *diabolus in musica*.'
+          },
           { t: 'tip', text: 'Le triton (6 demi-tons) sépare la 3ce et la 7e de tout accord de dominante (E et B♭ dans C7) : c’est la tension qui veut se résoudre.' },
           { t: 'h', text: 'La ligne de basse' },
           {
