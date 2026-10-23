@@ -5,8 +5,13 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Chart } from '../../core/chart/model';
 import { chordsByBar } from '../../core/chart/layout';
 import { ImprovPlan } from '../../core/analysis/improv';
-import { Phrase, Story, Tag, answerById, answers, storyOf } from '../../core/analysis/story';
-import { chordSymbol } from '../../core/theory/chords';
+import { Phrase, Story, Tag, answerById, answers, simpleDegree, storyOf } from '../../core/analysis/story';
+import { romanIn } from '../../core/analysis/analyze';
+import { Chord, chordSymbol } from '../../core/theory/chords';
+import { noteName, pcOf, spellWith } from '../../core/theory/notes';
+import { Key, keyLabel } from '../../core/chart/model';
+import { load, save } from '../../core/storage';
+import { AuPiano } from './AuPiano';
 import { audio, now, playChord } from '../../core/audio/engine';
 import { displayVoicing } from '../../core/audio/voicing';
 import { report } from '../../core/events';
@@ -47,8 +52,11 @@ function usePhrasePlayer(player: PlayerApi, phrases: Phrase[]) {
   return { playing, toggle };
 }
 
-/** Les mesures d'une phrase, accords et (si demandé) degrés ; toucher un accord le fait entendre. */
-function PhraseBars({ plan, phrase, degrees, nowBar }: { plan: ImprovPlan; phrase: Phrase; degrees: boolean; nowBar?: number }) {
+/**
+ * Les mesures d'une phrase, accords et (si demandé) degrés ; toucher un accord le fait entendre.
+ * shown : degrés à montrer (sinon tous ou aucun) ; cur : accord demandé ; cls : juste / faux.
+ */
+function PhraseBars({ plan, phrase, degrees, nowBar, shown, cur, cls }: { plan: ImprovPlan; phrase: Phrase; degrees: boolean; nowBar?: number; shown?: Set<number>; cur?: Set<number>; cls?: Record<number, string> }) {
   const byBar = useMemo(() => chordsByBar(plan.flat), [plan]);
   const barsList = Array.from({ length: phrase.to - phrase.from + 1 }, (_, k) => phrase.from + k);
   const hear = (ci: number) => {
@@ -64,9 +72,9 @@ function PhraseBars({ plan, phrase, degrees, nowBar }: { plan: ImprovPlan; phras
             <span class="barnum">{bi + 1}</span>
             <div class={'chords' + (idxs.length > 1 ? ' two' : '')}>
               {idxs.map((ci) => (
-                <button key={ci} class="ch" onClick={() => hear(ci)}>
+                <button key={ci} class={'ch' + (cur?.has(ci) ? ' cur' : '') + (cls?.[ci] ? ' ' + cls[ci] : '')} onClick={() => hear(ci)}>
                   <span class="sym">{chordSymbol(plan.flat[ci].chord)}</span>
-                  <span class="rn">{degrees ? phrase.degrees[ci] ?? ' ' : ' '}</span>
+                  <span class="rn">{degrees || shown?.has(ci) ? phrase.degrees[ci] ?? ' ' : ' '}</span>
                 </button>
               ))}
             </div>
@@ -83,6 +91,7 @@ export function Comprendre({ chart, plan, player }: { chart: Chart; plan: Improv
   const story = useStory(chart, plan);
   const pp = usePhrasePlayer(player, story.phrases);
   const nowBar = player.pos?.bar;
+  const [open, setOpen] = useState<number | null>(null);
   return (
     <div class="story">
       <section class="story-sum">
@@ -114,12 +123,70 @@ export function Comprendre({ chart, plan, player }: { chart: Chart; plan: Improv
             <h3 class="ph-title">{p.title}</h3>
             <PhraseBars plan={plan} phrase={p} degrees nowBar={here ? nowBar : undefined} />
             {p.same === undefined ? <p class="ph-text">{p.text}</p> : null}
+            {p.same === undefined ? (
+              <button class="linkbtn small" onClick={() => setOpen(open === i ? null : i)}>
+                {open === i ? 'Fermer' : 'Au piano : comment l’enchaîner'}
+              </button>
+            ) : null}
+            {open === i ? <AuPiano plan={plan} phrase={p} /> : null}
           </article>
         );
       })}
     </div>
   );
 }
+
+// ---------------------------------------------------------------- Degrés
+
+const MAJOR_DEG: [string, number, number, string][] = [
+  ['I', 0, 0, 'maj'],
+  ['ii', 1, 2, 'min'],
+  ['iii', 2, 4, 'min'],
+  ['IV', 3, 5, 'maj'],
+  ['V', 4, 7, 'maj'],
+  ['vi', 5, 9, 'min'],
+  ['vii°', 6, 11, 'dim']
+];
+const MINOR_DEG: [string, number, number, string][] = [
+  ['i', 0, 0, 'min'],
+  ['ii°', 1, 2, 'dim'],
+  ['bIII', 2, 3, 'maj'],
+  ['iv', 3, 5, 'min'],
+  ['v', 4, 7, 'min'],
+  ['V', 4, 7, 'maj'],
+  ['bVI', 5, 8, 'maj'],
+  ['bVII', 6, 10, 'maj']
+];
+const P = (s: string) => s.replace(/b/g, '♭').replace(/#/g, '♯');
+export const HORS = 'hors';
+
+/** Les accords de la gamme, avec leur degré : l'aide affichée pendant l'exercice. */
+export function scaleChords(key: Key): { deg: string; name: string }[] {
+  const t = pcOf(key.tonic);
+  return (key.mode === 'major' ? MAJOR_DEG : MINOR_DEG).map(([deg, letters, semis, q]) => ({
+    deg,
+    name: noteName(spellWith(key.tonic.letter + letters, t + semis)) + (q === 'min' ? 'm' : q === 'dim' ? '°' : '')
+  }));
+}
+
+/** Les accords d'une phrase à situer dans la gamme (chacun une fois) : la réponse, et le degré affiché. */
+export function degreeTargets(plan: ImprovPlan, phrase: Phrase): { sym: string; indices: number[]; answer: string; label: string }[] {
+  const set = (phrase.key.mode === 'major' ? MAJOR_DEG : MINOR_DEG).map((d) => d[0]);
+  const out: { sym: string; indices: number[]; answer: string; label: string }[] = [];
+  for (const c of phrase.chords) {
+    const ch: Chord = plan.flat[c.index].chord;
+    const sym = chordSymbol(ch);
+    const known = out.find((x) => x.sym === sym);
+    if (known) {
+      known.indices.push(c.index);
+      continue;
+    }
+    const d = simpleDegree(romanIn(ch, phrase.key), ch.quality);
+    out.push({ sym, indices: [c.index], answer: set.includes(d) ? d : HORS, label: phrase.degrees[c.index] ?? d });
+  }
+  return out;
+}
+export const degreeChoices = (key: Key) => [...(key.mode === 'major' ? MAJOR_DEG : MINOR_DEG).map((d) => d[0]), HORS];
 
 // ---------------------------------------------------------------- Quiz
 
@@ -168,6 +235,20 @@ export function quizOf(story: Story, genre: string, seed: number): Question[] {
     });
 }
 
+/** L'aide : les accords de la gamme et leur degré. */
+function ScaleHelp({ k }: { k: Key }) {
+  return (
+    <p class="deg-help small">
+      <b>En {keyLabel(k)} :</b>{' '}
+      {scaleChords(k).map((c) => (
+        <span key={c.deg}>
+          {c.name} = {P(c.deg)}
+        </span>
+      ))}
+    </p>
+  );
+}
+
 export function PhraseQuiz({ chart, plan, player, onExplain }: { chart: Chart; plan: ImprovPlan; player: PlayerApi; onExplain: () => void }) {
   const story = useStory(chart, plan);
   const [round, setRound] = useState(0);
@@ -175,12 +256,19 @@ export function PhraseQuiz({ chart, plan, player, onExplain }: { chart: Chart; p
   const [k, setK] = useState(0);
   const [picked, setPicked] = useState<string | null>(null);
   const [results, setResults] = useState<boolean[]>([]);
+  // Étape 1 de chaque phrase : les degrés, accord par accord ; étape 2 : la suite.
+  const [deg, setDeg] = useState<{ i: number; res: boolean[]; last: string } | null>({ i: 0, res: [], last: '' });
+  const [degScore, setDegScore] = useState({ ok: 0, n: 0 });
+  const [help, setHelpState] = useState(() => load<{ on: boolean }>('quiz-aide', { on: true }).on);
+  const setHelp = (on: boolean) => (setHelpState(on), save('quiz-aide', { on }));
   const pp = usePhrasePlayer(player, story.phrases);
   const restart = () => {
     setRound((r) => r + 1);
     setK(0);
     setPicked(null);
     setResults([]);
+    setDeg({ i: 0, res: [], last: '' });
+    setDegScore({ ok: 0, n: 0 });
   };
 
   if (!questions.length)
@@ -200,6 +288,11 @@ export function PhraseQuiz({ chart, plan, player, onExplain }: { chart: Chart; p
           </b>
           <span>phrases bien reconnues</span>
         </div>
+        {degScore.n ? (
+          <p class="small">
+            Degrés : <b>{degScore.ok}</b> justes sur {degScore.n}.
+          </p>
+        ) : null}
         <div class="list">
           {questions.map((q, i) => (
             <div key={i} class="row">
@@ -224,8 +317,25 @@ export function PhraseQuiz({ chart, plan, player, onExplain }: { chart: Chart; p
   }
 
   const q = questions[k];
+  const targets = degreeTargets(plan, q.phrase);
+  const inDeg = deg !== null && deg.i < targets.length;
   const answered = picked !== null;
   const right = picked === q.phrase.answer;
+  const shown = new Set<number>(deg ? targets.slice(0, deg.i).flatMap((t) => t.indices) : targets.flatMap((t) => t.indices));
+  const cls: Record<number, string> = {};
+  if (deg) targets.slice(0, deg.i).forEach((t, j) => t.indices.forEach((ci) => (cls[ci] = deg.res[j] ? 'ok' : 'bad')));
+  const cur = inDeg ? new Set(targets[deg!.i].indices) : undefined;
+
+  const chooseDeg = (d: string) => {
+    if (!deg || !inDeg) return;
+    const t = targets[deg.i];
+    const ok = d === t.answer;
+    const last = ok
+      ? `Juste : ${t.sym} = ${t.answer === HORS ? `hors de la gamme (${P(t.label)})` : P(t.answer)}.`
+      : `Non : ${t.sym} = ${t.answer === HORS ? `hors de la gamme de ${keyLabel(q.phrase.key)} (${P(t.label)})` : P(t.answer)}.`;
+    setDeg({ i: deg.i + 1, res: [...deg.res, ok], last });
+    setDegScore((x) => ({ ok: x.ok + (ok ? 1 : 0), n: x.n + 1 }));
+  };
   const choose = (t: string) => {
     if (answered) return;
     setPicked(t);
@@ -239,6 +349,7 @@ export function PhraseQuiz({ chart, plan, player, onExplain }: { chart: Chart; p
   const next = () => {
     if (pp.playing !== null) pp.toggle(pp.playing);
     setPicked(null);
+    setDeg({ i: 0, res: [], last: '' });
     setK((x) => x + 1);
   };
   return (
@@ -249,25 +360,50 @@ export function PhraseQuiz({ chart, plan, player, onExplain }: { chart: Chart; p
       </p>
       <article class="phrase">
         <header class="ph-head">
-          <h3 class="ph-title">{answered ? q.phrase.title : 'Qu’est-ce qui se passe dans cette phrase ?'}</h3>
+          <h3 class="ph-title">{answered ? q.phrase.title : inDeg ? `1. Le degré de ${targets[deg!.i].sym}` : '2. Quelle suite ?'}</h3>
           <button class="icon-btn ph-play" aria-label="Écouter la phrase" onClick={() => pp.toggle(q.index)}>
             {pp.playing === q.index ? <StopIcon /> : <PlayIcon />}
           </button>
         </header>
-        <PhraseBars plan={plan} phrase={q.phrase} degrees={answered} />
+        <PhraseBars plan={plan} phrase={q.phrase} degrees={answered} shown={shown} cur={cur} cls={cls} />
+        {deg?.last && !answered ? <p class={'small ' + (deg.res[deg.res.length - 1] ? 'ok-text' : 'bad-text')}>{deg.last}</p> : null}
         {answered ? (
           <>
             <p class={'verdict ' + (right ? 'ok' : 'bad')}>{right ? 'Juste.' : `Non : ${answerById(q.phrase.answer)?.label ?? ''}.`}</p>
             <p class="ph-text">{q.phrase.text}</p>
           </>
+        ) : inDeg ? (
+          <>
+            {help ? <ScaleHelp k={q.phrase.key} /> : null}
+            <button class="linkbtn small" onClick={() => setHelp(!help)}>
+              {help ? 'Cacher l’aide' : 'Montrer les accords de la gamme'}
+            </button>
+          </>
         ) : (
-          <p class="muted small">Écoute (▶), regarde les accords. Touche un accord pour l’entendre seul.</p>
+          <p class="muted small">Regarde les degrés : quelle suite reconnais-tu ? Écoute (▶) si besoin.</p>
         )}
       </article>
       {answered ? (
-        <button class="btn primary block" onClick={next}>
-          {k + 1 < questions.length ? 'Phrase suivante' : 'Voir le résultat'}
-        </button>
+        <>
+          <h3 class="label">Au piano</h3>
+          <AuPiano plan={plan} phrase={q.phrase} />
+          <button class="btn primary block" onClick={next}>
+            {k + 1 < questions.length ? 'Phrase suivante' : 'Voir le résultat'}
+          </button>
+        </>
+      ) : inDeg ? (
+        <>
+          <div class="choices deg">
+            {degreeChoices(q.phrase.key).map((d) => (
+              <button key={d} class="choice" onClick={() => chooseDeg(d)}>
+                {d === HORS ? 'hors gamme' : P(d)}
+              </button>
+            ))}
+          </div>
+          <button class="linkbtn small" onClick={() => setDeg(null)}>
+            Passer les degrés
+          </button>
+        </>
       ) : (
         <div class="choices long">
           {q.choices.map((t) => {

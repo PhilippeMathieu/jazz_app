@@ -717,3 +717,18 @@
 .lyr-ch b { font-weight: 600; }
 .lyr-ch b.now { text-decoration: underline; text-underline-offset: 3px; }
 .lyr-txt { font-size: 17px; line-height: 1.35; white-space: normal; }
+/* Quiz d'un morceau : les degrés accord par accord, puis « Au piano ». */
+.ch.cur { box-shadow: inset 0 0 0 2px var(--accent); border-radius: 8px; }
+.ch.ok .rn { color: var(--ok); }
+.ch.bad .rn { color: var(--bad); }
+.ok-text { color: var(--ok); }
+.bad-text { color: var(--bad); }
+.deg-help { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: var(--s2) 0 0; color: var(--muted); }
+.deg-help b { color: var(--fg); width: 100%; }
+.deg-help span { white-space: nowrap; }
+.choices.deg { grid-template-columns: repeat(4, 1fr); }
+.choices.deg .choice { min-height: 48px; font-size: 18px; }
+.choices.deg .choice:last-child { grid-column: span 2; font-size: 15px; }
+.au-piano { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
+.au-piano .ls-demo-head { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
+.au-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.4; }
