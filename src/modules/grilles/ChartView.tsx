@@ -25,6 +25,7 @@ import { ListenMode, useListening } from './useListening';
 import { ListenButtons, useListen, withActive } from '../../ui/Listen';
 import { Comprendre, PhraseQuiz } from './Story';
 import { MemoirePanel, useMemoire } from './Memoire';
+import { MelodyPanel, RecStatus, useMelodyRecorder, useMelodyStore } from './MelodyRec';
 
 export type Mode = ListenMode | 'comprendre' | 'analyser' | 'memoire';
 type Listen = ReturnType<typeof useListening>;
@@ -49,10 +50,15 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
   const plan = useMemo(() => improvPlan(chart), [chart]);
   const rows = useMemo(() => barRows(chart), [chart]);
   const byBar = useMemo(() => chordsByBar(plan.flat), [plan]);
-  const player = usePlayer(chart, original.id, original.tempo);
+  const melody = useMelodyStore(original.id, shift);
+  const player = usePlayer(chart, original.id, original.tempo, melody.shifted);
+  const barOf = (beat: number) => [...plan.flat].reverse().find((f) => f.start <= beat + 1e-6)?.bar ?? 0;
+  const rec = useMelodyRecorder(player, melody, shift, barOf);
+  const recording = rec.phase === 'rec' || rec.phase === 'mic';
   const listenMode: ListenMode = mode === 'gammes' || mode === 'guide' ? mode : 'analyse';
   const grid = mode === 'analyse' || mode === 'gammes' || mode === 'guide' || mode === 'memoire';
-  const listen = useListening(listenMode, plan, player.pos, chart.beatsPerBar);
+  // Pendant l'enregistrement de la mélodie, le micro n'évalue rien d'autre.
+  const listen = useListening(listenMode, plan, recording ? null : player.pos, chart.beatsPerBar);
   // Premier accord de chaque ligne : reste visible au niveau « 3/4 » de la mémoire.
   const firsts = useMemo(() => rows.map((r) => (byBar.get(r.bars[0]) ?? [])[0]).filter((x): x is number => x !== undefined), [rows, byBar]);
   const mem = useMemoire(original.id, plan, firsts, mode === 'memoire', memLevel);
@@ -66,7 +72,7 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
   // Fin d'une lecture écoutée au micro : on compte pour la collection de standards.
   const wasPlaying = useRef(false);
   useEffect(() => {
-    if (player.playing) wasPlaying.current = true;
+    if (player.playing) wasPlaying.current = !rec.active.current;
     else if (wasPlaying.current && listen.listening) {
       wasPlaying.current = false;
       const sm = listen.summary;
@@ -180,7 +186,7 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
 
         {(mode === 'gammes' || mode === 'guide') && n ? <LivePanel refEl={liveRef} mode={mode} plan={plan} cur={cur} listen={listen} /> : null}
 
-        {listen.listening && grid ? <ListenSummary mode={mode} listen={listen} playing={player.playing} /> : null}
+        {listen.listening && grid && !recording ? <ListenSummary mode={mode} listen={listen} playing={player.playing} /> : null}
 
         {grid ? (
         <div class="chart">
@@ -245,7 +251,12 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
 
       </div>
 
-      <PlayerBar p={player} fromBar={sel !== null ? plan.flat[sel].bar : 0} />
+      <PlayerBar
+        p={player}
+        fromBar={sel !== null ? plan.flat[sel].bar : 0}
+        status={rec.phase !== 'idle' ? <RecStatus r={rec} /> : undefined}
+        extra={(close) => <MelodyPanel r={rec} store={melody} fromBar={sel !== null ? plan.flat[sel].bar : 0} onRecord={close} />}
+      />
 
       <Drawer open={drawer && sel !== null && mode === 'analyse'} onClose={() => setDrawer(false)} label="Accord">
         {sel !== null ? (

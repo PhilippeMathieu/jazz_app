@@ -1,5 +1,6 @@
 // Barre de lecture du play-along : lecture, tempo, instruments.
 import { useState } from 'preact/hooks';
+import type { ComponentChildren } from 'preact';
 import { Drawer } from './Drawer';
 import { PlayIcon, SlidersIcon, StopIcon } from './icons';
 import { PlayerApi, PlayerToggle } from './usePlayer';
@@ -9,12 +10,15 @@ const TOGGLES: [PlayerToggle, string][] = [
   ['bass', 'Basse'],
   ['comp', 'Piano'],
   ['drums', 'Batterie'],
+  ['melody', 'Mélodie'],
   ['countIn', 'Décompte']
 ];
 
-export function PlayerBar({ p, fromBar = 0 }: { p: PlayerApi; fromBar?: number }) {
+/** status : ligne d'état à la place de la note habituelle ; extra : en bas du tiroir (mélodie). */
+export function PlayerBar({ p, fromBar = 0, status, extra }: { p: PlayerApi; fromBar?: number; status?: ComponentChildren; extra?: (close: () => void) => ComponentChildren }) {
   const [open, setOpen] = useState(false);
-  const off = TOGGLES.filter(([k]) => !p.prefs[k] && k !== 'countIn').map(([, l]) => l.toLowerCase());
+  const toggles = TOGGLES.filter(([k]) => k !== 'melody' || p.hasMelody);
+  const off = toggles.filter(([k]) => !p.prefs[k] && k !== 'countIn').map(([, l]) => l.toLowerCase());
   return (
     <>
       <div class="player">
@@ -33,7 +37,9 @@ export function PlayerBar({ p, fromBar = 0 }: { p: PlayerApi; fromBar?: number }
             <SlidersIcon />
           </button>
         </div>
-        {off.length || p.loadState === 'loading' || p.loadState === 'error' ? (
+        {status ? (
+          status
+        ) : off.length || p.loadState === 'loading' || p.loadState === 'error' ? (
           <p class="player-note">
             {p.loadState === 'loading' ? 'Chargement du piano… ' : p.loadState === 'error' ? 'Piano de secours (échantillons indisponibles). ' : ''}
             {off.length ? `Coupé : ${off.join(', ')}.` : ''}
@@ -43,13 +49,14 @@ export function PlayerBar({ p, fromBar = 0 }: { p: PlayerApi; fromBar?: number }
       <Drawer open={open} onClose={() => setOpen(false)} label="Instruments">
         <h2 class="drawer-title">Accompagnement</h2>
         <div class="toggles">
-          {TOGGLES.map(([k, l]) => (
+          {toggles.map(([k, l]) => (
             <label key={k} class="toggle">
               <input type="checkbox" checked={p.prefs[k]} onChange={() => p.flip(k)} />
               <span>{l}</span>
             </label>
           ))}
         </div>
+        {extra ? extra(() => setOpen(false)) : null}
         <h2 class="label">Style</h2>
         <div class="chips text">
           {STYLE_ORDER.filter((id) => (GROOVES[id].meter === 3) === (p.meter === 3)).map((id) => (

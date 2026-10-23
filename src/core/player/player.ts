@@ -2,8 +2,11 @@
 // de 150 ms pour un tempo stable même si l'interface est chargée.
 import { Chart, FlatChord, flatten } from '../chart/model';
 import { improvPlan } from '../analysis/improv';
-import { audio, bass, click, drum, playChord, silence } from '../audio/engine';
+import { audio, bass, click, drum, piano, playChord, silence } from '../audio/engine';
 import { ArrEvent, arrangeChorus, newArrangeState } from './arrange';
+import { BeatMap, MelNote } from '../melody/melody';
+
+type PlayEvent = ArrEvent | { beat: number; kind: 'mel'; midi: number; dur: number; vel: number };
 
 /** Décalage aléatoire de ± ms millisecondes. */
 const human = (ms: number) => ((Math.random() * 2 - 1) * ms) / 1000;
@@ -16,6 +19,9 @@ export interface PlayerOptions {
   comp: boolean;
   drums: boolean;
   countIn: boolean;
+  /** Mélodie enregistrée par l'élève (déjà transposée), jouée si melodyOn. */
+  melody?: MelNote[];
+  melodyOn?: boolean;
 }
 export interface Position {
   chorus: number;
@@ -30,7 +36,7 @@ export class ChartPlayer {
   private chords: FlatChord[];
   private scales: string[];
   private chorusBeats: number;
-  private events: ArrEvent[] = [];
+  private events: PlayEvent[] = [];
   private evIdx = 0;
   private chorus = 0;
   private anchorTime = 0; // temps audio du début du chorus 0
@@ -107,7 +113,21 @@ export class ChartPlayer {
   }
 
   private build() {
-    this.events = arrangeChorus(this.chart, this.chords, this.scales, this.opts, this.state, Math.random);
+    const arr: PlayEvent[] = arrangeChorus(this.chart, this.chords, this.scales, this.opts, this.state, Math.random);
+    const mel: PlayEvent[] = this.opts.melodyOn && this.opts.melody ? this.opts.melody.filter((n) => n.b < this.chorusBeats).map((n) => ({ beat: n.b, kind: 'mel', midi: n.m, dur: n.d, vel: 0.72 })) : [];
+    this.events = mel.length ? [...arr, ...mel].sort((a, b) => a.beat - b.beat) : arr;
+  }
+
+  /** Correspondance horloge audio → temps de la grille (premier passage), pendant la lecture. */
+  beatMap(): BeatMap | null {
+    return this.playing ? { anchor: this.anchorTime, spb: this.spb } : null;
+  }
+  /** Temps de la grille où commence une mesure ; longueur de la grille en temps. */
+  beatOfBar(bar: number) {
+    return this.chords.find((c) => c.bar === bar)?.start ?? 0;
+  }
+  get length() {
+    return this.chorusBeats;
   }
 
   private tick() {
@@ -134,7 +154,7 @@ export class ChartPlayer {
     }
   }
 
-  private run(ev: ArrEvent, time: number) {
+  private run(ev: PlayEvent, time: number) {
     const spb = this.spb;
     switch (ev.kind) {
       case 'pos':
@@ -149,6 +169,9 @@ export class ChartPlayer {
         break;
       case 'drum':
         drum(ev.sound, time + human(3), ev.vel * (0.9 + Math.random() * 0.2));
+        break;
+      case 'mel':
+        piano(ev.midi, time, Math.max(0.12, ev.dur * spb * 0.95), ev.vel);
         break;
     }
   }

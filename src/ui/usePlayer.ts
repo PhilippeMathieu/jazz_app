@@ -1,7 +1,8 @@
 // Lecteur de grille (play-along) partagé par la vue Grille et le mode pupitre.
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Chart } from '../core/chart/model';
-import { ChartPlayer, Position } from '../core/player/player';
+import { ChartPlayer, PlayerOptions, Position } from '../core/player/player';
+import { MelNote } from '../core/melody/melody';
 import { onLoadState, LoadState } from '../core/audio/engine';
 import { load, save } from '../core/storage';
 import { useWakeLock } from './wakeLock';
@@ -15,11 +16,15 @@ export interface PlayerPrefs {
   comp: boolean;
   drums: boolean;
   countIn: boolean;
+  /** Mélodie enregistrée, quand le morceau en a une. */
+  melody: boolean;
 }
-const DEFAULT_PREFS: PlayerPrefs = { tempo: {}, style: {}, bass: true, comp: true, drums: true, countIn: true };
-export type PlayerToggle = 'bass' | 'comp' | 'drums' | 'countIn';
+const DEFAULT_PREFS: PlayerPrefs = { tempo: {}, style: {}, bass: true, comp: true, drums: true, countIn: true, melody: true };
+export type PlayerToggle = 'bass' | 'comp' | 'drums' | 'countIn' | 'melody';
+const NO_MELODY: MelNote[] = [];
 
-export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
+/** melody : mélodie enregistrée, déjà transposée (même tableau d'un rendu à l'autre). */
+export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number, melody: MelNote[] = NO_MELODY) {
   const [prefs, setPrefs] = useState<PlayerPrefs>(() => load('grille-prefs', DEFAULT_PREFS));
   const [pos, setPos] = useState<Position | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -30,13 +35,14 @@ export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
   const resume = useRef<number | null>(null);
   const tempo = prefs.tempo[tempoId] ?? defaultTempo;
   const style = prefs.style[tempoId] ?? chart.style;
+  const base = () => ({ bass: prefs.bass, comp: prefs.comp, drums: prefs.drums, countIn: prefs.countIn, melody, melodyOn: prefs.melody && melody.length > 0 });
 
   useEffect(() => onLoadState(setLoadState), []);
   useEffect(() => save('grille-prefs', prefs), [prefs]);
   useWakeLock(playing);
 
   useEffect(() => {
-    const p = new ChartPlayer(chart, { tempo, style, bass: prefs.bass, comp: prefs.comp, drums: prefs.drums, countIn: prefs.countIn }, (x) => {
+    const p = new ChartPlayer(chart, { tempo, style, ...base() }, (x) => {
       posRef.current = x;
       setPos(x);
     });
@@ -51,7 +57,7 @@ export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
       resume.current = p.playing ? (posRef.current?.bar ?? 0) : null;
       p.stop();
     };
-  }, [chart, style, prefs.bass, prefs.comp, prefs.drums, prefs.countIn]);
+  }, [chart, style, prefs.bass, prefs.comp, prefs.drums, prefs.countIn, prefs.melody, melody]);
 
   const start = (bar = 0) => {
     player.current?.start(bar);
@@ -59,6 +65,8 @@ export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
   };
   const stop = () => {
     player.current?.stop();
+    // Fin d'une lecture à réglages imposés (enregistrement) : on revient aux réglages choisis.
+    if (player.current) Object.assign(player.current.opts, base());
     setPlaying(false);
   };
 
@@ -71,6 +79,15 @@ export function usePlayer(chart: Chart, tempoId: string, defaultTempo: number) {
     start,
     stop,
     toggle: (bar = 0) => (player.current?.playing ? stop() : start(bar)),
+    /** Lecture avec des réglages imposés le temps d'une lecture (ex. : piano coupé pour enregistrer). */
+    startWith: (bar: number, o: Partial<PlayerOptions>) => {
+      if (player.current) Object.assign(player.current.opts, o);
+      start(bar);
+    },
+    beatMap: () => player.current?.beatMap() ?? null,
+    beatOfBar: (bar: number) => player.current?.beatOfBar(bar) ?? 0,
+    length: () => player.current?.length ?? 0,
+    hasMelody: melody.length > 0,
     setTempo: (bpm: number) => {
       player.current?.setTempo(bpm);
       setPrefs((p) => ({ ...p, tempo: { ...p.tempo, [tempoId]: bpm } }));
