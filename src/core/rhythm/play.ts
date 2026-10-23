@@ -111,7 +111,9 @@ const DEMO: Record<StyleId, string> = {
   bossa: '| Dm7 | G7 | Cmaj7 | Cmaj7 |',
   samba: '| Dm7 | G7 | Cmaj7 | A7 |',
   latin: '| Cm7 | F7 | B♭maj7 | G7 |',
-  funk: '| Dm7 | Dm7 | G7 | G7 |'
+  funk: '| Dm7 | Dm7 | G7 | G7 |',
+  rock: '| C | G | Am | F |',
+  slow: '| C | Am | F | G |'
 };
 
 /** Joue `bars` mesures d'un style ; renvoie la fonction pour arrêter et la durée (s). */

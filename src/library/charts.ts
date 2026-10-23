@@ -1,6 +1,7 @@
 import { Chart, parseChart } from '../core/chart/model';
 import { EXERCISES } from './exercises';
 import { userCharts } from './userCharts';
+import { POP } from './pop';
 
 // Grilles d'accords uniquement (pas de mélodies). Format : voir parseChart.
 const SOURCES: Record<string, string> = {
@@ -493,6 +494,8 @@ notes: Un blues funk : F7 et B♭7, puis l'aller-retour C7 B♭7 avant de reveni
 
 export const LIBRARY: Chart[] = Object.entries(SOURCES).map(([id, src]) => parseChart(src, id));
 
-/** Cherche dans les standards, les exercices et les grilles importées. */
+export { POP };
+
+/** Cherche dans les standards, la pop et la chanson, les exercices et les grilles importées. */
 export const chartById = (id: string): Chart | undefined =>
-  LIBRARY.find((c) => c.id === id) ?? EXERCISES.find((c) => c.id === id) ?? userCharts().find((c) => c.id === id);
+  LIBRARY.find((c) => c.id === id) ?? POP.find((c) => c.id === id) ?? EXERCISES.find((c) => c.id === id) ?? userCharts().find((c) => c.id === id);

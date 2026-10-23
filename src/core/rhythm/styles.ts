@@ -1,7 +1,7 @@
 // Styles d'accompagnement : batterie, basse et comping propres à chaque style, et comment les reconnaître.
 import type { DrumSound } from '../audio/engine';
 
-export type StyleId = 'swing' | 'ballade' | 'valse' | 'bossa' | 'samba' | 'latin' | 'funk';
+export type StyleId = 'swing' | 'ballade' | 'valse' | 'bossa' | 'samba' | 'latin' | 'funk' | 'rock' | 'slow';
 /** [temps dans la mesure, son, vélocité] */
 export type DrumHit = [number, DrumSound, number];
 /** [temps depuis le début de l'accord, durée en temps] */
@@ -212,10 +212,46 @@ export const GROOVES: Record<StyleId, Groove> = {
       'Accords courts et percussifs'
     ],
     summary: 'Binaire et groovy (Herbie Hancock, Head Hunters) : tout en doubles croches.'
+  },
+  rock: {
+    id: 'rock',
+    name: 'Pop / rock',
+    meter: 4,
+    swing: 0.5,
+    tempo: [80, 180],
+    defaultTempo: 120,
+    drums: [
+      [...eighths('hat', 0.14, 0.08), [1, 'snare', 0.42], [3, 'snare', 0.42], [0, 'kick', 0.45], [2, 'kick', 0.4], [2.5, 'kick', 0.25]]
+    ],
+    bass: (b) => (b >= 4 ? Array.from({ length: 8 }, (_, i) => [i / 2, i === 4 || i === 6 ? 'fifth' : 'root', 0.42] as BassHit) : [[0, 'root', 0.45], [0.5, 'root', 0.45], [1, 'root', 0.45], [1.5, 'root', 0.42]]),
+    comp: {
+      4: [[[0, 0.9], [1, 0.9], [2, 0.9], [3, 0.9]], [[0, 1.4], [1.5, 0.9], [2.5, 1.4]]],
+      2: [[[0, 0.9], [1, 0.9]]]
+    },
+    cues: ['Croches droites au charleston', 'Caisse claire forte sur 2 et 4 (le « backbeat »)', 'Grosse caisse sur 1 et 3', 'Basse en croches sur la fondamentale'],
+    summary: 'Le rythme de base de la pop et du rock : croches droites, backbeat sur 2 et 4.'
+  },
+  slow: {
+    id: 'slow',
+    name: 'Ballade pop',
+    meter: 4,
+    swing: 0.5,
+    tempo: [50, 100],
+    defaultTempo: 72,
+    drums: [[...eighths('hat', 0.08, 0.05), [2, 'snare', 0.3], [0, 'kick', 0.32], [1.5, 'kick', 0.16]]],
+    bass: (b) => (b >= 4 ? [[0, 'root', 1.9], [2, 'root', 1.4], [3.5, 'fifth', 0.45]] : [[0, 'root', b - 0.1]]),
+    comp: {
+      4: [[[0, 3.8]], [[0, 1.9], [2, 1.9]], [[0, 1.4], [1.5, 2.4]]],
+      2: [[[0, 1.9]]]
+    },
+    cues: ['Tempo lent, croches droites', 'Caisse claire sur le 3 (un temps sur deux)', 'Basse longue sur la fondamentale', 'Accords tenus'],
+    summary: 'Ballade pop ou rock : lente, binaire, la caisse claire sur le 3.'
   }
 };
 
-export const STYLE_ORDER: StyleId[] = ['swing', 'ballade', 'valse', 'bossa', 'samba', 'latin', 'funk'];
+export const STYLE_ORDER: StyleId[] = ['swing', 'ballade', 'valse', 'bossa', 'samba', 'latin', 'funk', 'rock', 'slow'];
+/** Styles à reconnaître à l'oreille (exercice Rythme › Reconnaître un style) : ceux du jazz. */
+export const EAR_STYLES: StyleId[] = ['swing', 'ballade', 'valse', 'bossa', 'samba', 'latin', 'funk'];
 
 /** Style de la grille → groove (le « blues » se joue en swing). */
 export const grooveOf = (style: string): Groove => GROOVES[(style === 'blues' ? 'swing' : style) as StyleId] ?? GROOVES.swing;

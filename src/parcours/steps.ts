@@ -30,7 +30,7 @@ export type Run =
 export type Goal =
   /** n réponses, au moins min justes (takes : des passages en rythme, réussis ou non). */
   | { kind: 'answers'; n: number; min: number; takes?: boolean }
-  /** Analyser une grille : part des enchaînements trouvés. */
+  /** Analyser une grille : part des phrases reconnues au quiz. */
   | { kind: 'analyse'; ratio: number }
   /** Jouer la grille au micro : part des accords réussis, sur au moins `chords` accords. */
   | { kind: 'listen'; ratio: number; chords: number }
@@ -104,6 +104,7 @@ export const STEPS: Step[] = [
       A('g-ton', 'Quel accord sur ce degré ?', 'Une tonalité, une note : majeur, mineur ou diminué', 'metro', { kind: 'tonalite', level: 0 }),
       A('g-bass', 'La basse : I, IV ou V ?', 'Quatre notes de contrebasse après l’accord de la tonique', 'metro', { kind: 'bass', level: 0 }, { kind: 'answers', n: 20, min: 16 }),
       A('g-full', 'Quel accord, dans la tonalité ?', 'L’accord de la tonique, puis un accord de la gamme', 'metro', { kind: 'full', level: 0 }),
+      A('g-pop', 'Let It Be, phrase par phrase', 'Lis « Comprendre », puis le quiz : quelle suite ?', 'metro', { kind: 'chart', chart: 'let-it-be', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
       A('r-24', 'Sur 2 et 4', 'Le clic compte les 4 temps, tu tapes 2 et 4', 'metro', { kind: 'rythme', exercise: 'tempo', level: 1 }, T3),
       A('g-arm7', 'Armures : jusqu’à 7 ♯', 'Jusqu’à C♯ majeur', 'metro', { kind: 'armures', level: 1 }, Q10, true),
       A('g-piano', 'Enchaîner ii–V–I', 'En 3 sons, le renversement le plus proche', 'piano', { kind: 'flash', type: 'triad', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 })
@@ -166,7 +167,7 @@ export const STEPS: Step[] = [
     aim: 'Analyser, retenir et accompagner un blues jazz en rythme.',
     lessons: ['blues', 'turnarounds', 'comping'],
     activities: [
-      A('b-analyse', 'Analyser le Blues en F', 'Repérer les ii–V et les dominantes', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'analyser' }, { kind: 'analyse', ratio: 0.8 }),
+      A('b-analyse', 'Le Blues en F, phrase par phrase', 'Couleur blues, ii–V, dominantes : le quiz', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
       A('b-mem', 'Le Blues en F de mémoire', 'La moitié des accords cachés', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'memoire', memLevel: 1 }, { kind: 'memoire', ratio: 0.8 }),
       A('r-comping', 'Taper les rythmes de comping', 'Motifs de 2 mesures, anticipations', 'metro', { kind: 'rythme', exercise: 'taper', level: 3 }, T5),
       A('b-comp1', 'Comping : 1 et 3', 'Sur la grille, avec basse et batterie', 'piano', { kind: 'comping', level: 0, voicing: 'shell' }, { kind: 'answers', n: 15, min: 12 }),
@@ -180,16 +181,19 @@ export const STEPS: Step[] = [
   {
     id: 'mineur',
     title: 'Le mineur et les dominantes secondaires',
-    aim: 'Le ii–V–i mineur, les dominantes qui mènent à chaque accord. Reconnaître les styles : swing, bossa, latin…',
-    lessons: ['iiVim', 'secondaires', 'backdoor', 'styles'],
+    aim: 'Le ii–V–i mineur, les dominantes qui mènent à chaque accord, le mineur de la pop et de la chanson. Reconnaître les styles : swing, bossa, latin…',
+    lessons: ['iiVim', 'secondaires', 'backdoor', 'rock', 'styles'],
     activities: [
       A('m-exp', 'Analyser : mineur et dominantes', 'Degrés, ii–V, 9 ou ♭9', 'metro', { kind: 'express', level: 2 }, { kind: 'answers', n: 12, min: 10 }),
       A('m-arm', 'Armures et relatif mineur', 'Dièses et bémols mélangés, majeur ou mineur', 'metro', { kind: 'armures', level: 3 }),
       A('m-full', 'Dominantes secondaires à l’oreille', 'Accord entier : VI7, II7, III7…', 'metro', { kind: 'full', level: 2 }),
       A('m-reharm', 'Ajouter des dominantes', 'La dominante qui mène à un accord, et son ii', 'metro', { kind: 'reharm', level: 1 }),
-      A('m-autumn', 'Analyser Autumn Leaves', 'ii–V majeurs et mineurs', 'metro', { kind: 'chart', chart: 'autumn-leaves', mode: 'analyser' }, { kind: 'analyse', ratio: 0.8 }),
+      A('m-autumn', 'Autumn Leaves, phrase par phrase', 'ii–V–I majeur ou ii–V–i mineur ?', 'metro', { kind: 'chart', chart: 'autumn-leaves', mode: 'analyser' }, { kind: 'analyse', ratio: 0.75 }),
+      A('m-wind', 'Wind of Change, phrase par phrase', 'Suite pop, dominante secondaire, ♭VI–♭VII', 'metro', { kind: 'chart', chart: 'wind-of-change', mode: 'analyser' }, { kind: 'analyse', ratio: 0.75 }),
       A('r-style', 'Reconnaître un style', 'Swing, ballade, valse, bossa, samba, latin, funk', 'metro', { kind: 'rythme', exercise: 'style', level: 0 }),
       A('m-cite', 'Citer les altérations', 'Dans l’ordre : F♯ C♯ G♯…', 'metro', { kind: 'armures', level: 4 }, Q10, true),
+      A('m-still', 'Still Loving You, phrase par phrase', 'Le mineur du rock : i–♭VI–♭III–♭VII', 'metro', { kind: 'chart', chart: 'still-loving-you', mode: 'analyser' }, { kind: 'analyse', ratio: 0.75 }, true),
+      A('m-boheme', 'La Bohème, phrase par phrase', 'La cadence mineure de la chanson', 'metro', { kind: 'chart', chart: 'la-boheme', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }, true),
       A('m-piano', 'ii–V–i mineurs', 'Au piano, A et B', 'piano', { kind: 'flash', type: 'A', order: 'iiVim' }, { kind: 'answers', n: 9, min: 7 })
     ]
   },
@@ -243,7 +247,7 @@ export const goalText = (g: Goal) =>
   g.kind === 'answers'
     ? `${g.min} ${g.takes ? 'réussis' : 'justes'} sur ${g.n}`
     : g.kind === 'analyse'
-      ? `${Math.round(g.ratio * 100)} % des enchaînements trouvés`
+      ? `${Math.round(g.ratio * 100)} % des phrases reconnues`
       : g.kind === 'listen'
         ? `${Math.round(g.ratio * 100)} % au micro, sur ${g.chords} accords au moins`
         : `${Math.round(g.ratio * 100)} % de bonnes réponses`;

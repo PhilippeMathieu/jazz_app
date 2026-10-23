@@ -478,30 +478,6 @@
 .br-none { width: 6px; height: 2px; background: var(--line-strong); }
 
 /* Grille, mode Analyser */
-.ch.pick { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
-.ch.focus { background: var(--surface-2); }
-.bk.user { border-color: var(--accent); border-width: 2.5px; }
-.bk.user.ok { border-color: var(--ok); }
-.bk.user.near { border-color: var(--info); }
-.bk.user.bad { border-color: var(--bad); }
-.bk.missed { border-color: var(--accent); border-style: dashed; border-width: 2px; }
-.an-panel { display: flex; flex-direction: column; gap: var(--s2); }
-.an-hint { font-size: var(--t-body); font-weight: 600; }
-.an-row .row-main { cursor: pointer; }
-.an-row .icon-btn { font-size: 22px; color: var(--muted); }
-.an-res { display: flex; gap: var(--s3); align-items: flex-start; width: 100%; text-align: left; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: var(--s3); }
-.an-icon { flex: none; width: 1.4em; font-weight: 700; font-size: 18px; line-height: 1.2; text-align: center; }
-.an-res.ok .an-icon { color: var(--ok); }
-.an-res.near .an-icon { color: var(--info); }
-.an-res.bad .an-icon { color: var(--bad); }
-.an-res.missed .an-icon, .an-res.more .an-icon { color: var(--accent); }
-.an-text { font-size: var(--t-sec); color: var(--muted); margin-top: 2px; }
-.an-extra { color: var(--muted); padding: 0 var(--s1); }
-.an-form { display: flex; flex-direction: column; gap: var(--s3); }
-.an-sel { font-size: 22px; white-space: normal; }
-.an-top { display: flex; flex-direction: column; gap: var(--s2); }
-.an-top .btn { align-self: flex-start; }
-.an-actions { display: flex; align-items: center; gap: var(--s4); }
 
 /* Oreille : confusions */
 .pairs { display: flex; flex-direction: column; gap: var(--s1); }
@@ -710,3 +686,22 @@
 .chain { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .chain .btn.on { border-color: var(--accent); color: var(--accent); }
 .chain-step { font-family: var(--mono); font-size: 10.5px; color: var(--accent); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- Morceau : comprendre, quiz */
+.story { display: flex; flex-direction: column; gap: var(--s3); }
+.story-sum { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.story-sum .label { margin: 0; }
+.story-sum ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; font-size: var(--t-sec); }
+.phrase { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); }
+.phrase.now { border-color: var(--accent); }
+.phrase.same { opacity: 0.75; }
+.phrase.same .ph-title { font-size: 15px; color: var(--muted); }
+.ph-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); }
+.ph-where { display: flex; align-items: baseline; gap: var(--s2); }
+.ph-where b { font-family: var(--mono); font-size: var(--t-cap); text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+.ph-play { flex: none; }
+.ph-play svg { width: 18px; height: 18px; }
+.ph-title { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.25; }
+.ph-text { margin: 0; font-size: 16px; line-height: 1.45; }
+.ph-bars { border-left: 1px solid var(--line-strong); }
+.story.quiz .choice small { display: block; font-size: var(--t-cap); color: var(--muted); font-weight: 400; margin-top: 2px; }

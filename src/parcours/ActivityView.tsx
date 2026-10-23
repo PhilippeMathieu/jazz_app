@@ -15,7 +15,7 @@ import { WHERE_LABEL, hrefOf, stepNo } from './ui';
 
 /** Comment faire, pour les exercices qui se passent sur un morceau. */
 const HOW: Partial<Record<string, string>> = {
-  analyser: 'Touche le premier puis le dernier accord d’un enchaînement, dis ce que c’est, puis « Vérifier ».',
+  analyser: 'Le quiz du morceau : pour chaque phrase, écoute-la et dis ce qui s’y passe. L’explication s’affiche après chaque réponse. Tu peux d’abord lire « Comprendre ».',
   memoire: 'Des accords sont cachés : retrouve chacun parmi 4 choix.',
   guide: 'Active le micro, lance la lecture, et joue la 3ce ou la 7e de chaque accord sur le 1er temps. Arrête la lecture pour avoir le résultat.',
   gammes: 'Active le micro, lance la lecture, et improvise : vise une note de l’accord sur chaque 1er temps. Arrête la lecture pour avoir le résultat.',
@@ -82,7 +82,7 @@ function ActivityRun({ step, act }: { step: Step; act: Activity }) {
       } else if (run.kind === 'chart' && 'chart' in ev && ev.chart === run.chart) {
         if (goal.kind === 'analyse' && ev.type === 'analyse') {
           const r = ev.total ? ev.found / ev.total : 0;
-          finish({ passed: r >= goal.ratio, best: Math.round(r * 100), text: `${ev.found} enchaînements trouvés sur ${ev.total}${ev.bad ? `, ${ev.bad} mal nommé${ev.bad > 1 ? 's' : ''}` : ''}` });
+          finish({ passed: r >= goal.ratio, best: Math.round(r * 100), text: `${ev.found} phrase${ev.found > 1 ? 's' : ''} reconnue${ev.found > 1 ? 's' : ''} sur ${ev.total}` });
         } else if (goal.kind === 'listen' && ev.type === 'listen' && ev.mode === (run.mode === 'guide' || run.mode === 'gammes' ? run.mode : 'analyse') && ev.chords >= goal.chords) {
           finish({ passed: ev.ratio >= goal.ratio, best: Math.round(ev.ratio * 100), text: `${Math.round(ev.ratio * 100)} % sur ${ev.chords} accords` });
         } else if (goal.kind === 'memoire' && ev.type === 'memoire' && ev.level === (run.memLevel ?? ev.level)) {

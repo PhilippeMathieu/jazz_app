@@ -14,20 +14,20 @@ Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'acc
 |---|---|---|---|
 | 1 | Notes et intervalles | 2 | 4 (+1) |
 | 2 | Les accords de 3 sons | 1 | 4 |
-| 3 | La gamme et ses accords | 3 | 6 (+1) |
+| 3 | La gamme et ses accords | 3 | 7 (+1) |
 | 4 | Les accords de 4 sons | 4 | 11 (+2) |
 | 5 | Le ii–V–I | 2 | 7 |
 | 6 | Voicings et guide tones | 2 | 6 |
 | 7 | Lire une grille : le blues | 3 | 6 (+3) |
-| 8 | Le mineur et les dominantes secondaires | 4 | 7 (+1) |
+| 8 | Le mineur et les dominantes secondaires | 5 | 8 (+3) |
 | 9 | Substitutions et couleurs | 4 | 7 (+3) |
 | 10 | Improviser sur les accords | 3 | 7 (+3) |
 
-28 leçons, 65 exercices (36 dans le métro, 18 au piano, 11 de rythme), 14 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
+29 leçons, 67 exercices (38 dans le métro, 18 au piano, 11 de rythme), 16 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
 
 Chaque étape : **Comprendre** (leçons de 3 à 5 min, exemples à écouter et à voir au clavier, mini-quiz), **Dans le métro** (sans piano, d'une main, écouteurs), **Au piano** (le micro valide ; sans micro, on peut valider soi-même), **Rythme**, **Pour aller plus loin**.
 
-Chaque exercice a un **objectif** chiffré, affiché avant et pendant : « 8 justes sur 10 », « 2 réussis sur 3 » (rythme), « 80 % des enchaînements trouvés » (analyse d'une grille), « 80 % au micro, sur 12 accords au moins » (jouer une grille). Il se lance directement, sans écran de réglages. Résultat : Validé / Pas encore, Recommencer, Continuer.
+Chaque exercice a un **objectif** chiffré, affiché avant et pendant : « 8 justes sur 10 », « 2 réussis sur 3 » (rythme), « 75 % des phrases reconnues » (quiz d'un morceau), « 80 % au micro, sur 12 accords au moins » (jouer une grille). Il se lance directement, sans écran de réglages. Résultat : Validé / Pas encore, Recommencer, Continuer.
 
 Ce que contiennent les exercices :
 - **Notes** : lire en clé de sol ou de fa, toucher la note au clavier ou la jouer au piano (le micro vérifie l'octave).
@@ -39,7 +39,8 @@ Ce que contiennent les exercices :
 - **Voicings au piano** : 3 sons, shells, A et B, ii–V–I dans les 12 tonalités, deux mains (écartés, upper structures, quartes, drop 2). Le micro valide et passe au suivant.
 - **Comping en rythme** : ii–V–I avec contrebasse et batterie, motifs 1 et 3, Charleston, anticipations ; le micro mesure chaque attaque et vérifie l'accord.
 - **Phrases** : vocabulaire sur ii–V–I en appel-réponse (arpèges, gamme bebop, encerclements, approches chromatiques, mineur, altérée) ; le micro vérifie les notes.
-- **Morceaux** : analyser le Blues en F et Autumn Leaves, les retrouver de mémoire, jouer les guide tones, accompagner, improviser au micro.
+- **Morceaux** : le quiz phrase par phrase de Let It Be (étape 3), du Blues en F, d'Autumn Leaves et de Wind of Change (+ Still Loving You, La Bohème) ; retrouver une grille de mémoire, jouer les guide tones, accompagner, improviser au micro.
+- **Pop, rock et chanson** (leçon, étape 8) : majuscule = majeur, minuscule = mineur ; I – V – vi – IV et ses variantes, le ♭VII, i – ♭VI – ♭III – ♭VII, i – iv – V – i, la dominante du vi.
 - **Rythme** : tenir le tempo (avec le clic, sur 2 et 4, clic sur 2 et 4, une mesure sur deux, seul), lire et taper (noires, croches swing, contretemps, comping, triolets, claves), reconnaître un rythme, reconnaître un style (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Le décalage du téléphone se règle une fois (10 s) au premier exercice.
 
 **Astuces d'enchaînement** (15) : dans les leçons, là où la notion est enseignée : nouvelle leçon « Les guide tones » (étape 6 : la 7e qui descend, la note commune, le triton, la 13), « Construire une ligne » (étape 10 : arpège depuis la 3ce, approche, encadrement), et dans les leçons turnarounds, dominantes secondaires, ii–V–i mineur, backdoor, SubV. Pour chacune : la règle en mots simples, la note de la main droite sous chaque accord avec son rôle (« 7e », « 3ce », « approche ») et son mouvement (« ↓ ½ ton », « reste »), un clavier (accord en gris, note en jaune), l'écoute, « Autre tonalité ».
@@ -50,7 +51,7 @@ Ce que contiennent les exercices :
 
 **À revoir** (accueil) : l'appli retient ce que tu confonds à l'oreille (m7 ↔ ø7, deux intervalles, deux rythmes, deux styles…) ; la paire la plus confondue s'affiche, à départager deux réponses à la fois.
 
-**En libre** : *Morceaux* (28 standards et grilles d'exercice, import Ultimate Guitar / ChordPro ; degrés, analyse, gammes, guide tones, mémoire, play-along piano-contrebasse-batterie dans 7 styles, transposition, mode pupitre) et *Clavier* (voir et entendre n'importe quel accord ; nommer ce que tu joues).
+**En libre** : *Morceaux*, trois onglets : Jazz (28 standards, 5 grilles d'exercice), Pop-rock (11 : Scorpions, Queen, Beatles, Lennon, Eagles, Cohen, Dylan), Chanson (3 : Brel, Aznavour, Cabrel) ; grilles simplifiées, accords seulement ; import Ultimate Guitar / ChordPro. Pour chaque morceau : **Comprendre** (la grille racontée phrase par phrase en mots simples, chaque phrase à écouter, degrés sous les accords), **Quiz** (pour chaque phrase : quelle suite, quel enchaînement ? explication après chaque réponse), Accords, Impro (gammes, guide tones), Mémoire ; play-along piano-contrebasse-batterie dans 9 styles (dont pop-rock et ballade pop), transposition, mode pupitre. Et *Clavier* (voir et entendre n'importe quel accord ; nommer ce que tu joues).
 
 **Réglages** : objectif du jour, tester le micro, décalage du micro et de l'écran, point de départ, tout recommencer.
 
@@ -106,7 +107,8 @@ Chaque push sur `main` lance les tests, le build et le déploiement GitHub Pages
 title: Autumn Leaves
 key: Gm
 tempo: 132
-style: swing        # swing | bossa | blues
+style: swing        # swing | bossa | ballade | blues | valse | samba | latin | funk | rock | slow
+genre: jazz         # jazz | pop | chanson
 level: 1
 [A]
 | Cm7 | F7 | B♭maj7 | E♭maj7 |

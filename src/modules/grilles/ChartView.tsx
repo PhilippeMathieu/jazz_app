@@ -23,36 +23,36 @@ import { StandIcon } from '../../ui/icons';
 import { notesMarks, scaleMarks } from '../../ui/keyboardMarks';
 import { ListenMode, useListening } from './useListening';
 import { ListenButtons, useListen, withActive } from '../../ui/Listen';
-import { AnalyserForm, AnalyserHint, AnalyserPanel, useAnalyser } from './Analyser';
+import { Comprendre, PhraseQuiz } from './Story';
 import { MemoirePanel, useMemoire } from './Memoire';
 
-export type Mode = ListenMode | 'analyser' | 'memoire';
+export type Mode = ListenMode | 'comprendre' | 'analyser' | 'memoire';
 type Listen = ReturnType<typeof useListening>;
 const LIVE_LO = 55;
 const LIVE_HI = 79;
-const MODES: Mode[] = ['analyse', 'analyser', 'gammes', 'guide', 'memoire'];
+const MODES: Mode[] = ['comprendre', 'analyser', 'analyse', 'gammes', 'guide', 'memoire'];
 
 /** onBack : retour (au parcours) au lieu de la liste des morceaux ; memLevel : niveau de mémoire imposé. */
 export function ChartView({ chart: original, initialMode, onBack, memLevel }: { chart: Chart; initialMode?: Mode; onBack?: () => void; memLevel?: number }) {
   const [view, setView] = useState(() => {
-    const v = load('grille-view', { mode: 'analyse', showRomans: true });
+    const v = load('grille-vue', { mode: 'comprendre', showRomans: true });
     return initialMode ? { ...v, mode: initialMode } : v;
   });
-  const mode: Mode = MODES.includes(view.mode as Mode) ? (view.mode as Mode) : 'analyse';
+  const mode: Mode = MODES.includes(view.mode as Mode) ? (view.mode as Mode) : 'comprendre';
   const [shift, setShift] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [stand, setStand] = useState(false);
-  useEffect(() => save('grille-view', view), [view]);
+  useEffect(() => save('grille-vue', view), [view]);
 
   const chart = useMemo(() => transposeChart(original, shift), [original, shift]);
   const plan = useMemo(() => improvPlan(chart), [chart]);
   const rows = useMemo(() => barRows(chart), [chart]);
   const byBar = useMemo(() => chordsByBar(plan.flat), [plan]);
   const player = usePlayer(chart, original.id, original.tempo);
-  const listenMode: ListenMode = mode === 'analyser' || mode === 'memoire' ? 'analyse' : mode;
+  const listenMode: ListenMode = mode === 'gammes' || mode === 'guide' ? mode : 'analyse';
+  const grid = mode === 'analyse' || mode === 'gammes' || mode === 'guide' || mode === 'memoire';
   const listen = useListening(listenMode, plan, player.pos, chart.beatsPerBar);
-  const an = useAnalyser(original.id, plan, chart.beatsPerBar, shift);
   // Premier accord de chaque ligne : reste visible au niveau « 3/4 » de la mémoire.
   const firsts = useMemo(() => rows.map((r) => (byBar.get(r.bars[0]) ?? [])[0]).filter((x): x is number => x !== undefined), [rows, byBar]);
   const mem = useMemoire(original.id, plan, firsts, mode === 'memoire', memLevel);
@@ -120,7 +120,6 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
   const tapChord = (ci: number) => {
     setSelected(ci);
     if (mode === 'analyse') setDrawer(true);
-    if (mode === 'analyser') an.tap(ci);
     if (mode === 'memoire') {
       mem.pick(ci);
       // Une case cachée ne se fait pas entendre : ce serait la réponse.
@@ -150,26 +149,40 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
         />
         <Segmented
           label="Affichage"
-          value={mode}
-          onChange={(m) => setView({ ...view, mode: m })}
+          value={mode === 'gammes' || mode === 'guide' ? 'impro' : mode}
+          onChange={(m: string) => setView({ ...view, mode: m === 'impro' ? 'gammes' : m })}
           options={[
-            { value: 'analyse', label: 'Degrés' },
-            { value: 'analyser', label: 'Analyser' },
-            { value: 'gammes', label: 'Gammes' },
-            { value: 'guide', label: 'Guides' },
+            { value: 'comprendre', label: 'Comprendre' },
+            { value: 'analyser', label: 'Quiz' },
+            { value: 'analyse', label: 'Accords' },
+            { value: 'impro', label: 'Impro' },
             { value: 'memoire', label: 'Mémoire' }
           ]}
         />
+        {mode === 'gammes' || mode === 'guide' ? (
+          <Segmented
+            label="Impro"
+            value={mode}
+            onChange={(m: string) => setView({ ...view, mode: m })}
+            options={[
+              { value: 'gammes', label: 'Gammes', sub: 'La gamme de chaque accord' },
+              { value: 'guide', label: 'Guide tones', sub: 'La 3ce et la 7e, d’un accord à l’autre' }
+            ]}
+          />
+        ) : null}
         <div class="subbar">
           <TransposeStepper chartKey={chart.key} shift={shift} onShift={setShift} />
         </div>
-        {mode === 'analyser' ? <AnalyserHint an={an} plan={plan} /> : null}
+        {mode === 'comprendre' ? <Comprendre chart={chart} plan={plan} player={player} /> : null}
+        {mode === 'analyser' ? <PhraseQuiz key={chart.id + shift} chart={chart} plan={plan} player={player} onExplain={() => setView({ ...view, mode: 'comprendre' })} /> : null}
+        {mode === 'analyse' ? <p class="muted small">Tous les accords, avec leur degré (en bleu : hors de la tonalité). Touche un accord pour sa fiche. Au micro : accompagne, l’appli vérifie la 3ce et la 7e.</p> : null}
         {mode === 'memoire' ? <MemoirePanel m={mem} plan={plan} /> : null}
 
         {(mode === 'gammes' || mode === 'guide') && n ? <LivePanel refEl={liveRef} mode={mode} plan={plan} cur={cur} listen={listen} /> : null}
 
-        {listen.listening ? <ListenSummary mode={mode} listen={listen} playing={player.playing} /> : null}
+        {listen.listening && grid ? <ListenSummary mode={mode} listen={listen} playing={player.playing} /> : null}
 
+        {grid ? (
         <div class="chart">
           {rows.map((row, ri) => (
             <div key={ri}>
@@ -180,19 +193,15 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
                   return (
                     <div key={bi} class={'bar' + (pos?.bar === bi ? ' now' : '')}>
                       <span class="barnum">{bi + 1}</span>
-                      {(showRomans || (mode === 'analyser' && an.result)) && keyTags.has(bi) ? <span class="keytag">{keyTags.get(bi)}</span> : null}
+                      {showRomans && keyTags.has(bi) ? <span class="keytag">{keyTags.get(bi)}</span> : null}
                       <div class={'chords' + (idxs.length > 1 ? ' two' : '')}>
                         {idxs.map((ci) => {
                           const a = plan.analysis.chords[ci];
                           const st = listen.statusOf(pos?.chorus ?? 0, ci);
-                          const dec = mode === 'analyser' ? an.decor(ci) : null;
                           const md = mode === 'memoire' ? mem.decor(ci) : null;
                           let sub = '';
                           let subCls = 'rn';
-                          if (dec) {
-                            sub = dec.sub;
-                            subCls = dec.subCls;
-                          } else if (mode === 'analyse') {
+                          if (mode === 'analyse') {
                             const arrow = a.resolution && a.resolvesTo === (ci + 1) % n ? (a.resolution === 'sub' ? ' ⇣' : ' ↗') : '';
                             sub = a.roman + arrow;
                             if (!a.diatonic) subCls += ' out';
@@ -200,10 +209,10 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
                           else if (mode === 'guide') sub = `${plan.guideA[ci].name} · ${plan.guideB[ci].name}`;
                           const lCls = st?.done ? (st.ok ? ' l-ok' : ' l-miss') : '';
                           return (
-                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci && (pos || (sel !== null && mode !== 'analyser' && mode !== 'memoire')) ? ' now' : '') + lCls + (dec?.cls ?? '') + (md?.cls ?? '')} onClick={() => tapChord(ci)}>
+                            <button key={ci} data-ci={ci} class={'ch' + (cur === ci && (pos || (sel !== null && mode !== 'memoire')) ? ' now' : '') + lCls + (md?.cls ?? '')} onClick={() => tapChord(ci)}>
                               <span class="sym">{md?.sym ?? chordSymbol(plan.flat[ci].chord)}</span>
                               <span class={subCls}>{sub || ' '}</span>
-                              {mode === 'analyse' ? <i class={'bk' + bracketPart(ci)} /> : dec ? <i class={'bk' + dec.bk} /> : null}
+                              {mode === 'analyse' ? <i class={'bk' + bracketPart(ci)} /> : null}
                               {st && st.hits.length ? (
                                 <span class="hits">
                                   {st.hits.slice(-8).map((h, i) => (
@@ -222,8 +231,8 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
             </div>
           ))}
         </div>
+        ) : null}
 
-        {mode === 'analyser' ? <AnalyserPanel an={an} plan={plan} onShowDegrees={() => setView({ ...view, mode: 'analyse' })} /> : null}
         {mode === 'analyse' ? (
           <p class="legend">
             <span><i class="lg-bk" />ii–V</span>
@@ -233,7 +242,7 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
             <span class="lg-out">bleu : hors tonalité</span>
           </p>
         ) : null}
-        {mode === 'analyse' && chart.notes ? <p class="chart-notes">{chart.notes}</p> : null}
+
       </div>
 
       <PlayerBar p={player} fromBar={sel !== null ? plan.flat[sel].bar : 0} />
@@ -249,10 +258,6 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
             }}
           />
         ) : null}
-      </Drawer>
-
-      <Drawer open={mode === 'analyser' && !!an.form} onClose={() => an.setForm(null)} label="Enchaînement">
-        <AnalyserForm an={an} plan={plan} />
       </Drawer>
 
       {stand ? <Stand chart={chart} plan={plan} player={player} initial={listenMode} startIndex={cur} onClose={() => setStand(false)} /> : null}

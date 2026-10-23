@@ -5,6 +5,10 @@ import { RHYTHM_LEVELS, rhythmsOf } from '../core/rhythm/patterns';
 import { TIPS } from '../modules/cours/tips';
 import { LESSONS } from '../modules/cours/lessons';
 import { offsetOf, saveOffset } from '../core/rhythm/offset';
+import { chartById } from '../library/charts';
+import { improvPlan } from '../core/analysis/improv';
+import { storyOf } from '../core/analysis/story';
+import { quizOf } from '../modules/grilles/Story';
 
 // Stockage en mémoire (tests sous Node).
 const mem = new Map<string, string>();
@@ -46,6 +50,15 @@ describe('parcours : contenu', () => {
     expect(sets).toContain(3);
     expect(sets).toContain(4);
     expect(sets[sets.length - 1]).toBe(5);
+  });
+  it('les quiz de morceaux : au moins 3 phrases à reconnaître', () => {
+    const quizzes = all.filter((a) => a.run.kind === 'chart' && a.run.mode === 'analyser');
+    expect(quizzes.map((a) => (a.run.kind === 'chart' ? a.run.chart : ''))).toEqual(expect.arrayContaining(['let-it-be', 'wind-of-change']));
+    for (const a of quizzes) {
+      const c = chartById(a.run.kind === 'chart' ? a.run.chart : '')!;
+      const p = improvPlan(c);
+      expect(quizOf(storyOf(c, p.flat, p.analysis, p.scales), c.genre ?? 'jazz', 1).length, a.id).toBeGreaterThanOrEqual(3);
+    }
   });
   it('du rythme à chaque étape', () => {
     for (const s of STEPS) expect(s.activities.some((a) => a.run.kind === 'rythme' && !a.optional)).toBe(true);

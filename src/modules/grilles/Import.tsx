@@ -130,6 +130,8 @@ export function Import() {
                 <option value="bossa">Bossa</option>
                 <option value="blues">Blues</option>
                 <option value="ballade">Ballade</option>
+                <option value="rock">Pop / rock</option>
+                <option value="slow">Ballade pop</option>
               </select>
             </label>
             <label class="field t">

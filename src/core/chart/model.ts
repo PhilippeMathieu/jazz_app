@@ -6,7 +6,9 @@ export interface Key {
   tonic: Note;
   mode: Mode;
 }
-export type Style = 'swing' | 'bossa' | 'ballade' | 'blues' | 'samba' | 'latin' | 'funk' | 'valse';
+export type Style = 'swing' | 'bossa' | 'ballade' | 'blues' | 'samba' | 'latin' | 'funk' | 'valse' | 'rock' | 'slow';
+/** Le répertoire : standards de jazz, pop-rock, chanson. */
+export type Genre = 'jazz' | 'pop' | 'chanson';
 
 export interface ChordEvent {
   chord: Chord;
@@ -17,6 +19,8 @@ export interface Bar {
   chords: ChordEvent[];
   /** Étiquette de section qui commence à cette mesure (A, B, Pont…). */
   section?: string;
+  /** Première mesure d'une ligne de la grille écrite : une phrase musicale commence ici. */
+  line?: boolean;
 }
 export interface Chart {
   id: string;
@@ -29,6 +33,7 @@ export interface Chart {
   bars: Bar[];
   level: 1 | 2 | 3;
   notes?: string;
+  genre?: Genre;
 }
 
 /** Accord « à plat » avec sa position dans la grille. */
@@ -80,7 +85,7 @@ export function barsFrom(chords: Chord[], beatsPerBar: number, section?: string)
   return out;
 }
 
-const STYLES: Style[] = ['swing', 'bossa', 'ballade', 'blues', 'samba', 'latin', 'funk', 'valse'];
+const STYLES: Style[] = ['swing', 'bossa', 'ballade', 'blues', 'samba', 'latin', 'funk', 'valse', 'rock', 'slow'];
 const clampInt = (v: string | undefined, lo: number, hi: number, dflt: number) => {
   const n = Math.round(Number(v));
   return Number.isFinite(n) ? Math.min(hi, Math.max(lo, n)) : dflt;
@@ -116,6 +121,7 @@ export function parseChart(text: string, id = 'grille'): Chart {
     if (!rest) continue;
     const cells = rest.split('|').map((c) => c.trim()).filter((c) => c.length);
     const bpb = clampInt(meta.beats, 2, 7, 4);
+    const lineStart = bars.length;
     for (const cell of cells) {
       if (cell === '%') {
         const prev = bars[bars.length - 1];
@@ -132,6 +138,7 @@ export function parseChart(text: string, id = 'grille'): Chart {
       }
       pendingSection = undefined;
     }
+    if (bars[lineStart]) bars[lineStart].line = true;
   }
   const key = parseKey(meta.key ?? 'C');
   if (!key) throw new Error('Tonalité illisible');
@@ -145,6 +152,7 @@ export function parseChart(text: string, id = 'grille'): Chart {
     beatsPerBar: clampInt(meta.beats, 2, 7, 4),
     level: clampInt(meta.level, 1, 3, 1) as 1 | 2 | 3,
     notes: meta.notes,
+    genre: meta.genre === 'pop' || meta.genre === 'chanson' ? meta.genre : 'jazz',
     bars
   };
 }

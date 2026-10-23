@@ -287,6 +287,10 @@ export const PARTS: Part[] = [
           { t: 'chords', label: 'En 3 sons, puis avec les 7es', chords: ['Dm', 'G', 'C', 'Dm7', 'G7', 'Cmaj7'], romans: ['IIm', 'V', 'I', 'IIm7', 'V7', 'IΔ7'], gap: 1.1 },
           { t: 'tip', text: 'Écoute la basse : si elle **monte d’une quarte** d’accord en accord (D → G → C), c’est un II – V – I.' },
           {
+            t: 'tip',
+            text: 'Ces boucles sont partout : Let It Be (C G Am F, I – V – VI – IV), Knockin’ on Heaven’s Door (G D Am, G D C). Dans **Morceaux**, onglet Pop-rock.'
+          },
+          {
             t: 'quiz',
             q: 'I – IV – V en F :',
             choices: ['F C G', 'F B♭ C', 'F G A', 'F A♭ C'],
@@ -801,6 +805,70 @@ export const PARTS: Part[] = [
             choices: ['F7', 'C7', 'B♭7', 'Gm7'],
             answer: 2,
             explain: 'Début de la 2e phrase : le IV7.'
+          }
+        ]
+      },
+      {
+        id: 'rock',
+        title: 'Pop, rock et chanson',
+        sub: 'I–V–vi–IV, le ♭VII, i–♭VI–♭III–♭VII',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Mêmes degrés qu’en jazz, autre écriture : **majuscule = accord majeur** (I, IV, V), **minuscule = mineur** (ii, iii, vi). VIm s’écrit vi. Et le plus souvent sans 7e : des accords de 3 sons.'
+          },
+          { t: 'h', text: 'La suite de la pop' },
+          { t: 'chords', label: 'I – V – vi – IV : Let It Be', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'vi', 'IV'], voicing: 'triad', gap: 1 },
+          {
+            t: 'p',
+            text: 'Les mêmes quatre accords dans un autre ordre : **vi – IV – I – V** (on part du mineur, plus sombre), **I – vi – IV – V** (les slows des années 50). Et **vi – V – IV – I** : la basse descend note à note.'
+          },
+          { t: 'chords', label: 'vi – V – IV – I : le refrain de Let It Be', chords: ['Am', 'G', 'F', 'C'], romans: ['vi', 'V', 'IV', 'I'], voicing: 'triad', gap: 1 },
+          { t: 'h', text: 'Le ♭VII : la couleur rock' },
+          {
+            t: 'p',
+            text: 'En C, B♭ n’est pas dans la gamme (on y trouve B) : il vient de **C mineur**. **I – ♭VII – IV – I** (C B♭ F C), c’est le son des guitares rock. Le jazz l’utilise aussi : le backdoor, B♭7 → C.'
+          },
+          { t: 'chords', label: 'I – ♭VII – IV – I', chords: ['C', 'B♭', 'F', 'C'], romans: ['I', '♭VII', 'IV', 'I'], voicing: 'triad', gap: 1 },
+          { t: 'h', text: 'En mineur' },
+          {
+            t: 'p',
+            text: 'En A mineur, **i – ♭VI – ♭III – ♭VII** (Am F C G) : la suite « épique », celle du refrain de Still Loving You (en G mineur). Ces accords majeurs sont ceux de la gamme mineure.'
+          },
+          { t: 'chords', label: 'i – ♭VI – ♭III – ♭VII', chords: ['Am', 'F', 'C', 'G'], romans: ['i', '♭VI', '♭III', '♭VII'], voicing: 'triad', gap: 1 },
+          {
+            t: 'p',
+            text: 'La chanson aime **i – iv – V – i** (Am Dm E Am) : E majeur et pas Em, pour avoir G♯, la sensible, qui tire vers A. C’est Ne me quitte pas, La Bohème (en C mineur).'
+          },
+          { t: 'chords', label: 'i – iv – V – i', chords: ['Am', 'Dm', 'E', 'Am'], romans: ['i', 'iv', 'V', 'i'], voicing: 'triad', gap: 1 },
+          { t: 'h', text: 'La dominante du vi' },
+          {
+            t: 'p',
+            text: 'Un **E** ou **E7** dans un morceau en C : il n’est pas dans la gamme, c’est la dominante de Am, le vi (V7/vi). Il annonce le mineur : Hallelujah, Je l’aime à mourir, le pont de Wind of Change.'
+          },
+          { t: 'chords', label: 'I – V7/vi – vi', chords: ['C', 'E7', 'Am'], romans: ['I', 'V7/vi', 'vi'], voicing: 'triad', gap: 1.1 },
+          { t: 'tip', text: 'Dans **Morceaux**, onglets **Pop-rock** et **Chanson** : « Comprendre » raconte chaque grille phrase par phrase, le « Quiz » te fait reconnaître chaque phrase.' },
+          {
+            t: 'quiz',
+            q: 'I – V – vi – IV en G :',
+            choices: ['G D Em C', 'G C D Em', 'G D Am C', 'G Em C D'],
+            answer: 0,
+            explain: 'V = D, vi = Em, IV = C.'
+          },
+          {
+            t: 'quiz',
+            q: 'Dans un morceau en C, B♭ est…',
+            choices: ['le ♭VII, emprunté à C mineur', 'le IV de C', 'le vii° de C', 'le V de C'],
+            answer: 0,
+            explain: 'La gamme de C a B, pas B♭ : B♭ vient de C mineur, comme A♭ (♭VI) et E♭ (♭III).'
+          },
+          {
+            t: 'quiz',
+            q: 'En A mineur, pourquoi E plutôt que Em avant de revenir sur Am ?',
+            choices: ['E contient G♯, qui tire vers A', 'Em n’est pas dans la gamme de A mineur', 'Pour aller vers C', 'E est le ♭VII'],
+            answer: 0,
+            explain: 'G♯ est à un demi-ton de A : la sensible. Em (avec G) ne tire pas autant vers A.'
           }
         ]
       }

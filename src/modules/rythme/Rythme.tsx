@@ -4,7 +4,7 @@ import { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { RHYTHMS, RHYTHM_LEVELS, RPattern, countOf, rhythmById, rhythmsOf } from '../../core/rhythm/patterns';
 import { calibrate, countInHits, drift, scoreTiming, tolerance, TimingResult } from '../../core/rhythm/timing';
-import { GROOVES, STYLE_ORDER, StyleId } from '../../core/rhythm/styles';
+import { EAR_STYLES, GROOVES, StyleId } from '../../core/rhythm/styles';
 import { playClicks, playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
 import { offsetOf, saveOffset } from '../../core/rhythm/offset';
 import { audio, now } from '../../core/audio/engine';
@@ -845,9 +845,9 @@ function EarStyle({ saved, set, onBack }: { saved: Saved; set: SetSaved; onBack:
       const two = shuffle([p.a, p.b]) as StyleId[];
       return { answer: two[0], choices: shuffle(two), duel: true };
     }
-    const answer = weightedPick(STYLE_ORDER, (id) => confusionWeight(pairs, id) * (1 + 3 * (1 - ((saved.styles[id]?.c ?? 0) + 1) / ((saved.styles[id]?.t ?? 0) + 2))));
-    const rivals = rivalsOf(pairs, answer).filter((x): x is StyleId => STYLE_ORDER.includes(x as StyleId)).slice(0, 2);
-    const rest = shuffle(STYLE_ORDER.filter((x) => x !== answer && !rivals.includes(x)));
+    const answer = weightedPick(EAR_STYLES, (id) => confusionWeight(pairs, id) * (1 + 3 * (1 - ((saved.styles[id]?.c ?? 0) + 1) / ((saved.styles[id]?.t ?? 0) + 2))));
+    const rivals = rivalsOf(pairs, answer).filter((x): x is StyleId => EAR_STYLES.includes(x as StyleId)).slice(0, 2);
+    const rest = shuffle(EAR_STYLES.filter((x) => x !== answer && !rivals.includes(x)));
     return { answer, choices: shuffle([answer, ...[...rivals, ...rest].slice(0, 3)]), duel: false };
   };
   const [q, setQ] = useState(makeQ);
