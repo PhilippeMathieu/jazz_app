@@ -8,17 +8,18 @@ import { newChartId, saveUserChart } from '../../library/userCharts';
 import { TopBar } from '../../ui/Screen';
 import { go } from '../../ui/router';
 
+// Exemple aux paroles inventées (l'appli ne contient aucune parole de chanson).
 const EXAMPLE = `Capo: 2nd fret
 Key: Am
 
 [Intro]
 Dm7  G7  Cmaj7  Fmaj7
 
-[Verse 1]
+[Couplet]
 Dm7               G7
-The falling leaves drift by the window
+Je compte les mesures en marchant
 Bm7b5    E7(b9)   Am
-The autumn leaves of red and gold`;
+Le métro passe, le tempo reste`;
 
 const KEYS: { value: string; label: string }[] = [];
 for (const mode of ['major', 'minor'] as const) for (let pc = 0; pc < 12; pc++) KEYS.push({ value: `${pc}-${mode}`, label: keyLabel(keyOnPc(pc, mode)) });
@@ -52,7 +53,7 @@ export function Import() {
   return (
     <div class="screen">
       <TopBar title="Importer une grille" back="/morceaux" />
-      <p class="intro">Colle les accords d’un morceau, avec ou sans paroles : Ultimate Guitar, ChordPro ou texte libre.</p>
+      <p class="intro">Colle un morceau copié sur Ultimate Guitar, La Boîte à chansons, en ChordPro ou en texte libre : les accords, et les paroles si tu veux les avoir sous les yeux en jouant (onglet « Paroles »).</p>
       <details class="help">
         <summary>Copie bloquée dans l’appli ?</summary>
         <p class="muted small">
@@ -66,7 +67,7 @@ export function Import() {
         <input id="imp-title" type="text" value={title} placeholder={result?.title ?? 'Sans titre'} onInput={(e) => setTitle((e.target as HTMLInputElement).value)} />
       </label>
       <label class="field">
-        <span>Accords</span>
+        <span>Accords et paroles</span>
         <textarea
           id="imp-text"
           rows={9}
@@ -105,6 +106,11 @@ export function Import() {
                   <input id="imp-capo" type="checkbox" checked={applyCapo} onChange={() => setApplyCapo(!applyCapo)} />
                   <span>Capo {result.capo} : transposer à la hauteur réelle (+{result.capo})</span>
                 </label>
+              ) : null}
+              {result.lyricLines ? (
+                <p class="small">
+                  <b>{result.lyricLines} lignes de paroles</b> gardées sous les accords.
+                </p>
               ) : null}
               {!result.measured ? <p class="muted small">Sans barres « | », chaque accord occupe une mesure.</p> : null}
             </>
@@ -146,7 +152,7 @@ export function Import() {
       <button class="btn primary block" disabled={!result || !result.bars.length} onClick={saveIt}>
         Enregistrer et ouvrir
       </button>
-      <p class="muted small">Tes grilles restent sur ce téléphone.</p>
+      <p class="muted small">Tes grilles et leurs paroles restent sur ce téléphone.</p>
     </div>
   );
 }

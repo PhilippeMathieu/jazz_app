@@ -92,9 +92,14 @@
   border-radius: var(--r-md);
   padding: 3px;
   gap: 3px;
+  /* Beaucoup d'options (vues d'un morceau) : on fait défiler plutôt que d'écraser. */
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+.seg::-webkit-scrollbar { display: none; }
 .seg button {
-  flex: 1;
+  flex: 1 0 auto;
+  padding: 0 8px;
   min-height: 38px;
   border: 0;
   border-radius: 9px;

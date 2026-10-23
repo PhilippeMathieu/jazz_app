@@ -19,6 +19,8 @@ export interface ImportResult {
   /** Le capo a-t-il été appliqué (accords transposés à la hauteur réelle). */
   capoApplied: boolean;
   tempo?: number;
+  /** Lignes de paroles gardées (sous les accords). */
+  lyricLines: number;
 }
 export interface ImportOptions {
   /** Transposer selon le capo (par défaut : oui). */
@@ -52,6 +54,23 @@ function parseToken(t: string): Chord | null {
 const looksLikeChord = (t: string) => /^[\[(]?[A-G][#b♯♭]?/.test(t);
 const capitalize = (s: string) => (s.length <= 2 ? s.toUpperCase() : s[0].toUpperCase() + s.slice(1).toLowerCase());
 
+/** Une ligne de paroles (pas de la tablature, pas un diagramme d'accord). */
+const isLyric = (line: string) => /\p{L}{2,}/u.test(line) && !/-{3,}/.test(line) && !/^[A-Ga-g]\s*\|/.test(line);
+
+/**
+ * Coupe une ligne de paroles aux colonnes des accords écrits au-dessus : à chaque accord, le texte jusqu'à l'accord
+ * suivant. Un accord au milieu d'un mot prend le mot entier. Le texte avant le premier accord (levée) va au premier.
+ */
+export function splitLyric(lyric: string, cols: number[]): string[] {
+  const cuts: number[] = [];
+  cols.forEach((c, i) => {
+    let x = i === 0 ? 0 : Math.min(c, lyric.length);
+    while (x > 0 && /\S/.test(lyric[x - 1]) && /\S/.test(lyric[x] ?? ' ')) x--;
+    cuts.push(Math.max(x, cuts[i - 1] ?? 0));
+  });
+  return cuts.map((c, i) => lyric.slice(c, cuts[i + 1]).trim().replace(/\s+/g, ' '));
+}
+
 const CHORDPRO_SECTIONS: Record<string, string> = {
   soc: 'Refrain', start_of_chorus: 'Refrain', sov: 'Couplet', start_of_verse: 'Couplet', sob: 'Pont', start_of_bridge: 'Pont'
 };
@@ -66,18 +85,34 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
   let keyLine: Key | null = null;
   let tempo: number | undefined;
 
+  /** Mesures et colonnes des accords de la dernière ligne d'accords libre, en attente de ses paroles. */
+  let above: { bars: number[]; cols: number[] } | null = null;
+  let lyricLines = 0;
+  let lineStart = true;
+  const addLyric = (bar: number, text: string) => {
+    if (!text || !bars[bar]) return;
+    bars[bar].lyric = bars[bar].lyric ? `${bars[bar].lyric} / ${text}` : text;
+  };
   const push = (chords: Chord[]) => {
     if (!chords.length) return;
+    const from = bars.length;
     bars.push(...barsFrom(chords, 4, section));
+    // Chaque ligne du texte commence une ligne de la grille (les paroles s'y retrouvent).
+    if (lineStart) bars[from].line = true;
+    lineStart = false;
     section = undefined;
   };
 
   // Balises du format brut d'Ultimate Guitar : [ch]Am[/ch], [tab]…[/tab]
   const cleaned = text.replace(/\r/g, '').replace(/\[ch\](.*?)\[\/ch\]/g, '$1').replace(/\[\/?tab\]/g, '');
 
-  for (const raw of cleaned.split('\n')) {
+  for (const rawLine of cleaned.split('\n')) {
+    const raw = rawLine.replace(/\t/g, '    ').replace(/\s+$/, '');
     const line = raw.trim();
+    lineStart = true;
     if (!line) continue;
+    const pending = above;
+    above = null;
 
     // Métadonnées
     const dir = DIRECTIVE.exec(line);
@@ -115,11 +150,26 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
     }
 
     // ChordPro : [Am7]paroles [D7]suite
-    const inline = [...line.matchAll(INLINE)].map((m) => m[1]);
+    const matches = [...line.matchAll(INLINE)];
+    const inline = matches.map((m) => m[1]);
     if (inline.length && line.replace(INLINE, '').trim().length > 0) {
       const chords = inline.map((t) => parseToken(t));
       if (chords.some((c) => c)) {
-        inline.forEach((t, i) => (chords[i] ? push([chords[i]!]) : looksLikeChord(t) && unknown.push(t)));
+        let sung = false;
+        matches.forEach((m, i) => {
+          const end = matches[i + 1]?.index ?? line.length;
+          const text = line.slice(m.index! + m[0].length, end).trim().replace(/\s+/g, ' ');
+          // Levée : le texte avant le premier accord va avec lui.
+          const before = i === 0 ? line.slice(0, m.index).trim() : '';
+          const words = [before, text].filter(Boolean).join(' ');
+          if (chords[i]) push([chords[i]!]);
+          else if (looksLikeChord(inline[i])) unknown.push(inline[i]);
+          if (words) {
+            addLyric(bars.length - 1, words);
+            sung = true;
+          }
+        });
+        if (sung) lyricLines++;
         continue;
       }
     }
@@ -153,14 +203,27 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
     }
 
     // Ligne d'accords libre : chaque accord occupe une mesure.
-    const tokens = line.split(/\s+/).filter((t) => !NOISE.test(t));
-    const parsed = tokens.map((t) => ({ t, c: parseToken(t) }));
+    const found = [...raw.matchAll(/\S+/g)].filter((m) => !NOISE.test(m[0]));
+    const parsed = found.map((m) => ({ t: m[0], col: m.index!, c: parseToken(m[0]) }));
     const ok = parsed.filter((x) => x.c).length;
-    if (!tokens.length || ok / tokens.length < 0.6) continue; // paroles, diagrammes, tablature
+    if (!found.length || ok / found.length < 0.6) {
+      // Paroles : sous une ligne d'accords, coupées aux accords ; sinon, à la suite de la dernière mesure.
+      if (isLyric(line) && bars.length) {
+        if (pending) splitLyric(raw, pending.cols).forEach((t, i) => addLyric(pending.bars[i], t));
+        else addLyric(bars.length - 1, line.replace(/\s+/g, ' '));
+        lyricLines++;
+      }
+      continue;
+    }
+    const at = { bars: [] as number[], cols: [] as number[] };
     parsed.forEach((x) => {
-      if (x.c) push([x.c]);
-      else if (looksLikeChord(x.t)) unknown.push(x.t);
+      if (x.c) {
+        push([x.c]);
+        at.bars.push(bars.length - 1);
+        at.cols.push(x.col);
+      } else if (looksLikeChord(x.t)) unknown.push(x.t);
     });
+    if (at.bars.length) above = at;
   }
 
   const chordsOf = (bs: Bar[]) => bs.flatMap((b) => b.chords.map((c) => c.chord));
@@ -180,18 +243,21 @@ export function importText(text: string, opts: ImportOptions = {}): ImportResult
     if (kpc === g || relative === g) key = k;
     else if (applyCapo && mod(kpc + capo, 12) === g) key = keyOnPc(kpc + capo, k.mode);
   }
-  return { bars, unknown: [...new Set(unknown)], measured, key, title, capo, capoApplied: applyCapo, tempo };
+  return { bars, unknown: [...new Set(unknown)], measured, key, title, capo, capoApplied: applyCapo, tempo, lyricLines };
 }
 
 export function chartFromImport(r: ImportResult, opts: { id: string; title: string; key?: Key; tempo?: number; style?: Style }): Chart {
+  const style = opts.style ?? 'swing';
   return {
     id: opts.id,
     title: opts.title || r.title || 'Grille importée',
     key: opts.key ?? r.key,
     tempo: opts.tempo ?? r.tempo ?? 120,
-    style: opts.style ?? 'swing',
+    style,
     beatsPerBar: 4,
     level: 2,
+    // Styles pop : l'analyse parle en suites de la pop (I – V – vi – IV…) plutôt qu'en ii–V–I.
+    genre: style === 'rock' || style === 'slow' ? 'pop' : 'jazz',
     bars: r.bars
   };
 }

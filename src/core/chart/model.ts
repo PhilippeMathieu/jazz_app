@@ -21,6 +21,8 @@ export interface Bar {
   section?: string;
   /** Première mesure d'une ligne de la grille écrite : une phrase musicale commence ici. */
   line?: boolean;
+  /** Paroles chantées pendant la mesure (grilles importées par l'élève seulement, gardées sur l'appareil). */
+  lyric?: string;
 }
 export interface Chart {
   id: string;
@@ -104,9 +106,22 @@ export function parseChart(text: string, id = 'grille'): Chart {
   const meta: Record<string, string> = {};
   const bars: Bar[] = [];
   let pendingSection: string | undefined;
+  /** Première mesure de chaque case de la dernière ligne lue (pour les paroles « > » qui suivent). */
+  let lastRow: number[] = [];
   for (const raw of text.split('\n')) {
     const line = raw.trim();
     if (!line || line.startsWith('#')) continue;
+    // Paroles de la ligne précédente, une case par mesure : > paroles | suite | …
+    if (line.startsWith('>')) {
+      line
+        .slice(1)
+        .split('|')
+        .forEach((seg, i) => {
+          const t = seg.trim();
+          if (t && lastRow[i] !== undefined) bars[lastRow[i]].lyric = t;
+        });
+      continue;
+    }
     const m = /^([a-zA-Z]+)\s*:\s*(.+)$/.exec(line);
     if (m && !line.includes('|')) {
       meta[m[1].toLowerCase()] = m[2].trim();
@@ -122,7 +137,9 @@ export function parseChart(text: string, id = 'grille'): Chart {
     const cells = rest.split('|').map((c) => c.trim()).filter((c) => c.length);
     const bpb = clampInt(meta.beats, 2, 7, 4);
     const lineStart = bars.length;
+    lastRow = [];
     for (const cell of cells) {
+      lastRow.push(bars.length);
       if (cell === '%') {
         const prev = bars[bars.length - 1];
         if (!prev) throw new Error('« % » sans mesure précédente');
@@ -159,22 +176,29 @@ export function parseChart(text: string, id = 'grille'): Chart {
 
 export function chartToText(chart: Chart): string {
   const lines = [`title: ${chart.title}`, `key: ${keyName(chart.key)}`, `tempo: ${chart.tempo}`, `style: ${chart.style}`];
-  let row: string[] = [];
+  if (chart.genre && chart.genre !== 'jazz') lines.push(`genre: ${chart.genre}`);
+  // Lignes de la grille écrite gardées telles quelles (paroles) ; sinon 4 mesures par ligne.
+  const byLine = chart.bars.some((b) => b.line);
+  let row: Bar[] = [];
   const flush = () => {
-    if (row.length) lines.push('| ' + row.join(' | ') + ' |');
+    if (row.length) lines.push('| ' + row.map((b) => b.chords.map((c) => chordSymbol(c.chord)).join(' ')).join(' | ') + ' |');
+    if (row.some((b) => b.lyric)) lines.push('> ' + row.map((b) => (b.lyric ?? '').replace(/[|\n]/g, '/')).join(' | '));
     row = [];
   };
   chart.bars.forEach((b) => {
     if (b.section) {
       flush();
       lines.push(`[${b.section}]`);
-    }
-    row.push(b.chords.map((c) => chordSymbol(c.chord)).join(' '));
-    if (row.length === 4) flush();
+    } else if (byLine && b.line) flush();
+    row.push(b);
+    if (!byLine && row.length === 4) flush();
   });
   flush();
   return lines.join('\n');
 }
+
+/** La grille a-t-elle des paroles (collées par l'élève) ? */
+export const hasLyrics = (chart: Chart) => chart.bars.some((b) => !!b.lyric);
 
 // --- Transposition -------------------------------------------------------
 

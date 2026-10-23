@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { chartFromImport, importText } from './import';
+import { chartFromImport, importText, splitLyric } from './import';
 import { chartToText, keyName, parseChart } from './model';
 import { QUALITIES, chordSymbol, chordOnPc, parseChord } from '../theory/chords';
 
@@ -13,9 +13,9 @@ Am7  D7  Gmaj7  Cmaj7
 
 [Verse 1]
 Am7             D7
-The falling leaves drift by the window
+Une ligne inventée pour le test
 F#m7b5   B7(b9)   Em
-The autumn leaves of red and gold
+Encore trois mots ici
 `);
     expect(syms(r)).toEqual(['Am7', 'D7', 'Gmaj7', 'Cmaj7', 'Am7', 'D7', 'F♯ø7', 'B7♭9', 'Em']);
     expect(r.bars[0].section).toBe('Intro');
@@ -37,7 +37,7 @@ The autumn leaves of red and gold
   });
 
   it('ignore les paroles et signale les symboles inconnus', () => {
-    const r = importText('A day in the life\nC  G7xyz  F\n');
+    const r = importText('Une phrase quelconque\nC  G7xyz  F\n');
     expect(syms(r)).toEqual(['C', 'F']);
     expect(r.unknown).toContain('G7xyz');
   });
@@ -48,6 +48,48 @@ The autumn leaves of red and gold
     const back = parseChart(chartToText(chart), 'u-test');
     expect(back.bars.length).toBe(4);
     expect(keyName(back.key)).toBe('C');
+  });
+
+  // Paroles inventées pour les tests : l'appli ne contient aucune parole de chanson, seulement celles que l'élève colle.
+  it('garde les paroles sous les accords, coupées à chaque accord', () => {
+    const r = importText(`
+[Couplet]
+C                G
+Le matin se lève sur la ville
+Am         F
+Je compte les tempos du métro
+Un vers sans accords
+`);
+    expect(syms(r)).toEqual(['C', 'G', 'Am', 'F']);
+    expect(r.bars.map((b) => b.lyric)).toEqual(['Le matin se lève', 'sur la ville', 'Je compte', 'les tempos du métro / Un vers sans accords']);
+    expect(r.lyricLines).toBe(3);
+    expect(r.bars.map((b) => !!b.line)).toEqual([true, false, true, false]);
+  });
+
+  it('un accord au milieu d’un mot prend le mot entier ; la levée va au premier accord', () => {
+    expect(splitLyric('  et hop la-dessus', [4, 9])).toEqual(['et hop', 'la-dessus']);
+    expect(splitLyric('le matin se lève', [0, 14])).toEqual(['le matin se', 'lève']);
+    expect(splitLyric('bonjour tout le monde', [0, 3, 12])).toEqual(['', 'bonjour tout', 'le monde']);
+  });
+
+  it('ChordPro : les paroles entre les accords', () => {
+    const r = importText('Et [C]voilà une [G7]phrase [C]inventée');
+    expect(syms(r)).toEqual(['C', 'G7', 'C']);
+    expect(r.bars.map((b) => b.lyric)).toEqual(['Et voilà une', 'phrase', 'inventée']);
+  });
+
+  it('ni la tablature ni les diagrammes ne sont pris pour des paroles', () => {
+    const r = importText('Am  G\ne|---0---3---|\nx02210\nC');
+    expect(r.bars.every((b) => !b.lyric)).toBe(true);
+  });
+
+  it('les paroles et les lignes de la grille se relisent après enregistrement', () => {
+    const r = importText('C   G\nUn deux | trois\nAm  F  C  G  Am  F\nquatre cinq six');
+    const chart = chartFromImport(r, { id: 'u-p', title: 'Test', style: 'rock' });
+    const back = parseChart(chartToText(chart), 'u-p');
+    expect(back.bars.map((b) => b.lyric)).toEqual(chart.bars.map((b) => b.lyric?.replace('|', '/')));
+    expect(back.bars.map((b) => !!b.line)).toEqual(chart.bars.map((b) => !!b.line));
+    expect(back.genre).toBe('pop');
   });
 
   it('tous les symboles affichés se relisent', () => {

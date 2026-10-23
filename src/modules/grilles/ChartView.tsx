@@ -1,6 +1,6 @@
 // Une grille : lecture et analyse, gammes, guide tones, play-along, pupitre, écoute au micro.
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import { Chart, keyLabel, keyName, transposeChart } from '../../core/chart/model';
+import { Chart, hasLyrics, keyLabel, keyName, transposeChart } from '../../core/chart/model';
 import { barRows, chordsByBar } from '../../core/chart/layout';
 import { ImprovPlan, improvPlan } from '../../core/analysis/improv';
 import { chordNotes, chordSymbol } from '../../core/theory/chords';
@@ -26,20 +26,23 @@ import { ListenButtons, useListen, withActive } from '../../ui/Listen';
 import { Comprendre, PhraseQuiz } from './Story';
 import { MemoirePanel, useMemoire } from './Memoire';
 import { MelodyPanel, RecStatus, useMelodyRecorder, useMelodyStore } from './MelodyRec';
+import { LyricsView } from './Lyrics';
 
-export type Mode = ListenMode | 'comprendre' | 'analyser' | 'memoire';
+export type Mode = ListenMode | 'comprendre' | 'analyser' | 'memoire' | 'paroles';
 type Listen = ReturnType<typeof useListening>;
 const LIVE_LO = 55;
 const LIVE_HI = 79;
-const MODES: Mode[] = ['comprendre', 'analyser', 'analyse', 'gammes', 'guide', 'memoire'];
+const MODES: Mode[] = ['comprendre', 'analyser', 'analyse', 'gammes', 'guide', 'memoire', 'paroles'];
 
 /** onBack : retour (au parcours) au lieu de la liste des morceaux ; memLevel : niveau de mémoire imposé. */
 export function ChartView({ chart: original, initialMode, onBack, memLevel }: { chart: Chart; initialMode?: Mode; onBack?: () => void; memLevel?: number }) {
+  const lyrics = useMemo(() => hasLyrics(original), [original]);
   const [view, setView] = useState(() => {
     const v = load('grille-vue', { mode: 'comprendre', showRomans: true });
-    return initialMode ? { ...v, mode: initialMode } : v;
+    // Un morceau avec ses paroles s'ouvre sur les paroles : c'est pour le jouer.
+    return initialMode ? { ...v, mode: initialMode } : lyrics ? { ...v, mode: 'paroles' } : v;
   });
-  const mode: Mode = MODES.includes(view.mode as Mode) ? (view.mode as Mode) : 'comprendre';
+  const mode: Mode = MODES.includes(view.mode as Mode) && (view.mode !== 'paroles' || lyrics) ? (view.mode as Mode) : 'comprendre';
   const [shift, setShift] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [drawer, setDrawer] = useState(false);
@@ -158,6 +161,7 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
           value={mode === 'gammes' || mode === 'guide' ? 'impro' : mode}
           onChange={(m: string) => setView({ ...view, mode: m === 'impro' ? 'gammes' : m })}
           options={[
+            ...(lyrics ? [{ value: 'paroles', label: 'Paroles' }] : []),
             { value: 'comprendre', label: 'Comprendre' },
             { value: 'analyser', label: 'Quiz' },
             { value: 'analyse', label: 'Accords' },
@@ -179,6 +183,7 @@ export function ChartView({ chart: original, initialMode, onBack, memLevel }: { 
         <div class="subbar">
           <TransposeStepper chartKey={chart.key} shift={shift} onShift={setShift} />
         </div>
+        {mode === 'paroles' ? <LyricsView chart={chart} plan={plan} pos={pos} selBar={sel !== null ? plan.flat[sel].bar : null} onTap={tapChord} /> : null}
         {mode === 'comprendre' ? <Comprendre chart={chart} plan={plan} player={player} /> : null}
         {mode === 'analyser' ? <PhraseQuiz key={chart.id + shift} chart={chart} plan={plan} player={player} onExplain={() => setView({ ...view, mode: 'comprendre' })} /> : null}
         {mode === 'analyse' ? <p class="muted small">Tous les accords, avec leur degré (en bleu : hors de la tonalité). Touche un accord pour sa fiche. Au micro : accompagne, l’appli vérifie la 3ce et la 7e.</p> : null}
