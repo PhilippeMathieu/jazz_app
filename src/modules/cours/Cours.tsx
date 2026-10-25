@@ -15,10 +15,51 @@ import { RhythmGrid, useCursor } from '../../ui/RhythmGrid';
 import { rhythmById } from '../../core/rhythm/patterns';
 import { playGroove, playRhythm, stopPlayback } from '../../core/rhythm/play';
 import { GROOVES, StyleId } from '../../core/rhythm/styles';
+import { Drawer } from '../../ui/Drawer';
+import { Term, splitTerms, termById } from './glossary';
+import { STEPS } from '../../parcours/steps';
 
-/** « **gras** » → <b>. */
-function rich(text: string) {
-  return text.split('**').map((part, i) => (i % 2 ? <b key={i}>{part}</b> : part));
+/** Mots du lexique déjà rendus touchables dans la leçon, et ce qu'on fait quand on en touche un. */
+interface Terms {
+  seen: Set<string>;
+  open: (id: string) => void;
+}
+
+/** « **gras** » → <b> ; la première apparition d'un mot du lexique devient touchable. */
+function rich(text: string, terms?: Terms) {
+  return text.split('**').map((part, i) => {
+    const content = terms
+      ? splitTerms(part, terms.seen).map((x, j) =>
+          'term' in x ? (
+            <button key={j} class="term" onClick={() => terms.open(x.term.id)}>
+              {x.text}
+            </button>
+          ) : (
+            x.text
+          )
+        )
+      : part;
+    return i % 2 ? <b key={i}>{content}</b> : <span key={i}>{content}</span>;
+  });
+}
+
+/** L'explication d'un mot : définition, à quoi ça sert, un exemple à écouter, la leçon qui le détaille. */
+export function TermCard({ term }: { term: Term }) {
+  const step = term.lesson ? STEPS.findIndex((s) => s.lessons.includes(term.lesson!)) : -1;
+  const lesson = term.lesson ? lessonById(term.lesson) : undefined;
+  return (
+    <div class="term-card">
+      <h2 class="drawer-title">{term.title}</h2>
+      <p class="ls-p">{rich(term.text)}</p>
+      {term.why ? <p class="ls-p">{rich(term.why)}</p> : null}
+      {term.example ? <ChordDemo chords={term.example.chords} romans={term.example.romans} label={term.example.label} voicing={term.example.voicing} gap={1.3} /> : null}
+      {lesson && step >= 0 ? (
+        <p class="muted small">
+          Expliqué en détail : étape {step + 1}, « {lesson.title} ».
+        </p>
+      ) : null}
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------- Leçon
@@ -26,38 +67,47 @@ function rich(text: string) {
 /** Une leçon. « J'ai compris » la compte comme lue (le parcours l'enregistre), puis onDone. */
 export function LessonView({ id, where, onBack, onDone }: { id: string; where: string; onBack: () => void; onDone: () => void }) {
   const lesson = lessonById(id);
+  const [term, setTerm] = useState<string | null>(null);
   if (!lesson) return null;
   const done = () => {
     report({ type: 'lesson', id: lesson.id });
     onDone();
   };
+  // Chaque rendu repart de zéro : la première apparition de chaque mot, dans l'ordre de la leçon.
+  const terms: Terms = { seen: new Set(), open: (tid) => setTerm(tid) };
   return (
     <div class="screen lesson">
       <TopBar title={lesson.title} onBack={onBack} />
       <p class="intro">
         {where} · {lesson.minutes} min · {lesson.sub}
       </p>
+      <p class="muted small">
+        Un mot <span class="term demo">souligné</span> ? Touche-le pour son explication. Tous les mots : <a href="#/lexique">le lexique</a>.
+      </p>
       {lesson.blocks.map((b, i) => (
-        <BlockView key={`${lesson.id}-${i}`} b={b} />
+        <BlockView key={`${lesson.id}-${i}`} b={b} terms={terms} />
       ))}
       <button class="btn primary block" onClick={done}>
         J’ai compris
       </button>
+      <Drawer open={term !== null} onClose={() => setTerm(null)} label="Explication">
+        {term && termById(term) ? <TermCard term={termById(term)!} /> : null}
+      </Drawer>
     </div>
   );
 }
 
-function BlockView({ b }: { b: Block }): JSX.Element {
+function BlockView({ b, terms }: { b: Block; terms?: Terms }): JSX.Element {
   switch (b.t) {
     case 'h':
       return <h2 class="ls-h">{b.text}</h2>;
     case 'p':
-      return <p class="ls-p">{rich(b.text)}</p>;
+      return <p class="ls-p">{rich(b.text, terms)}</p>;
     case 'tip':
       return (
         <div class="ls-tip">
           <span class="label">À retenir</span>
-          <p>{rich(b.text)}</p>
+          <p>{rich(b.text, terms)}</p>
         </div>
       );
     case 'table':
@@ -75,7 +125,7 @@ function BlockView({ b }: { b: Block }): JSX.Element {
               {b.rows.map((r, i) => (
                 <tr key={i}>
                   {r.map((c, j) => (
-                    <td key={j}>{rich(c)}</td>
+                    <td key={j}>{rich(c, terms)}</td>
                   ))}
                 </tr>
               ))}

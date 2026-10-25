@@ -732,3 +732,8 @@
 .au-piano { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); }
 .au-piano .ls-demo-head { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; }
 .au-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.4; }
+/* Mots du lexique dans les leçons : touchables, soulignés en pointillés. */
+.term { display: inline; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-decoration: underline dotted var(--accent); text-decoration-thickness: 2px; text-underline-offset: 3px; cursor: pointer; }
+.term.demo { cursor: default; }
+.term-card { display: flex; flex-direction: column; gap: var(--s2); }
+.row-wrap .term-card { padding: var(--s2) var(--s3) var(--s4); }

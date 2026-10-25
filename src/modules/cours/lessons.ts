@@ -579,24 +579,43 @@ export const PARTS: Part[] = [
       {
         id: 'iiVI',
         title: 'Le ii–V–I majeur',
-        sub: 'La cadence du jazz',
-        minutes: 5,
+        sub: 'La cadence du jazz, et pourquoi elle change de tonalité',
+        minutes: 6,
         blocks: [
           {
             t: 'p',
-            text: 'IIm7 – V7 – IΔ7. Les fondamentales montent de quarte (ou descendent de quinte) : D → G → C. C’est l’enchaînement le plus fréquent du jazz : souvent plusieurs par grille, chacun dans une tonalité.'
+            text: 'Trois accords de la tonalité, le II, le V et le I, chacun avec sa 7e : **IIm7 – V7 – IΔ7**. En C : Dm7 → G7 → Cmaj7. La basse monte d’une quarte à chaque accord : D → G → C. C’est l’enchaînement le plus fréquent du jazz.'
           },
           { t: 'chords', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], gap: 1.4 },
+          { t: 'h', text: 'Pourquoi ça marche' },
+          {
+            t: 'p',
+            text: 'Chaque accord a un rôle : **Dm7 prépare**, **G7 tend**, **Cmaj7 repose**. La tension de G7 tient à deux de ses notes : **B**, la sensible, juste sous C, qui veut monter ; et **F**, qui veut descendre sur E. Entre B et F, il y a un triton, l’intervalle le plus instable. Sur Cmaj7, les deux notes se resserrent : B → C, F → E. L’oreille entend : « arrivé ».'
+          },
+          { t: 'chords', label: 'Écoute la tension, puis le repos', chords: ['G7', 'Cmaj7'], romans: ['V7', 'IΔ7'], gap: 1.6 },
           { t: 'h', text: 'Les guide tones' },
           {
             t: 'p',
             text: 'À chaque accord, la **7e descend d’un demi-ton** sur la 3ce du suivant, et la **3ce reste** pour devenir la 7e. Dm7 (F, C) → G7 (F, B) → Cmaj7 (E, B). Joue seulement ces deux notes : l’enchaînement s’entend déjà.'
           },
-          { t: 'chords', label: 'En shells (fondamentale, 3ce, 7e)', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'shell', gap: 1.4 },
-          { t: 'h', text: 'Dans les standards' },
           {
             t: 'p',
-            text: 'Le ii–V sert à **changer de tonalité** : Autumn Leaves alterne B♭ et G mineur, All the Things You Are passe par A♭, C, E♭, G et E. Chaque ii–V annonce le prochain centre tonal.'
+            text: 'Au piano, on joue souvent ces accords en 3 notes : la fondamentale, la 3ce et la 7e, sans la 5te. On appelle ça un **shell** (« coquille ») : la 5te n’apporte rien à la couleur, la 3ce et la 7e disent tout. Les shells sont détaillés à l’étape 6.'
+          },
+          { t: 'chords', label: 'En shells : fondamentale, 3ce, 7e', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'shell', gap: 1.4 },
+          { t: 'h', text: 'Pourquoi le ii–V fait changer de tonalité' },
+          {
+            t: 'p',
+            text: 'Dm7, G7 et Cmaj7 ne sont ensemble que dans **une seule tonalité** : C majeur. Dès que l’oreille entend Dm7 → G7, elle attend C, même si le morceau était ailleurs une seconde avant. Le ii–V est un panneau qui annonce la prochaine ville.'
+          },
+          {
+            t: 'p',
+            text: 'Pour aller en F, il suffit de jouer le ii–V de F : **Gm7 → C7 → Fmaj7**. C7 contient B♭, qui n’est pas dans la gamme de C, et E, la sensible de F. L’oreille comprend : on est passé en F. Pas besoin de préparer davantage.'
+          },
+          { t: 'chords', label: 'De C vers F par son ii–V', chords: ['Cmaj7', 'Gm7', 'C7', 'Fmaj7'], romans: ['I en C', 'II en F', 'V en F', 'I en F'], gap: 1.3 },
+          {
+            t: 'p',
+            text: 'Les standards font ça sans arrêt : Autumn Leaves alterne B♭ majeur et G mineur, All the Things You Are passe par A♭, C, E♭, G et E. Devant chaque ii–V, une seule question : **sur quel accord va-t-il résoudre ?** C’est la tonalité du moment.'
           },
           { t: 'tip', text: 'Un **m7 suivi d’un 7 une quarte plus haut** = un ii–V. Cherche ensuite où il résout.' },
           {
@@ -605,6 +624,13 @@ export const PARTS: Part[] = [
             choices: ['Dm7 G7 Fmaj7', 'Gm7 C7 F7', 'Gm7 C7 Fmaj7', 'Am7 D7 Gmaj7'],
             answer: 2,
             explain: 'II = G, V = C dans F majeur : Gm7 C7 Fmaj7.'
+          },
+          {
+            t: 'quiz',
+            q: 'Tu es en C. Pour aller en G, quel ii–V joues-tu ?',
+            choices: ['Am7 D7', 'Dm7 G7', 'Em7 A7', 'Gm7 C7'],
+            answer: 0,
+            explain: 'Le II et le V de G : Am7 et D7. D7 contient F♯, la sensible de G, absente de C majeur.'
           },
           {
             t: 'quiz',

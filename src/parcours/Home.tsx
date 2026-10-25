@@ -96,7 +96,14 @@ export function Home() {
           <a class="row" href="#/morceaux">
             <span class="row-main">
               <span class="row-title">Morceaux</span>
-              <span class="row-sub">28 standards : analyse, play-along, mémoire ; import</span>
+              <span class="row-sub">Jazz, pop-rock, chanson : comprendre, quiz, play-along ; import avec paroles</span>
+            </span>
+            <ChevronIcon />
+          </a>
+          <a class="row" href="#/lexique">
+            <span class="row-main">
+              <span class="row-title">Lexique</span>
+              <span class="row-sub">Shell, dominante, sensible, ii–V–I… : les mots du cours expliqués</span>
             </span>
             <ChevronIcon />
           </a>
