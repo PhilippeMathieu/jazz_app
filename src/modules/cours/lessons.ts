@@ -126,13 +126,13 @@ export const PARTS: Part[] = [
       },
       {
         id: 'intervalles',
-        title: 'Intervalles et ligne de basse',
-        sub: 'L’écart entre deux notes, et ce que joue la contrebasse',
+        title: 'Les intervalles',
+        sub: 'L’écart entre deux notes',
         minutes: 4,
         blocks: [
           {
             t: 'p',
-            text: 'Un **intervalle** est l’écart entre deux notes, compté en demi-tons. Un accord est un empilement d’intervalles, une ligne de basse une suite d’intervalles : les entendre, c’est la base de l’oreille.'
+            text: 'Un **intervalle** est l’écart entre deux notes, compté en demi-tons. Un accord est un empilement d’intervalles : les entendre, c’est la base de l’oreille.'
           },
           {
             t: 'table',
@@ -147,15 +147,8 @@ export const PARTS: Part[] = [
             t: 'p',
             text: 'En descendant : **Douce nuit** donne la 2de majeure (2e et 3e notes, la → sol) puis la 3ce mineure (sol → mi) ; **Adeste fideles**, la quarte (2e → 3e note). Le triton, lui, est absent des chants d’église anciens : on l’appelait *diabolus in musica*.'
           },
-          { t: 'tip', text: 'Le triton (6 demi-tons) sépare la 3ce et la 7e de tout accord de dominante (E et B♭ dans C7) : c’est la tension qui veut se résoudre.' },
-          { t: 'h', text: 'La ligne de basse' },
-          {
-            t: 'p',
-            text: 'Sur le 1 de chaque mesure, la contrebasse joue presque toujours la **fondamentale** de l’accord. Reconnaître ses degrés par rapport à la tonique (I, IV, V…), c’est entendre la grille sans la voir. Les mouvements les plus courants : la quarte qui monte (V → I, II → V) et le demi-ton qui descend (SubV : ♭II → I).'
-          },
-          { t: 'chords', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'], label: 'I, IV, V, I : écoute la basse' },
-          { t: 'quiz', q: 'C → G, en montant : quel intervalle ?', choices: ['Une quarte', 'Une quinte', 'Une sixte'], answer: 1, explain: 'C D E F G : 5 notes, 7 demi-tons : une quinte juste.' },
-          { t: 'quiz', q: 'En F majeur, la basse joue F puis B♭. Quel degré ?', choices: ['II', 'IV', 'V'], answer: 1, explain: 'F G A B♭ : B♭ est la 4e note de la gamme de F, le IV.' }
+          { t: 'tip', text: 'Le triton (6 demi-tons, la moitié exacte de l’octave) est l’intervalle le plus instable : tu le retrouveras au cœur des accords de tension.' },
+          { t: 'quiz', q: 'C → G, en montant : quel intervalle ?', choices: ['Une quarte', 'Une quinte', 'Une sixte'], answer: 1, explain: 'C D E F G : 5 notes, 7 demi-tons : une quinte juste.' }
         ]
       },
       {
@@ -205,7 +198,7 @@ export const PARTS: Part[] = [
           { t: 'p', text: 'Même armure, tonique **1 ton ½ plus bas** (le 6e degré de la gamme majeure) : A majeur → F♯ mineur ; E♭ majeur → C mineur.' },
           {
             t: 'tip',
-            text: 'En jazz, un thème change souvent de tonalité sans changer d’armure : l’armure donne la tonalité de départ, les ii–V donnent les autres.'
+            text: 'L’armure donne la tonalité du **début** du morceau. Un morceau peut ensuite passer dans d’autres tonalités sans changer d’armure : on verra comment à l’étape 6.'
           },
           {
             t: 'quiz',
@@ -309,6 +302,26 @@ export const PARTS: Part[] = [
             explain: 'II = A (mineur), V = D, I = G.'
           }
         ]
+      },
+      {
+        id: 'basse',
+        title: 'La ligne de basse',
+        sub: 'I, IV, V : entendre la grille par la basse',
+        minutes: 3,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Sur le 1 de chaque mesure, la contrebasse (ou ta main gauche) joue presque toujours la **fondamentale** de l’accord. Si tu reconnais ces notes par rapport à la tonique (I, IV, V…), tu entends la grille sans la voir.'
+          },
+          { t: 'chords', chords: ['C', 'F', 'G', 'C'], romans: ['I', 'IV', 'V', 'I'], label: 'I, IV, V, I : écoute la basse' },
+          {
+            t: 'p',
+            text: 'Les deux mouvements les plus courants : la basse qui **monte d’une quarte** (G → C : V → I ; D → G : II → V), et celle qui **descend note à note** (C → B → A → G).'
+          },
+          { t: 'tip', text: 'Pour trouver le degré d’une note de basse, compte dans la gamme depuis la tonique : en F, F G A B♭ : B♭ est la 4e note, le IV.' },
+          { t: 'quiz', q: 'En F majeur, la basse joue F puis B♭. Quel degré ?', choices: ['II', 'IV', 'V'], answer: 1, explain: 'F G A B♭ : B♭ est la 4e note de la gamme de F, le IV.' },
+          { t: 'quiz', q: 'En C, la basse joue G puis C (au-dessus). Quel mouvement ?', choices: ['Elle monte d’une quarte : V → I', 'Elle monte d’une quinte : I → V', 'Elle descend d’une tierce'], answer: 0, explain: 'G A B C : 4 notes, une quarte. C’est le V qui retourne au I.' }
+        ]
       }
     ]
   },
@@ -386,7 +399,7 @@ export const PARTS: Part[] = [
           { t: 'h', text: 'ø7 et °7 : l’instabilité' },
           {
             t: 'p',
-            text: '**ø7** est le II du mineur (Dø7 → G7 → Cm). **°7** empile trois tierces mineures : il est symétrique, ses renversements sont identiques, donc il n’existe que **3** accords °7 différents. Il sert d’accord de passage (Cmaj7 C♯°7 Dm7) ou de dominante sans fondamentale : B°7 = G7♭9 sans le G.'
+            text: '**ø7** est l’accord du VII en majeur (Bø7 en C). **°7** empile trois tierces mineures : il est symétrique, ses renversements sont identiques, donc il n’existe que **3** accords °7 différents. Il sert surtout d’accord de passage, entre deux accords : Cmaj7 C♯°7 Dm7.'
           },
           { t: 'chords', label: 'Accord de passage', chords: ['Cmaj7', 'C#dim7', 'Dm7', 'G7'], romans: ['IΔ7', '♯I°7', 'IIm7', 'V7'] },
           { t: 'tip', text: 'Repos : maj7, 6, m6. Mouvement : m7. Tension : 7, ø7, °7.' },
@@ -460,7 +473,7 @@ export const PARTS: Part[] = [
           {
             t: 'quiz',
             q: 'De Cø7 à C°7 :',
-            choices: ['La 7e baisse : B♭ → B𝄫 (= A)', 'La 3ce baisse : E♭ → E𝄫', 'La 5te monte : G♭ → G', 'On ajoute une 9e'],
+            choices: ['La 7e baisse : B♭ → B𝄫 (= A)', 'La 3ce baisse : E♭ → E𝄫', 'La 5te monte : G♭ → G', 'On ajoute une 6te'],
             answer: 0,
             explain: 'ø7 et °7 ne diffèrent que par la 7e : mineure dans ø7, diminuée (un demi-ton plus bas) dans °7.'
           },
@@ -507,7 +520,7 @@ export const PARTS: Part[] = [
           { t: 'h', text: '2. La règle' },
           {
             t: 'p',
-            text: 'Rien de nouveau : ce sont les accords de l’étape 4. Chaque accord de 3 sons garde sa couleur et gagne sa 7e :'
+            text: 'Rien de nouveau : ce sont les accords de l’étape 5. Chaque accord de 3 sons garde sa couleur et gagne sa 7e :'
           },
           {
             t: 'table',
@@ -600,7 +613,7 @@ export const PARTS: Part[] = [
           },
           {
             t: 'p',
-            text: 'Au piano, on joue souvent ces accords en 3 notes : la fondamentale, la 3ce et la 7e, sans la 5te. On appelle ça un **shell** (« coquille ») : la 5te n’apporte rien à la couleur, la 3ce et la 7e disent tout. Les shells sont détaillés à l’étape 6.'
+            text: 'Au piano, joue-les en **shell** (étape 5) : la fondamentale, la 3ce et la 7e. Les deux notes qui bougent d’un accord à l’autre sont justement la 3ce et la 7e.'
           },
           { t: 'chords', label: 'En shells : fondamentale, 3ce, 7e', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'shell', gap: 1.4 },
           { t: 'h', text: 'Pourquoi le ii–V fait changer de tonalité' },
@@ -654,7 +667,7 @@ export const PARTS: Part[] = [
           { t: 'chords', chords: ['Dm7b5', 'G7b9', 'Cm6'], romans: ['IIø7', 'V7♭9', 'Im6'], gap: 1.4 },
           {
             t: 'p',
-            text: 'Dø7 et G7♭9 viennent de C mineur harmonique. Le ♭9 de G7 (A♭) est la ♭6 de la tonalité : c’est aussi la ♭5 de Dø7, qui reste d’un accord à l’autre. Le Cm6 prend la 6te majeure (A) du mineur mélodique.'
+            text: 'Dø7 et G7♭9 viennent de C mineur harmonique. Le ♭9 de G7 (A♭) est la ♭6 de la tonalité : c’est aussi la ♭5 de Dø7, qui reste d’un accord à l’autre. Le Cm6 ajoute une 6te majeure (A) : un repos plus doux que la 7e.'
           },
           {
             t: 'p',
@@ -693,16 +706,13 @@ export const PARTS: Part[] = [
           },
           { t: 'chords', chords: ['Cmaj7', 'Am7', 'Dm7', 'G7'], romans: ['IΔ7', 'VIm7', 'IIm7', 'V7'], gap: 0.9 },
           { t: 'h', text: 'Variantes' },
-          { t: 'chords', label: 'Le VI devient dominante (V7/II)', chords: ['Cmaj7', 'A7', 'Dm7', 'G7'], romans: ['IΔ7', 'V7/II', 'IIm7', 'V7'], gap: 0.9 },
-          { t: 'chords', label: 'Le III remplace le I', chords: ['Em7', 'A7', 'Dm7', 'G7'], romans: ['IIIm7', 'V7/II', 'IIm7', 'V7'], gap: 0.9 },
-          { t: 'chords', label: 'Avec substitutions tritoniques', chords: ['Cmaj7', 'Eb7', 'Dm7', 'Db7'], romans: ['IΔ7', 'SubV/II', 'IIm7', 'SubV'], gap: 0.9 },
+          { t: 'chords', label: 'Le III remplace le I', chords: ['Em7', 'Am7', 'Dm7', 'G7'], romans: ['IIIm7', 'VIm7', 'IIm7', 'V7'], gap: 0.9 },
           {
             t: 'p',
-            text: 'Dans les rhythm changes, le turnaround tourne en boucle sur les mesures 1–2 et 3–4 : B♭6 G7 Cm7 F7.'
+            text: 'Dans les rhythm changes, le turnaround tourne en boucle sur les mesures 1 à 4 : B♭6 Gm7 Cm7 F7. D’autres variantes, plus colorées, viendront aux étapes 9 et 10.'
           },
           { t: 'tip', text: 'Deux dernières mesures d’une grille, quatre accords qui descendent par quintes : turnaround.' },
           { t: 'h', text: 'Faire chanter le turnaround' },
-          { t: 'astuce', id: 'turn-chrom' },
           { t: 'astuce', id: 'dim-passage' },
           {
             t: 'quiz',
@@ -744,12 +754,17 @@ export const PARTS: Part[] = [
             text: 'Enchaînées, elles forment des **dominantes en cascade** : D7 G7 C7 F7 dans le pont des rhythm changes, ou E7 A7 D7 G7 vers C.'
           },
           { t: 'chords', label: 'Cascade', chords: ['E7', 'A7', 'D7', 'G7', 'Cmaj7'], gap: 1 },
+          { t: 'h', text: 'Dans un turnaround' },
+          { t: 'p', text: 'Le VI du turnaround devient souvent une dominante : A7 au lieu de Am7, qui pousse vers Dm7. Et le III peut remplacer le I.' },
+          { t: 'chords', label: 'Le VI devient dominante (V7/II)', chords: ['Cmaj7', 'A7', 'Dm7', 'G7'], romans: ['IΔ7', 'V7/II', 'IIm7', 'V7'], gap: 0.9 },
+          { t: 'chords', label: 'Le III remplace le I', chords: ['Em7', 'A7', 'Dm7', 'G7'], romans: ['IIIm7', 'V7/II', 'IIm7', 'V7'], gap: 0.9 },
+          { t: 'astuce', id: 'turn-chrom' },
           { t: 'h', text: 'Une ligne qui descend toute seule' },
           { t: 'astuce', id: 'cascade' },
           {
             t: 'quiz',
             q: 'En C, D7 est…',
-            choices: ['V7/II', 'V7/V', 'V7/IV', 'SubV'],
+            choices: ['V7/II', 'V7/V', 'V7/IV', 'V7/VI'],
             answer: 1,
             explain: 'D7 résout sur G : V de V.'
           },
@@ -779,6 +794,7 @@ export const PARTS: Part[] = [
             text: 'Pour improviser sur D♭7 en SubV, joue **lydien ♭7** (D♭ E♭ F G A♭ B♭ C♭). Ce sont les mêmes notes que la gamme altérée de G.'
           },
           { t: 'tip', text: 'Un **7 qui descend d’un demi-ton** sur sa résolution = SubV.' },
+          { t: 'chords', label: 'Un turnaround avec deux SubV', chords: ['Cmaj7', 'Eb7', 'Dm7', 'Db7'], romans: ['IΔ7', 'SubV/II', 'IIm7', 'SubV'], gap: 0.9 },
           { t: 'h', text: 'Au clavier' },
           { t: 'astuce', id: 'subv' },
           {
@@ -810,7 +826,7 @@ export const PARTS: Part[] = [
           { t: 'chords', label: 'IV puis IV mineur', chords: ['Fmaj7', 'Fm6', 'Cmaj7'], romans: ['IVΔ7', 'IVm6', 'IΔ7'], gap: 1.3 },
           {
             t: 'p',
-            text: 'La **cadence backdoor** : IVm7 – ♭VII7 – IΔ7 (Fm7 B♭7 Cmaj7). B♭7 arrive sur C par un ton : ce n’est ni un V ni un SubV. On l’entend dans Lady Bird.'
+            text: 'La **cadence backdoor** : IVm7 – ♭VII7 – IΔ7 (Fm7 B♭7 Cmaj7). B♭7 arrive sur C par un ton : ce n’est pas le V (G7), c’est une autre porte d’entrée. On l’entend dans Lady Bird.'
           },
           { t: 'chords', chords: ['Fm7', 'Bb7', 'Cmaj7'], romans: ['IVm7', '♭VII7', 'IΔ7'], gap: 1.3 },
           { t: 'tip', text: 'Un **accord mineur sur le IV** d’un morceau majeur = emprunt. Un 7 un ton sous le I = backdoor.' },
@@ -870,7 +886,7 @@ export const PARTS: Part[] = [
             rows: [
               ['1–4', 'F7 | B♭7 | F7 | Cm7 F7', 'IV en mesure 2 ; ii–V vers le IV en 4'],
               ['5–8', 'B♭7 | B°7 | F7 | Am7 D7', '°7 de passage ; ii–V vers Gm'],
-              ['9–12', 'Gm7 | C7 | F7 D7 | Gm7 C7', 'ii–V–I, puis turnaround']
+              ['9–12', 'Gm7 | C7 | F7 D7 | Gm7 C7', 'ii–V–I, puis le turnaround qui ramène au début']
             ]
           },
           { t: 'chords', label: 'Les 4 premières mesures', chords: ['F7', 'Bb7', 'F7', 'Cm7', 'F7'], gap: 1 },
@@ -890,21 +906,14 @@ export const PARTS: Part[] = [
       },
       {
         id: 'rock',
-        title: 'Pop, rock et chanson',
-        sub: 'I–V–vi–IV, le ♭VII, i–♭VI–♭III–♭VII',
+        title: 'Le mineur de la pop et de la chanson',
+        sub: 'Le ♭VII, i–♭VI–♭III–♭VII, i–iv–V–i, la dominante du vi',
         minutes: 5,
         blocks: [
           {
             t: 'p',
-            text: 'Mêmes degrés qu’en jazz, autre écriture : **majuscule = accord majeur** (I, IV, V), **minuscule = mineur** (ii, iii, vi). VIm s’écrit vi. Et le plus souvent sans 7e : des accords de 3 sons.'
+            text: 'Tu connais les suites majeures de la pop (étape 4). Les accords du mineur leur donnent leur couleur rock ou mélancolique.'
           },
-          { t: 'h', text: 'La suite de la pop' },
-          { t: 'chords', label: 'I – V – vi – IV : Let It Be', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'vi', 'IV'], voicing: 'triad', gap: 1 },
-          {
-            t: 'p',
-            text: 'Les mêmes quatre accords dans un autre ordre : **vi – IV – I – V** (on part du mineur, plus sombre), **I – vi – IV – V** (les slows des années 50). Et **vi – V – IV – I** : la basse descend note à note.'
-          },
-          { t: 'chords', label: 'vi – V – IV – I : le refrain de Let It Be', chords: ['Am', 'G', 'F', 'C'], romans: ['vi', 'V', 'IV', 'I'], voicing: 'triad', gap: 1 },
           { t: 'h', text: 'Le ♭VII : la couleur rock' },
           {
             t: 'p',
@@ -928,14 +937,6 @@ export const PARTS: Part[] = [
             text: 'Un **E** ou **E7** dans un morceau en C : il n’est pas dans la gamme, c’est la dominante de Am, le vi (V7/vi). Il annonce le mineur : Hallelujah, Je l’aime à mourir, le pont de Wind of Change.'
           },
           { t: 'chords', label: 'I – V7/vi – vi', chords: ['C', 'E7', 'Am'], romans: ['I', 'V7/vi', 'vi'], voicing: 'triad', gap: 1.1 },
-          { t: 'tip', text: 'Dans **Morceaux**, onglets **Pop-rock** et **Chanson** : « Comprendre » raconte chaque grille phrase par phrase, le « Quiz » te fait reconnaître chaque phrase.' },
-          {
-            t: 'quiz',
-            q: 'I – V – vi – IV en G :',
-            choices: ['G D Em C', 'G C D Em', 'G D Am C', 'G Em C D'],
-            answer: 0,
-            explain: 'V = D, vi = Em, IV = C.'
-          },
           {
             t: 'quiz',
             q: 'Dans un morceau en C, B♭ est…',
@@ -955,28 +956,215 @@ export const PARTS: Part[] = [
     ]
   },
   {
-    title: 'Au clavier',
+    title: 'Accompagner une chanson',
     lessons: [
       {
-        id: 'voicings',
-        title: 'Voicings main gauche',
-        sub: 'Shells, sans fondamentale A et B',
+        id: 'renverser',
+        title: 'Enchaîner sans sauter',
+        sub: 'Renverser les accords, garder les notes communes',
         minutes: 5,
         blocks: [
           {
             t: 'p',
-            text: 'Un voicing, c’est le choix et l’ordre des notes jouées. En jazz, on ne joue presque jamais 1-3-5-7 serré : on garde ce qui compte.'
+            text: 'Jouer chaque accord en position fondamentale (C E G, puis G B D…) oblige la main à sauter d’un accord à l’autre. Les pianistes font autrement : ils **renversent** les accords pour que la main droite bouge le moins possible.'
           },
-          { t: 'h', text: 'Shell : 1, 3, 7' },
+          { t: 'p', text: 'La règle : **les notes communes restent**, les autres vont à la note la plus proche, un ton ou un demi-ton plus loin.' },
+          { t: 'astuce', id: 'renverser' },
+          { t: 'p', text: 'Deux enchaînements que tu entendras partout, à l’église comme dans la pop :' },
+          { t: 'astuce', id: 'amen' },
+          { t: 'astuce', id: 'sensible' },
+          { t: 'tip', text: 'Avant de jouer une grille, regarde d’un accord à l’autre : quelles notes restent ? Garde-les sous les doigts, déplace seulement les autres.' },
+          {
+            t: 'quiz',
+            q: 'De C (C E G) à Am, quelles notes restent ?',
+            choices: ['C et E', 'G seulement', 'Aucune', 'E et G'],
+            answer: 0,
+            explain: 'Am = A C E : C et E sont déjà sous tes doigts ; seul G monte d’un ton, sur A.'
+          },
+          {
+            t: 'quiz',
+            q: 'De G (B D G) à C (C E G), quelle note monte d’un demi-ton ?',
+            choices: ['B → C', 'D → E', 'G → A'],
+            answer: 0,
+            explain: 'B, juste sous C, monte sur C. D monte d’un ton sur E, G reste.'
+          }
+        ]
+      },
+      {
+        id: 'main-gauche',
+        title: 'La main gauche et le rythme',
+        sub: 'Basse, octave, arpège ; ballade et pop',
+        minutes: 5,
+        blocks: [
           {
             t: 'p',
-            text: 'Fondamentale + guide tones. Idéal en solo ou sans contrebasse. Dans les graves (sous A2), écarte : 1-7-10 au lieu de 1-3-7.'
+            text: 'La main droite joue l’accord ; la main gauche donne la **basse** : la fondamentale, plus bas. C’est elle qui fait entendre la grille (leçon « La ligne de basse », étape 3).'
           },
-          { t: 'chords', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'shell', gap: 1.3 },
+          { t: 'chords', label: 'Basse à gauche, accord renversé à droite', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'VIm', 'IV'], voicing: 'triad', gap: 1.1 },
+          { t: 'h', text: 'Trois façons de jouer la main gauche' },
+          {
+            t: 'table',
+            head: ['Main gauche', 'Comment', 'Pour'],
+            rows: [
+              ['La fondamentale', 'une note tenue par mesure', 'commencer, les chants lents'],
+              ['L’octave', 'la fondamentale et la même note une octave plus haut, ensemble', 'un son plus plein, les refrains'],
+              ['L’arpège 1-5-8', 'fondamentale, quinte, octave, l’une après l’autre', 'les ballades, les chants calmes']
+            ]
+          },
+          { t: 'h', text: 'Le rythme' },
+          {
+            t: 'p',
+            text: 'Pour accompagner, la main droite joue l’accord **en rythme**. Deux grooves suffisent pour commencer : la **ballade** (calme, la caisse claire sur le 3) et la **pop** (des croches régulières, la caisse claire sur 2 et 4).'
+          },
+          { t: 'grooves', styles: ['slow', 'rock'], label: 'Écoute les deux grooves' },
+          { t: 'tip', text: 'Commence lentement : la basse sur le 1, l’accord sur 2, 3 et 4. Quand c’est stable, passe aux croches.' },
+          {
+            t: 'quiz',
+            q: 'Ballade pop : sur quel temps tombe la caisse claire ?',
+            choices: ['Sur le 3', 'Sur 2 et 4', 'Sur le 1'],
+            answer: 0,
+            explain: 'Ballade : un seul coup de caisse claire, sur le 3. En pop rapide, sur 2 et 4.'
+          },
+          {
+            t: 'quiz',
+            q: 'L’arpège 1-5-8 de main gauche sur G :',
+            choices: ['G D G', 'G B D', 'G C G'],
+            answer: 0,
+            explain: 'Fondamentale G, quinte D, octave G.'
+          }
+        ]
+      },
+      {
+        id: 'pop',
+        title: 'Lire une grille de chanson',
+        sub: 'Les accords au-dessus des paroles ; I–V–vi–IV ; l’« Amen »',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Une grille de chanson (Ultimate Guitar, La Boîte à chansons…) écrit les accords **au-dessus des paroles**, sur la syllabe où ils changent. Pas de barres de mesure : souvent, un accord dure une mesure.'
+          },
+          {
+            t: 'p',
+            text: 'Pour la comprendre, on la lit en **degrés**, comme à l’étape 3. Dans les chansons, on écrit souvent **majuscule = accord majeur** (I, IV, V), **minuscule = mineur** (ii, iii, vi) : vi veut dire VIm.'
+          },
+          { t: 'h', text: 'La suite de la pop' },
+          { t: 'chords', label: 'I – V – vi – IV : Let It Be', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'vi', 'IV'], voicing: 'triad', gap: 1 },
+          {
+            t: 'p',
+            text: 'Les mêmes quatre accords dans un autre ordre : **vi – IV – I – V** (on part du mineur, plus sombre), **I – vi – IV – V** (les slows des années 50). Et **vi – V – IV – I** : la basse descend note à note.'
+          },
+          { t: 'chords', label: 'vi – V – IV – I : le refrain de Let It Be', chords: ['Am', 'G', 'F', 'C'], romans: ['vi', 'V', 'IV', 'I'], voicing: 'triad', gap: 1 },
+          { t: 'h', text: 'Les chants d’église' },
+          {
+            t: 'p',
+            text: 'Cantiques et chants de messe utilisent les mêmes accords, avec deux fins de phrase à reconnaître : **IV → I**, la cadence de l’« Amen », et **V → I**, qui conclut.'
+          },
+          { t: 'chords', label: 'I – IV – I – V – I', chords: ['C', 'F', 'C', 'G', 'C'], romans: ['I', 'IV', 'I', 'V', 'I'], voicing: 'triad', gap: 1 },
+          { t: 'tip', text: 'Dans **Morceaux**, « Importer » : colle une grille avec ses paroles. L’onglet « Paroles » les affiche sous les accords ; « Comprendre » et le « Quiz » t’aident à la lire ; « Au piano » te montre comment l’enchaîner.' },
+          {
+            t: 'quiz',
+            q: 'I – V – vi – IV en G :',
+            choices: ['G D Em C', 'G C D Em', 'G D Am C', 'G Em C D'],
+            answer: 0,
+            explain: 'V = D, vi = Em, IV = C.'
+          },
+          {
+            t: 'quiz',
+            q: 'Dans une chanson en C, F → C à la fin d’une phrase, c’est…',
+            choices: ['IV → I, l’« Amen »', 'V → I', 'ii → V'],
+            answer: 0,
+            explain: 'F est le IV de C : la cadence plagale, celle de l’« Amen ».'
+          }
+        ]
+      },
+      {
+        id: 'shell',
+        title: 'Le shell : un 4 sons d’une main',
+        sub: 'Fondamentale, 3ce, 7e',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Un accord de 4 sons joué d’une main, c’est large. Les pianistes gardent les notes qui comptent : la **fondamentale**, la **3ce** et la **7e**. On enlève la 5te. Cette façon de disposer l’accord (un **voicing**) s’appelle un **shell** (« coquille » en anglais).'
+          },
+          {
+            t: 'p',
+            text: 'Pourquoi la 5te peut sauter : elle est la même dans maj7, m7 et 7 (G dans Cmaj7, Cm7 et C7). La 3ce dit majeur ou mineur, la 7e dit maj7, 7 ou m7 : avec elles, l’accord est reconnaissable.'
+          },
+          {
+            t: 'table',
+            head: ['Accord', 'Notes', 'Shell'],
+            rows: [
+              ['Cmaj7', 'C E G B', 'C E B'],
+              ['C7', 'C E G B♭', 'C E B♭'],
+              ['Cm7', 'C E♭ G B♭', 'C E♭ B♭']
+            ]
+          },
+          { t: 'chords', label: 'Trois shells sur C', chords: ['Cmaj7', 'C7', 'Cm7'], voicing: 'shell', gap: 1.3 },
+          { t: 'p', text: 'Dans les graves (sous A2), la 3ce trop près de la fondamentale sonne brouillée : écarte en 1-7-10 (fondamentale, 7e, puis la 3ce une octave plus haut).' },
+          { t: 'tip', text: 'Shell = 1, 3, 7 : trois notes, toute la couleur.' },
+          {
+            t: 'quiz',
+            q: 'Le shell de G7 :',
+            choices: ['G B F', 'G B D', 'G D F', 'B D F'],
+            answer: 0,
+            explain: 'Fondamentale G, 3ce B, 7e F.'
+          }
+        ]
+      },
+      {
+        id: 'couleurs',
+        title: 'Les couleurs : 9e et 13e',
+        sub: 'Ce qu’on ajoute au-dessus de la 7e',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Au-dessus de la 7e, on peut continuer à prendre une note de la gamme sur deux : C E G B, puis **D**, puis F, puis **A**. Ces notes s’appellent la **9e** (D), la **11e** (F) et la **13e** (A). Ce sont les mêmes notes que la 2de, la 4te et la 6te, pensées au-dessus de l’accord.'
+          },
+          {
+            t: 'p',
+            text: 'Elles ne changent pas le rôle de l’accord (Cmaj9 reste un I) : elles le **colorent**. La 9e va presque partout ; la 13e surtout sur les accords 7 (G13). La 11e frotte avec la 3ce des accords majeurs : on l’y évite (détails à l’étape 10).'
+          },
+          { t: 'chords', label: 'Cmaj7, puis Cmaj9 : la 9e ajoute de l’air', chords: ['Cmaj7', 'Cmaj9'], romans: ['IΔ7', 'IΔ9'], gap: 1.6 },
+          { t: 'chords', label: 'G7, puis G13', chords: ['G7', 'G13'], romans: ['V7', 'V13'], gap: 1.6 },
+          { t: 'tip', text: '**9e = 2de**, **13e = 6te**, une octave plus haut. Sur C : 9e = D, 13e = A.' },
+          {
+            t: 'quiz',
+            q: 'La 9e de F :',
+            choices: ['G', 'A', 'E', 'D'],
+            answer: 0,
+            explain: 'F G : la 2de de F, donc sa 9e.'
+          },
+          {
+            t: 'quiz',
+            q: 'La 13e de G7 :',
+            choices: ['E', 'F', 'C', 'A'],
+            answer: 0,
+            explain: 'G A B C D E : la 6te de G, donc sa 13e.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    title: 'Au clavier',
+    lessons: [
+      {
+        id: 'voicings',
+        title: 'Voicings sans fondamentale',
+        sub: 'Types A et B',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Un voicing, c’est le choix et l’ordre des notes jouées. Tu connais le shell (1, 3, 7, étape 5). Quand une contrebasse joue déjà la fondamentale, la main gauche peut la laisser, et prendre une couleur à la place : la 9e (leçon précédente).'
+          },
           { t: 'h', text: 'Sans fondamentale : A et B' },
           {
             t: 'p',
-            text: 'Avec une contrebasse, on laisse la fondamentale et on ajoute la 9 (et la 13 sur les dominantes). **Type A** : 3ce en bas (3-5-7-9). **Type B** : 7e en bas (7-9-3-5).'
+            text: 'On garde la 3ce, la 5te et la 7e, on ajoute la 9e (et la 13e sur les accords 7). **Type A** : 3ce en bas (3-5-7-9). **Type B** : 7e en bas (7-9-3-5).'
           },
           { t: 'chords', label: 'Type A', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'A', gap: 1.3 },
           { t: 'chords', label: 'Type B', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'B', gap: 1.3 },
@@ -1081,13 +1269,13 @@ export const PARTS: Part[] = [
       },
       {
         id: 'tensions',
-        title: 'Les tensions : 9, 11, 13',
-        sub: 'Ce qu’on ajoute, ce qu’on évite',
+        title: 'Les tensions altérées',
+        sub: '♭9, ♯9, ♯11, ♭13, et celles qu’on évite',
         minutes: 5,
         blocks: [
           {
             t: 'p',
-            text: 'Au-dessus de la 7e, on continue d’empiler des tierces : **9, 11, 13** (les 2, 4 et 6, une octave plus haut). Elles colorent l’accord ; la fondamentale et la 5te peuvent alors sauter.'
+            text: 'Tu connais les couleurs 9 et 13 (étape 7). Sur les accords 7, on peut aussi les **altérer**, les baisser ou les monter d’un demi-ton : **♭9, ♯9, ♯11, ♭13**. Plus tendues, elles servent surtout quand le V va vers un accord mineur. Le tableau dit ce qui sonne sur chaque accord.'
           },
           {
             t: 'table',

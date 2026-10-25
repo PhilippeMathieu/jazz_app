@@ -8,22 +8,25 @@ Deux usages : **dans le métro** (sans piano, d'une main, hors ligne) et **au pi
 
 Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'accueil répond par une carte « Continuer » : la prochaine leçon ou le prochain exercice. Un sélecteur **Métro / Au piano** dit où l'on est : dans le métro, seuls les exercices sans piano sont proposés (ceux au piano attendent, et l'accueil dit combien) ; au piano, ceux au piano passent d'abord.
 
-10 étapes, des notes à l'improvisation. Au premier lancement : « Je débute » (étape 1), « Je connais les accords de 3 sons » (étape 4) ou « Je joue déjà des ii–V–I » (étape 6) ; les étapes d'avant sont comptées comme acquises et restent ouvertes.
+11 étapes, des notes à l'improvisation. Au premier lancement : « Je débute » (étape 1), « Je connais les accords de 3 sons » (étape 4) ou « Je joue déjà des ii–V–I » (étape 7) ; les étapes d'avant sont comptées comme acquises et restent ouvertes. Le point de départ est gardé par identifiant d'étape (un ancien choix est relu correctement après l'ajout d'une étape).
 
 | # | Étape | Leçons | Exercices |
 |---|---|---|---|
 | 1 | Notes et intervalles | 2 | 4 (+1) |
 | 2 | Les accords de 3 sons | 1 | 4 |
-| 3 | La gamme et ses accords | 3 | 7 (+1) |
-| 4 | Les accords de 4 sons | 4 | 11 (+2) |
-| 5 | Le ii–V–I | 2 | 7 |
-| 6 | Voicings et guide tones | 2 | 6 |
-| 7 | Lire une grille : le blues | 3 | 6 (+3) |
-| 8 | Le mineur et les dominantes secondaires | 5 | 8 (+3) |
-| 9 | Substitutions et couleurs | 4 | 7 (+3) |
-| 10 | Improviser sur les accords | 3 | 7 (+3) |
+| 3 | La gamme et ses accords | 4 | 6 (+2) |
+| 4 | Accompagner une chanson | 3 | 5 |
+| 5 | Les accords de 4 sons | 4 | 11 (+2) |
+| 6 | Le ii–V–I | 3 | 7 |
+| 7 | Couleurs, voicings et guide tones | 3 | 5 |
+| 8 | Lire une grille et accompagner | 4 | 7 (+2) |
+| 9 | Le mineur et les dominantes secondaires | 4 | 8 (+3) |
+| 10 | Substitutions et tensions | 4 | 7 (+3) |
+| 11 | Improviser sur les accords | 3 | 7 (+3) |
 
-29 leçons, 67 exercices (38 dans le métro, 18 au piano, 11 de rythme), 16 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
+35 leçons, 71 exercices (38 dans le métro, 20 au piano, 13 de rythme), 16 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
+
+**Aucun mot avant son explication** : un test parcourt les leçons dans l'ordre du parcours et échoue si un mot du lexique (shell, dominante, 9e, SubV…) apparaît avant la leçon qui l'explique (ou le présente en passant). Dans les leçons, la première apparition de chaque mot est touchable (définition, exemple à écouter) ; page Lexique depuis l'accueil.
 
 Chaque étape : **Comprendre** (leçons de 3 à 5 min, exemples à écouter et à voir au clavier, mini-quiz), **Dans le métro** (sans piano, d'une main, écouteurs), **Au piano** (le micro valide ; sans micro, on peut valider soi-même), **Rythme**, **Pour aller plus loin**.
 
@@ -32,18 +35,18 @@ Chaque exercice a un **objectif** chiffré, affiché avant et pendant : « 8 jus
 Ce que contiennent les exercices :
 - **Notes** : lire en clé de sol ou de fa, toucher la note au clavier ou la jouer au piano (le micro vérifie l'octave).
 - **Armures** : l’armure ↔ la tonalité (3 ♯ → A majeur), dièses puis bémols, relatif mineur, citer les altérations dans l’ordre.
-- **Les 5 accords de 4 sons à l’oreille** (étape 4), progressivement : maj7 → 7 → m7 → ø7 → °7, une seule note baisse d’un demi-ton à chaque fois. Leçon « Comparer les accords de 4 sons » : chaque paire (la note qui change, « la 7e : B → B♭ », l’un / l’autre / l’un puis l’autre, clavier avec la note qui change en jaune et celle de l’autre accord en pointillés, comment l’entendre), puis les 5 ensemble (la chaîne sur une même fondamentale, à la suite ou un par un) et la méthode d’écoute (3ce, 7e, puis 5te). Exercices, boutons toujours dans l’ordre de la chaîne : maj7 ou 7 → 7 ou m7 → les 3 → m7 ou ø7 → les 4 → ø7 ou °7 → **les 5** (12 justes sur 15), puis les 5 renversés en option. Après chaque réponse : la note qui change, et les accords de l’exercice sur la même fondamentale pour comparer.
+- **Les 5 accords de 4 sons à l’oreille** (étape 5), progressivement : maj7 → 7 → m7 → ø7 → °7, une seule note baisse d’un demi-ton à chaque fois. Leçon « Comparer les accords de 4 sons » : chaque paire (la note qui change, « la 7e : B → B♭ », l’un / l’autre / l’un puis l’autre, clavier avec la note qui change en jaune et celle de l’autre accord en pointillés, comment l’entendre), puis les 5 ensemble (la chaîne sur une même fondamentale, à la suite ou un par un) et la méthode d’écoute (3ce, 7e, puis 5te). Exercices, boutons toujours dans l’ordre de la chaîne : maj7 ou 7 → 7 ou m7 → les 3 → m7 ou ø7 → les 4 → ø7 ou °7 → **les 5** (12 justes sur 15), puis les 5 renversés en option. Après chaque réponse : la note qui change, et les accords de l’exercice sur la même fondamentale pour comparer.
 - **Accords** : construire un accord au clavier ; quel accord sur ce degré ; majeur/mineur puis maj7, m7, 7, ø7, °7 à l'oreille ; l'accord entier (fondamentale et nature) dans une tonalité.
 - **Intervalles et basse** à l'oreille : intervalles, degrés de la ligne de basse (I, IV, V… jusqu'à la walking bass).
 - **Enchaînements** : analyse (degrés, ii–V, tonalité, 9 ou ♭9, gammes) ; reconnaître un enchaînement à l'oreille ; réharmoniser (SubV, dominantes secondaires, diminués de passage, ii–V du SubV, reconnaître la technique à l'écoute).
 - **Voicings au piano** : 3 sons, shells, A et B, ii–V–I dans les 12 tonalités, deux mains (écartés, upper structures, quartes, drop 2). Le micro valide et passe au suivant.
 - **Comping en rythme** : ii–V–I avec contrebasse et batterie, motifs 1 et 3, Charleston, anticipations ; le micro mesure chaque attaque et vérifie l'accord.
 - **Phrases** : vocabulaire sur ii–V–I en appel-réponse (arpèges, gamme bebop, encerclements, approches chromatiques, mineur, altérée) ; le micro vérifie les notes.
-- **Morceaux** : le quiz phrase par phrase de Let It Be (étape 3), du Blues en F, d'Autumn Leaves et de Wind of Change (+ Still Loving You, La Bohème) ; retrouver une grille de mémoire, jouer les guide tones, accompagner, improviser au micro.
-- **Pop, rock et chanson** (leçon, étape 8) : majuscule = majeur, minuscule = mineur ; I – V – vi – IV et ses variantes, le ♭VII, i – ♭VI – ♭III – ♭VII, i – iv – V – i, la dominante du vi.
+- **Morceaux** : le quiz phrase par phrase de Let It Be (étape 4), du Blues en F, d'Autumn Leaves et de Wind of Change (+ Still Loving You, La Bohème) ; retrouver une grille de mémoire, jouer les guide tones, accompagner, improviser au micro.
+- **Accompagner une chanson** (étape 4) : enchaîner sans sauter (renversements, notes communes ; astuces I – V – vi – IV, « Amen » IV → I, V → I), la main gauche (fondamentale, octave, arpège 1-5-8) et le rythme (ballade, pop), lire une grille de chanson en degrés (majuscule = majeur, minuscule = mineur ; I – V – vi – IV et ses variantes) ; au piano : I – V – vi – IV renversés, accompagner Let It Be au micro (3ce et 5te des accords de 3 sons). **Le mineur de la pop et de la chanson** (étape 9) : le ♭VII, i – ♭VI – ♭III – ♭VII, i – iv – V – i, la dominante du vi.
 - **Rythme** : tenir le tempo (avec le clic, sur 2 et 4, clic sur 2 et 4, une mesure sur deux, seul), lire et taper (noires, croches swing, contretemps, comping, triolets, claves), reconnaître un rythme, reconnaître un style (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Le décalage du téléphone se règle une fois (10 s) au premier exercice.
 
-**Astuces d'enchaînement** (15) : dans les leçons, là où la notion est enseignée : nouvelle leçon « Les guide tones » (étape 6 : la 7e qui descend, la note commune, le triton, la 13), « Construire une ligne » (étape 10 : arpège depuis la 3ce, approche, encadrement), et dans les leçons turnarounds, dominantes secondaires, ii–V–i mineur, backdoor, SubV. Pour chacune : la règle en mots simples, la note de la main droite sous chaque accord avec son rôle (« 7e », « 3ce », « approche ») et son mouvement (« ↓ ½ ton », « reste »), un clavier (accord en gris, note en jaune), l'écoute, « Autre tonalité ».
+**Astuces d'enchaînement** (15) : dans les leçons, là où la notion est enseignée : leçon « Les guide tones » (étape 7 : la 7e qui descend, la note commune, le triton, la 13), « Construire une ligne » (étape 10 : arpège depuis la 3ce, approche, encadrement), et dans les leçons turnarounds, dominantes secondaires, ii–V–i mineur, backdoor, SubV. Pour chacune : la règle en mots simples, la note de la main droite sous chaque accord avec son rôle (« 7e », « 3ce », « approche ») et son mouvement (« ↓ ½ ton », « reste »), un clavier (accord en gris, note en jaune), l'écoute, « Autre tonalité ».
 
 **Micro** : le micro d'un téléphone, sans contrôle de gain, arrive très faible (un piano joué normalement ≈ −60 dBFS). L'appli mesure le bruit de fond de la pièce (10e centile du niveau sur 15 s), amplifie pour le ramener à −60 dBFS (jusqu'à +50 dB), et place le seuil de silence à 4 fois ce bruit. Sensibilité Moins / Normale / Plus dans Réglages › Tester le micro, et un enregistrement de 15 s (WAV, signal brut) à envoyer pour régler la détection sur un piano donné. Sur des accords joués à −55 et −65 dBFS avec souffle à −87 dBFS : 72/72 entendus, 68/72 reconnus (avant : seuil fixe à −44 dBFS, rien n'était entendu).
 

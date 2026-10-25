@@ -13,6 +13,8 @@ export interface Term {
   example?: { chords: string[]; romans?: string[]; label?: string; voicing?: SeqVoicing };
   /** Leçon où la notion est enseignée en détail. */
   lesson?: string;
+  /** Leçon où le mot apparaît pour la première fois, expliqué en passant (si avant `lesson`). */
+  intro?: string;
 }
 
 export const TERMS: Term[] = [
@@ -50,7 +52,8 @@ export const TERMS: Term[] = [
     title: 'Tierce (3ce)',
     forms: 'tierces?|3ces?',
     text: 'La note deux crans au-dessus de la fondamentale, dans la gamme : C → E. Elle décide si l’accord est **majeur** (E, 4 demi-tons) ou **mineur** (E♭, 3 demi-tons).',
-    lesson: 'triades'
+    lesson: 'triades',
+    intro: 'intervalles'
   },
   {
     id: 'quinte',
@@ -63,14 +66,15 @@ export const TERMS: Term[] = [
     title: 'Septième (7e)',
     forms: 'septièmes?|7es?',
     text: 'La note qu’on ajoute au-dessus d’un accord de 3 sons, en prenant encore une note de la gamme sur deux : C E G → **B**. Elle est soit un demi-ton sous l’octave (B : maj7), soit un ton sous l’octave (B♭ : 7, m7).',
-    lesson: 'construire'
+    lesson: 'construire',
+    intro: 'intervalles'
   },
   {
     id: 'ton',
     title: 'Ton, demi-ton',
     forms: 'demi-tons?',
     text: 'Le **demi-ton** est le plus petit pas du piano : d’une touche à sa voisine immédiate, blanche ou noire (E → F, C → C♯). Un **ton** = deux demi-tons (C → D).',
-    lesson: 'intervalles'
+    lesson: 'clavier'
   },
   {
     id: 'intervalle',
@@ -100,7 +104,8 @@ export const TERMS: Term[] = [
     title: 'Voicing',
     forms: 'voicings?',
     text: 'La façon de disposer les notes d’un accord au piano : lesquelles on garde, dans quel ordre, à quelle hauteur. Un même Cmaj7 peut se jouer de dizaines de façons.',
-    lesson: 'voicings'
+    lesson: 'voicings',
+    intro: 'shell'
   },
   {
     id: 'shell',
@@ -109,7 +114,7 @@ export const TERMS: Term[] = [
     text: 'Mot anglais pour « coquille » : un accord de 4 sons réduit à **3 notes**, la fondamentale, la 3ce et la 7e. On enlève la 5te. Dm7 = D F C, G7 = G B F, Cmaj7 = C E B.',
     why: 'La 3ce dit majeur ou mineur, la 7e dit maj7, 7 ou m7 : tout l’essentiel est là. La 5te est la même dans maj7, m7 et 7, elle n’apprend rien à l’oreille. Avec 3 notes, la main gauche reste légère et laisse la place à la main droite.',
     example: { chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], label: 'En shells : fondamentale, 3ce, 7e', voicing: 'shell' },
-    lesson: 'voicings'
+    lesson: 'shell'
   },
   {
     id: 'dominante',
@@ -117,7 +122,8 @@ export const TERMS: Term[] = [
     forms: 'dominantes?',
     text: 'L’accord construit sur le V (5e degré), avec sa 7e : G7 en C majeur. C’est l’accord de **tension** : il contient la sensible (B) et le triton (B–F), qui veulent aller vers l’accord de repos, le I.',
     example: { chords: ['G7', 'Cmaj7'], romans: ['V7', 'IΔ7'], label: 'Tension → repos' },
-    lesson: 'caracteres'
+    lesson: 'caracteres',
+    intro: 'tonalite-3'
   },
   {
     id: 'sensible',
@@ -125,6 +131,16 @@ export const TERMS: Term[] = [
     forms: 'sensibles?',
     text: 'La note juste sous la tonique, un demi-ton en dessous : B en C majeur, G♯ en A mineur. Elle « tire » vers la tonique. C’est la 3ce de la dominante (B dans G7).',
     lesson: 'tonalite'
+  },
+  {
+    id: 'tirer',
+    title: 'Une note qui « tire »',
+    forms: 'tirer|tirent|tire',
+    text: 'Une note « tire » vers une autre quand l’oreille attend qu’elle y aille. C’est le cas d’une note instable, juste à côté (souvent un demi-ton) d’une note de repos : B tire vers C, F tire vers E dans G7 → C. Quand elle arrive, la tension se relâche : on dit qu’elle se résout.',
+    why: 'Repérer les notes qui tirent, c’est savoir où va la musique : sur la note visée, on pose la main.',
+    example: { chords: ['G7', 'C'], romans: ['V7', 'I'], label: 'B monte sur C, F descend sur E' },
+    lesson: 'tonalite',
+    intro: 'renverser'
   },
   {
     id: 'triton',
@@ -152,7 +168,8 @@ export const TERMS: Term[] = [
     text: 'Trois accords qui vont au repos : IIm7 → V7 → IΔ7. En C : Dm7 → G7 → Cmaj7. La basse monte de quarte à chaque fois (D → G → C).',
     why: 'Il n’existe qu’une seule tonalité où ces trois accords sont ensemble : entendre Dm7 G7, c’est savoir que C arrive. C’est pour ça qu’un ii–V suffit à changer de tonalité (voir la leçon « Le ii–V–I majeur »).',
     example: { chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'] },
-    lesson: 'iiVI'
+    lesson: 'iiVI',
+    intro: 'premiers'
   },
   {
     id: 'guide',
@@ -160,7 +177,8 @@ export const TERMS: Term[] = [
     forms: 'guide tones?',
     text: 'La 3ce et la 7e de chaque accord : les deux notes qui disent quel accord on joue. D’un accord au suivant, elles bougent d’un demi-ton ou restent en place.',
     example: { chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'shell' },
-    lesson: 'guide-tones'
+    lesson: 'guide-tones',
+    intro: 'construire'
   },
   {
     id: 'armure',
@@ -203,7 +221,7 @@ export const TERMS: Term[] = [
     forms: '9es?|11es?|13es?|neuvièmes?|treizièmes?',
     text: 'Des notes ajoutées au-dessus de la 7e, en continuant une note de la gamme sur deux : la **9e** (la même note que la 2de : D sur C), la **11e** (= la 4te : F), la **13e** (= la 6te : A). Elles colorent l’accord sans changer son rôle. ♭9, ♯9, ♭13 : altérées, plus tendues, surtout sur les dominantes.',
     example: { chords: ['G13', 'Cmaj9'], romans: ['V13', 'IΔ9'], label: '9e et 13e' },
-    lesson: 'tensions'
+    lesson: 'couleurs'
   },
   {
     id: 'maj7',

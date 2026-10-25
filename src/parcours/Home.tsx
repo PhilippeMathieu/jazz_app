@@ -1,4 +1,4 @@
-// Accueil : la prochaine chose à faire, le parcours en 10 étapes, et l'accès libre (morceaux, clavier).
+// Accueil : la prochaine chose à faire, le parcours en étapes, et l'accès libre (morceaux, clavier).
 import { useEffect, useState } from 'preact/hooks';
 import { canInstall, install, onInstallChange } from '../core/app/pwa';
 import { ChevronIcon, SlidersIcon } from '../ui/icons';
@@ -161,7 +161,7 @@ export function Placement() {
           <h1 class="home-title">Par où commencer ?</h1>
         </div>
       </header>
-      <p class="intro">Un parcours en 10 étapes, des notes jusqu’à l’improvisation. Chaque étape : une leçon courte, des exercices dans le métro, puis au piano (le micro écoute).</p>
+      <p class="intro">Un parcours en {STEPS.length} étapes, des notes jusqu’à l’improvisation. Chaque étape : une leçon courte, des exercices dans le métro, puis au piano (le micro écoute).</p>
       <div class="list">
         {PLACEMENTS.map((pl) => (
           <button key={pl.step} class="row" onClick={() => setStart(pl.step)}>

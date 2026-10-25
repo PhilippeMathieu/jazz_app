@@ -30,4 +30,28 @@ describe('vérification de l’accompagnement', () => {
     expect(ok / total).toBeGreaterThan(0.85);
     expect(wrongOk / total).toBeLessThan(0.05);
   }, 120000);
+  it('accompagner une chanson : accords de 3 sons, dans tous les renversements', () => {
+    const rng = seeded(9);
+    let ok = 0;
+    let wrongOk = 0;
+    let total = 0;
+    for (let pc = 0; pc < 12; pc++)
+      for (const q of ['maj', 'min'] as const) {
+        const c = chordOnPc(pc, q);
+        let prev: number[] | null = null;
+        for (let k = 0; k < 3; k++) {
+          // Renversements successifs (main droite), comme dans « I – V – vi – IV renversés ».
+          const v = lhVoicing(c, 'triad', prev).map((m) => m + 12 * (k % 2));
+          prev = v;
+          const r = analyzeChordBuffer(chord(v, N, rng), SR);
+          total++;
+          if (checkComping(r.chroma, c, q === 'maj' ? 'ionien' : 'dorien').ok) ok++;
+          const other = chordOnPc(pc, q === 'maj' ? 'min' : 'maj');
+          const r2 = analyzeChordBuffer(chord(lhVoicing(other, 'triad', null), N, rng), SR);
+          if (checkComping(r2.chroma, c, q === 'maj' ? 'ionien' : 'dorien').ok) wrongOk++;
+        }
+      }
+    expect(ok / total).toBeGreaterThan(0.85);
+    expect(wrongOk / total).toBeLessThan(0.1);
+  }, 120000);
 });

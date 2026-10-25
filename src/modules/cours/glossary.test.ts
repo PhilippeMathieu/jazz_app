@@ -31,3 +31,27 @@ describe('lexique', () => {
     expect([...seen]).toEqual(expect.arrayContaining(['shell', 'iiVI', 'sensible', 'triton', 'tonalite']));
   });
 });
+
+describe('parcours : aucun mot avant son explication', () => {
+  it('chaque mot du lexique apparaît pour la première fois à sa leçon (ou après)', async () => {
+    const { STEPS } = await import('../../parcours/steps');
+    const order = STEPS.flatMap((s) => s.lessons);
+    const textOf = (id: string) =>
+      LESSONS.find((l) => l.id === id)!
+        .blocks.map((b) => {
+          const x = b as { text?: string; label?: string; q?: string; explain?: string; rows?: string[][]; choices?: string[] };
+          return [x.text, x.label, x.q, x.explain, ...(x.rows ?? []).flat(), ...(x.choices ?? [])].filter(Boolean).join(' ');
+        })
+        .join(' ')
+        .replace(/\*\*/g, '');
+    const early: string[] = [];
+    for (const t of TERMS) {
+      const where = t.intro ?? t.lesson;
+      if (!where) continue;
+      expect(order, `${t.id} → ${where}`).toContain(where);
+      const first = order.find((id) => termRegex(t).test(textOf(id)));
+      if (first && order.indexOf(first) < order.indexOf(where)) early.push(`${t.title} : dans « ${first} », expliqué dans « ${where} »`);
+    }
+    expect(early).toEqual([]);
+  });
+});

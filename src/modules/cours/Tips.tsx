@@ -4,7 +4,7 @@ import { Fragment } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { chordSymbol, degreeLabel } from '../../core/theory/chords';
 import { keyLabel } from '../../core/chart/model';
-import { isBlackKey } from '../../core/theory/notes';
+import { isBlackKey, mod, pcOf } from '../../core/theory/notes';
 import { audio, now, piano, playChord } from '../../core/audio/engine';
 import { sequenceVoicings } from '../../core/audio/play';
 import { Keyboard, Mark } from '../../ui/Keyboard';
@@ -20,7 +20,11 @@ export function TipCard({ id }: { id: string }) {
 function TipBody({ tip }: { tip: Tip }) {
   const [pc, setPc] = useState(0);
   const r = useMemo(() => realize(tip, pc), [tip, pc]);
-  const voicings = useMemo(() => sequenceVoicings(r.chords, 'shell'), [r]);
+  // Main gauche : le shell, ou la fondamentale en octave pour les accords de 3 sons.
+  const voicings = useMemo(
+    () => (tip.left === 'octave' ? r.chords.map((c) => { const b = 36 + mod(pcOf(c.root) - 36, 12); return [b, b + 12]; }) : sequenceVoicings(r.chords, 'shell')),
+    [r]
+  );
   const [active, setActive] = useState(0);
   const timers = useRef<number[]>([]);
   const clear = () => {

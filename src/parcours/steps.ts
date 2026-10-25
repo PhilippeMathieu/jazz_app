@@ -1,4 +1,4 @@
-// Le parcours : 10 étapes, du débutant à l'improvisation. Chaque étape : des leçons, des exercices dans le
+// Le parcours : 11 étapes, du débutant à l'improvisation. Chaque étape : des leçons, des exercices dans le
 // métro (sans piano) et au piano (le micro valide), parfois un morceau. Les exercices réutilisent les briques
 // de l'appli avec un réglage fixé ici et un objectif clair.
 import type { VoicingType } from '../core/audio/voicing';
@@ -97,24 +97,37 @@ export const STEPS: Step[] = [
   {
     id: 'gamme',
     title: 'La gamme et ses accords',
-    aim: 'Lire une armure, savoir quel accord se trouve sur chaque degré, et entendre I, IV et V.',
-    lessons: ['armures', 'tonalite-3', 'premiers'],
+    aim: 'Lire une armure, savoir quel accord se trouve sur chaque degré, entendre I, IV et V, et suivre la basse.',
+    lessons: ['tonalite-3', 'armures', 'premiers', 'basse'],
     activities: [
       A('g-arm', 'Armures : les dièses', 'L’armure ↔ la tonalité majeure, jusqu’à 3 ♯', 'metro', { kind: 'armures', level: 0 }),
       A('g-ton', 'Quel accord sur ce degré ?', 'Une tonalité, une note : majeur, mineur ou diminué', 'metro', { kind: 'tonalite', level: 0 }),
       A('g-bass', 'La basse : I, IV ou V ?', 'Quatre notes de contrebasse après l’accord de la tonique', 'metro', { kind: 'bass', level: 0 }, { kind: 'answers', n: 20, min: 16 }),
       A('g-full', 'Quel accord, dans la tonalité ?', 'L’accord de la tonique, puis un accord de la gamme', 'metro', { kind: 'full', level: 0 }),
-      A('g-pop', 'Let It Be, phrase par phrase', 'Lis « Comprendre », puis le quiz : quelle suite ?', 'metro', { kind: 'chart', chart: 'let-it-be', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
-      A('r-24', 'Sur 2 et 4', 'Le clic compte les 4 temps, tu tapes 2 et 4', 'metro', { kind: 'rythme', exercise: 'tempo', level: 1 }, T3),
+      A('r-ear0', 'Reconnaître un rythme', 'Des noires et des silences : l’entendre, le retrouver écrit', 'metro', { kind: 'rythme', exercise: 'oreille', level: 0 }),
       A('g-arm7', 'Armures : jusqu’à 7 ♯', 'Jusqu’à C♯ majeur', 'metro', { kind: 'armures', level: 1 }, Q10, true),
+      A('v-iv', 'Les 12 intervalles', 'À l’oreille, en montant', 'metro', { kind: 'iv', level: 2 }, Q10, true),
       A('g-piano', 'Enchaîner ii–V–I', 'En 3 sons, le renversement le plus proche', 'piano', { kind: 'flash', type: 'triad', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 })
+    ]
+  },
+  {
+    id: 'chanson',
+    title: 'Accompagner une chanson',
+    aim: 'Enchaîner les accords sans sauter, tenir la basse à gauche, jouer en rythme, et lire une grille de chanson en degrés.',
+    lessons: ['renverser', 'main-gauche', 'pop'],
+    activities: [
+      A('c-prog', 'Les suites de la pop à l’oreille', 'I–IV–V, I–V–vi–IV… : laquelle ?', 'metro', { kind: 'ear', mode: 'prog', level: 0 }),
+      A('g-pop', 'Let It Be, phrase par phrase', 'Les degrés de chaque accord, puis la suite', 'metro', { kind: 'chart', chart: 'let-it-be', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
+      A('r-24', 'Sur 2 et 4', 'Le clic compte les 4 temps, tu tapes 2 et 4 : la caisse claire de la pop', 'metro', { kind: 'rythme', exercise: 'tempo', level: 1 }, T3),
+      A('c-renv', 'I – V – vi – IV renversés', 'Au piano, en 3 sons, la main bouge le moins possible', 'piano', { kind: 'flash', type: 'triad', order: 'pop' }, { kind: 'answers', n: 8, min: 6 }),
+      A('c-joue', 'Accompagner Let It Be', 'Au micro, avec basse et batterie : la 3ce et la 5te de chaque accord', 'piano', { kind: 'chart', chart: 'let-it-be', mode: 'analyse' }, { kind: 'listen', ratio: 0.8, chords: 12 })
     ]
   },
   {
     id: 'quatre',
     title: 'Les accords de 4 sons',
-    aim: 'Construire maj7, 7, m7, ø7 et °7, et les reconnaître à l’oreille : deux à deux, puis les 5 ensemble. Sentir les croches swing.',
-    lessons: ['construire', 'caracteres', 'comparer', 'swing'],
+    aim: 'Construire maj7, 7, m7, ø7 et °7, les reconnaître à l’oreille (deux à deux, puis les 5 ensemble), et les jouer d’une main en shell.',
+    lessons: ['construire', 'caracteres', 'comparer', 'shell'],
     activities: [
       A('q-build', 'Construire maj7, m7, 7', 'Un symbole, tu touches ses 4 notes', 'metro', { kind: 'ear', mode: 'build', level: 1 }),
       A('q-arm', 'Armures : les bémols', 'De F (1 ♭) à C♭ (7 ♭)', 'metro', { kind: 'armures', level: 2 }),
@@ -126,7 +139,7 @@ export const STEPS: Step[] = [
       A('q-s4', 'maj7, 7, m7 ou ø7 ?', 'Les 4 ensemble', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', '7', 'm7', 'm7b5'] }, S12),
       A('q-p5', 'ø7 ou °7 ?', '2 accords : seule la 7e change', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['m7b5', 'dim7'] }, S12),
       A('q-ear2', 'Les 5 accords', 'maj7, 7, m7, ø7 ou °7 : le but de l’étape', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: FIVE }, { kind: 'answers', n: 15, min: 12 }),
-      A('r-croches', 'Taper des croches swing', 'Longue-courte : « dou-ba »', 'metro', { kind: 'rythme', exercise: 'taper', level: 1 }, T5),
+      A('r-clic24', 'Clic sur 2 et 4', 'Le clic sur 2 et 4 seulement : tu tapes les 4 temps', 'metro', { kind: 'rythme', exercise: 'tempo', level: 2 }, T3),
       A('q-piano', 'Shells : 1, 3, 7', 'Au piano, main gauche', 'piano', { kind: 'flash', type: 'shell', order: 'random', level: 2 }),
       A('q-p3', 'maj7 ou m7 ?', '2 accords : la 3ce et la 7e changent', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', 'm7'] }, S12, true),
       A('q-ear5r', 'Les 5, renversés', 'Les mêmes accords, la basse n’est plus toujours la fondamentale', 'metro', { kind: 'ear', mode: 'ear', level: 3, set: FIVE }, { kind: 'answers', n: 15, min: 12 }, true)
@@ -136,25 +149,24 @@ export const STEPS: Step[] = [
     id: 'iivi',
     title: 'Le ii–V–I',
     aim: 'Reconnaître le ii–V–I partout : à la lecture, à l’oreille, dans la basse.',
-    lessons: ['tonalite', 'iiVI'],
+    lessons: ['tonalite', 'iiVI', 'swing'],
     activities: [
       A('i-ton', 'Les accords de la tonalité', 'En 4 sons : IΔ7, IIm7, V7…', 'metro', { kind: 'tonalite', level: 1 }),
       A('i-exp', 'Analyser des enchaînements', 'Degrés, ii–V, tonalité', 'metro', { kind: 'express', level: 1 }, { kind: 'answers', n: 12, min: 10 }),
       A('i-prog', 'Reconnaître les enchaînements', 'À l’oreille : ii–V–I, turnarounds', 'metro', { kind: 'ear', mode: 'prog', level: 1 }),
       A('i-bass', 'La basse des grilles', 'I, II, IV, V, VI', 'metro', { kind: 'bass', level: 1 }, { kind: 'answers', n: 20, min: 16 }),
+      A('r-croches', 'Taper des croches swing', 'Longue-courte : « dou-ba »', 'metro', { kind: 'rythme', exercise: 'taper', level: 1 }, T5),
       A('r-ear1', 'Reconnaître un rythme', 'Croches swing : l’entendre, le retrouver écrit', 'metro', { kind: 'rythme', exercise: 'oreille', level: 1 }),
-      A('r-clic24', 'Clic sur 2 et 4', 'Le clic sur 2 et 4 seulement : tu tapes les 4 temps', 'metro', { kind: 'rythme', exercise: 'tempo', level: 2 }, T3),
       A('i-piano', 'ii–V–I en shells', 'Au piano, dans toutes les tonalités', 'piano', { kind: 'flash', type: 'shell', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 })
     ]
   },
   {
     id: 'voicings',
-    title: 'Voicings et guide tones',
-    aim: 'Jouer les ii–V–I sans fondamentale (A et B) dans les 12 tonalités, entendre l’accord entier.',
-    lessons: ['voicings', 'guide-tones'],
+    title: 'Couleurs, voicings et guide tones',
+    aim: 'Ajouter la 9e et la 13e, jouer les ii–V–I sans fondamentale (A et B) dans les 12 tonalités, entendre l’accord entier.',
+    lessons: ['couleurs', 'voicings', 'guide-tones'],
     activities: [
       A('v-full', 'Accord entier', 'Fondamentale et nature, dans la tonalité', 'metro', { kind: 'full', level: 1 }),
-      A('v-iv', 'Les 12 intervalles', 'À l’oreille, en montant', 'metro', { kind: 'iv', level: 2 }),
       A('r-contre', 'Taper les contretemps', 'Charleston, contretemps de 2 et 4', 'metro', { kind: 'rythme', exercise: 'taper', level: 2 }, T5),
       A('v-ab', 'Voicings A et B', 'ii–V–I : A, B, A', 'piano', { kind: 'flash', type: 'A', order: 'iiVI' }, { kind: 'answers', n: 9, min: 8 }),
       A('v-12', 'ii–V–I dans les 12 tonalités', 'Par quartes : C, F, B♭…', 'piano', { kind: 'flash', type: 'A', order: 'iiVI12' }, { kind: 'answers', n: 36, min: 30 }),
@@ -163,9 +175,9 @@ export const STEPS: Step[] = [
   },
   {
     id: 'grilles',
-    title: 'Lire une grille : le blues',
-    aim: 'Analyser, retenir et accompagner un blues jazz en rythme.',
-    lessons: ['blues', 'turnarounds', 'comping'],
+    title: 'Lire une grille et accompagner',
+    aim: 'Analyser, retenir et accompagner un blues jazz en rythme ; reconnaître les styles : swing, bossa, latin…',
+    lessons: ['turnarounds', 'blues', 'comping', 'styles'],
     activities: [
       A('b-analyse', 'Le Blues en F, phrase par phrase', 'Couleur blues, ii–V, dominantes : le quiz', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
       A('b-mem', 'Le Blues en F de mémoire', 'La moitié des accords cachés', 'metro', { kind: 'chart', chart: 'blues-f', mode: 'memoire', memLevel: 1 }, { kind: 'memoire', ratio: 0.8 }),
@@ -173,16 +185,16 @@ export const STEPS: Step[] = [
       A('b-comp1', 'Comping : 1 et 3', 'Sur la grille, avec basse et batterie', 'piano', { kind: 'comping', level: 0, voicing: 'shell' }, { kind: 'answers', n: 15, min: 12 }),
       A('b-comp2', 'Comping : Charleston', 'Le 1, puis le « et » de 2', 'piano', { kind: 'comping', level: 1, voicing: 'AB' }, { kind: 'answers', n: 15, min: 12 }),
       A('b-joue', 'Accompagner le Blues en F', 'Au micro, avec le play-along', 'piano', { kind: 'chart', chart: 'blues-f', mode: 'analyse' }, { kind: 'listen', ratio: 0.9, chords: 12 }),
+      A('r-style', 'Reconnaître un style', 'Swing, ballade, valse, bossa, samba, latin, funk', 'metro', { kind: 'rythme', exercise: 'style', level: 0 }),
       A('r-ear3', 'Reconnaître un rythme de comping', 'Charleston, anticipations : à l’oreille', 'metro', { kind: 'rythme', exercise: 'oreille', level: 3 }, Q10, true),
-      A('r-1sur2', 'Une mesure sur deux', 'Le clic se tait une mesure sur deux', 'metro', { kind: 'rythme', exercise: 'tempo', level: 3 }, T3, true),
       A('b-comp3', 'Comping : anticipations', 'L’accord suivant sur le « et » de 4', 'piano', { kind: 'comping', level: 3, voicing: 'AB' }, { kind: 'answers', n: 15, min: 12 }, true)
     ]
   },
   {
     id: 'mineur',
     title: 'Le mineur et les dominantes secondaires',
-    aim: 'Le ii–V–i mineur, les dominantes qui mènent à chaque accord, le mineur de la pop et de la chanson. Reconnaître les styles : swing, bossa, latin…',
-    lessons: ['iiVim', 'secondaires', 'backdoor', 'rock', 'styles'],
+    aim: 'Le ii–V–i mineur, les dominantes qui mènent à chaque accord, les emprunts, le mineur de la pop et de la chanson.',
+    lessons: ['iiVim', 'secondaires', 'backdoor', 'rock'],
     activities: [
       A('m-exp', 'Analyser : mineur et dominantes', 'Degrés, ii–V, 9 ou ♭9', 'metro', { kind: 'express', level: 2 }, { kind: 'answers', n: 12, min: 10 }),
       A('m-arm', 'Armures et relatif mineur', 'Dièses et bémols mélangés, majeur ou mineur', 'metro', { kind: 'armures', level: 3 }),
@@ -190,7 +202,7 @@ export const STEPS: Step[] = [
       A('m-reharm', 'Ajouter des dominantes', 'La dominante qui mène à un accord, et son ii', 'metro', { kind: 'reharm', level: 1 }),
       A('m-autumn', 'Autumn Leaves, phrase par phrase', 'ii–V–I majeur ou ii–V–i mineur ?', 'metro', { kind: 'chart', chart: 'autumn-leaves', mode: 'analyser' }, { kind: 'analyse', ratio: 0.75 }),
       A('m-wind', 'Wind of Change, phrase par phrase', 'Suite pop, dominante secondaire, ♭VI–♭VII', 'metro', { kind: 'chart', chart: 'wind-of-change', mode: 'analyser' }, { kind: 'analyse', ratio: 0.75 }),
-      A('r-style', 'Reconnaître un style', 'Swing, ballade, valse, bossa, samba, latin, funk', 'metro', { kind: 'rythme', exercise: 'style', level: 0 }),
+      A('r-1sur2', 'Une mesure sur deux', 'Le clic se tait une mesure sur deux', 'metro', { kind: 'rythme', exercise: 'tempo', level: 3 }, T3),
       A('m-cite', 'Citer les altérations', 'Dans l’ordre : F♯ C♯ G♯…', 'metro', { kind: 'armures', level: 4 }, Q10, true),
       A('m-still', 'Still Loving You, phrase par phrase', 'Le mineur du rock : i–♭VI–♭III–♭VII', 'metro', { kind: 'chart', chart: 'still-loving-you', mode: 'analyser' }, { kind: 'analyse', ratio: 0.75 }, true),
       A('m-boheme', 'La Bohème, phrase par phrase', 'La cadence mineure de la chanson', 'metro', { kind: 'chart', chart: 'la-boheme', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }, true),
@@ -199,8 +211,8 @@ export const STEPS: Step[] = [
   },
   {
     id: 'subst',
-    title: 'Substitutions et couleurs',
-    aim: 'SubV, diminués de passage, tensions, et les voicings à deux mains qui vont avec.',
+    title: 'Substitutions et tensions',
+    aim: 'SubV, diminués de passage, tensions altérées, et les voicings à deux mains qui vont avec.',
     lessons: ['subv', 'reharm', 'tensions', 'deux-mains'],
     activities: [
       A('s-subv', 'Le SubV', 'D♭7 à la place de G7', 'metro', { kind: 'reharm', level: 0 }),
@@ -252,9 +264,10 @@ export const goalText = (g: Goal) =>
         ? `${Math.round(g.ratio * 100)} % au micro, sur ${g.chords} accords au moins`
         : `${Math.round(g.ratio * 100)} % de bonnes réponses`;
 
+const stepIndex = (id: string) => STEPS.findIndex((s) => s.id === id);
 /** Niveaux de départ proposés au premier lancement (index de l'étape). */
 export const PLACEMENTS = [
-  { step: 0, label: 'Je débute', sub: 'Les notes, les intervalles, les premiers accords' },
-  { step: 3, label: 'Je connais les accords de 3 sons', sub: 'On commence par les accords de 4 sons' },
-  { step: 5, label: 'Je joue déjà des ii–V–I', sub: 'On commence par les voicings sans fondamentale' }
+  { step: stepIndex('notes'), label: 'Je débute', sub: 'Les notes, les intervalles, les premiers accords' },
+  { step: stepIndex('chanson'), label: 'Je connais les accords de 3 sons', sub: 'On commence par accompagner une chanson' },
+  { step: stepIndex('voicings'), label: 'Je joue déjà des ii–V–I', sub: 'On commence par les couleurs et les voicings sans fondamentale' }
 ];

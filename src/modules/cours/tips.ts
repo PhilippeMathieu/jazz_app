@@ -16,12 +16,19 @@ export interface Tip {
   chords: Step[];
   /** Notes de la ligne, accord par accord (une ou plusieurs). */
   line: Rel[][];
-  /** Les notes d'un même accord sonnent ensemble (deux voix) au lieu de se suivre. */
+  /** Les notes d'un même accord sonnent ensemble (plusieurs voix) au lieu de se suivre. */
   together?: boolean;
   gap?: number;
+  /** Main gauche : la fondamentale en octave (accords de 3 sons), au lieu du shell. */
+  left?: 'octave';
 }
 
 const II: Step = [1, 2, 'm7', 'IIm7'];
+// Accords de 3 sons (accompagner une chanson).
+const I3: Step = [0, 0, 'maj', 'I'];
+const IV3: Step = [3, 5, 'maj', 'IV'];
+const V3: Step = [4, 7, 'maj', 'V'];
+const VI3: Step = [5, 9, 'min', 'VIm'];
 const V: Step = [4, 7, '7', 'V7'];
 const I: Step = [0, 0, 'maj7', 'IΔ7'];
 
@@ -36,6 +43,7 @@ const M7: Rel = [6, 11];
 const M9: Rel = [1, 14];
 const b9: Rel = [1, 13];
 const M13: Rel = [5, 21];
+const P5m: Rel = [4, 7];
 
 export const TIPS: Tip[] = [
   {
@@ -184,6 +192,39 @@ export const TIPS: Tip[] = [
       I
     ],
     line: [[M3], [m3], [P5]]
+  },
+  {
+    id: 'renverser',
+    title: 'I – V – vi – IV sans sauter',
+    rule: 'C, G, Am, F : à chaque accord, une ou deux notes restent, les autres font un petit pas. C → G : G reste, C et E descendent sur B et D. G → Am : les trois notes montent d’un cran. Am → F : C et A restent, seul E monte sur F.',
+    mode: 'major',
+    chords: [I3, V3, VI3, IV3],
+    line: [[R, M3, P5], [M3, P5, R], [m3, P5m, R], [P5, R, M3]],
+    together: true,
+    left: 'octave',
+    gap: 1.3
+  },
+  {
+    id: 'amen',
+    title: 'IV → I : l’« Amen »',
+    rule: 'F → C, la fin des cantiques : C, la note commune, reste ; A descend d’un ton sur G, F descend d’un demi-ton sur E. Tout se pose doucement.',
+    mode: 'major',
+    chords: [IV3, I3],
+    line: [[M3, P5, R], [P5, R, M3]],
+    together: true,
+    left: 'octave',
+    gap: 1.6
+  },
+  {
+    id: 'sensible',
+    title: 'V → I : la note qui monte',
+    rule: 'G → C : B, juste sous C, monte d’un demi-ton sur C ; D monte d’un ton sur E ; G reste. B « tire » vers C : c’est la sensible, la note qui donne à la fin de phrase son effet d’arrivée.',
+    mode: 'major',
+    chords: [V3, I3],
+    line: [[M3, P5, R], [R, M3, P5]],
+    together: true,
+    left: 'octave',
+    gap: 1.6
   }
 ];
 
@@ -231,18 +272,24 @@ export function realize(tip: Tip, keyPc: number): RealizedTip {
   const chords: Chord[] = tip.chords.map(([off, semis, quality]) => ({ root: spellWith(key.tonic.letter + off, t + semis), quality }));
   const line: TipNote[] = [];
   let prev = 71;
+  /** Plusieurs voix : chacune suit sa propre ligne (la j-ième note de l'accord après la j-ième du précédent). */
+  let voices: number[] = [];
   tip.line.forEach((rels, ci) => {
     const c = chords[ci];
-    for (const [dl, ds, app] of rels) {
+    const now: number[] = [];
+    rels.forEach(([dl, ds, app], j) => {
       const note = spellWith(c.root.letter + dl, pcOf(c.root) + ds);
       const pc = pcOf(note);
-      // Octave la plus proche de la note précédente, dans le registre G4–F6.
+      const ref = tip.together && ci > 0 && voices[j] !== undefined ? voices[j] : prev;
+      // Octave la plus proche de la note précédente (de la même voix), dans le registre G4–F6.
       let midi = 67 + mod(pc - 67, 12);
-      for (let m = 67; m <= 89; m++) if (mod(m, 12) === pc && Math.abs(m - prev) < Math.abs(midi - prev)) midi = m;
+      for (let m = 67; m <= 89; m++) if (mod(m, 12) === pc && Math.abs(m - ref) < Math.abs(midi - ref)) midi = m;
       prev = midi;
+      now.push(midi);
       const degree = degreeLabel(c, pc);
       line.push({ chord: ci, note, midi, name: noteName(note), degree, role: app ? 'approche' : roleOf(degree), short: app ? '' : shortOf(degree) });
-    }
+    });
+    voices = now;
   });
   return { key, chords, romans: tip.chords.map((s) => s[3]), line };
 }

@@ -344,7 +344,7 @@ function ListenSummary({ mode, listen, playing }: { mode: Mode; listen: Listen; 
     return (
       <p class="listen-hint">
         {mode === 'analyse'
-          ? 'Lance la lecture et accompagne à la main gauche : l’appli vérifie la 3ce et la 7e de chaque accord. Le piano de l’appli est coupé.'
+          ? 'Lance la lecture et accompagne : l’appli vérifie la 3ce et la 7e de chaque accord (la 5te pour un accord de 3 sons). Le piano de l’appli est coupé.'
           : 'Lance la lecture et joue la main droite seule. Sans écouteurs, coupe aussi la basse (Instruments).'}
       </p>
     );

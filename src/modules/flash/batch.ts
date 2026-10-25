@@ -7,13 +7,14 @@ import { UPPER_STRUCTURES, US_IDS, UsId, VoicingType } from '../../core/audio/vo
 import { Rng, pick, rndInt, weightedPick } from '../../core/random';
 import { QUALITY_LEVELS } from '../oreille/data';
 
-export type Order = 'random' | 'cycle' | 'iiVI' | 'iiVim' | 'iiVI12';
+export type Order = 'random' | 'cycle' | 'iiVI' | 'iiVim' | 'iiVI12' | 'pop';
 export const ORDER_LABEL: Record<Order, string> = {
   random: 'Au hasard',
   cycle: 'Cycle de quartes',
   iiVI: 'ii–V–I majeurs',
   iiVim: 'ii–V–i mineurs',
-  iiVI12: 'ii–V–I dans les 12 tonalités'
+  iiVI12: 'ii–V–I dans les 12 tonalités',
+  pop: 'I – V – vi – IV'
 };
 /** Les 12 tonalités, par quartes : C, F, B♭… */
 const CYCLE = Array.from({ length: 12 }, (_, i) => (i * 5) % 12);
@@ -67,6 +68,11 @@ export function weakness(s: ChordStats, key: string): number {
 
 export function nextBatch(s: FlashSettings, step: number, stats: ChordStats = {}, rng: Rng = Math.random): Item[] {
   const triad = s.type === 'triad';
+  if (s.order === 'pop') {
+    // La suite de la pop, dans une tonalité au hasard : chaque accord dans le renversement le plus proche.
+    const key = keyFor('I-V-vi-IV', rndInt(12, rng));
+    return spellProgression(key, 'I-V-vi-IV').map(({ chord, roman }) => ({ chord, type: s.type, context: `I – V – vi – IV en ${keyLabel(key)} · ${roman}` }));
+  }
   if (s.order === 'iiVI' || s.order === 'iiVim' || s.order === 'iiVI12') {
     // En 3 sons : II – V – I sans les 7es (II° en mineur).
     const minor = s.order === 'iiVim';

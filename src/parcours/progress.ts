@@ -14,15 +14,28 @@ export interface ActState {
 export interface Parcours {
   /** Étape de départ choisie au premier lancement (-1 : pas encore choisi). Les étapes d'avant sont acquises. */
   start: number;
+  /** La même, par identifiant : l'index change quand on ajoute une étape. */
+  startId: string;
   acts: Record<string, ActState>;
   lessons: string[];
   where: Where;
 }
 const KEY = 'parcours';
-const DEFAULT: Parcours = { start: -1, acts: {}, lessons: [], where: 'metro' };
+const DEFAULT: Parcours = { start: -1, startId: '', acts: {}, lessons: [], where: 'metro' };
+/**
+ * Ancien point de départ (avant l'ajout de « Accompagner une chanson », 25 oct. 2026) → étape. « Je connais les
+ * accords de 3 sons » (ancien index 3) mène désormais à la nouvelle étape, faite pour ce niveau.
+ */
+const OLD_ORDER = ['notes', 'triades', 'gamme', 'chanson', 'iivi', 'voicings', 'grilles', 'mineur', 'subst', 'impro'];
 
 const listeners = new Set<() => void>();
-export const loadParcours = (): Parcours => load(KEY, DEFAULT);
+export const loadParcours = (): Parcours => {
+  const p = load(KEY, DEFAULT);
+  if (p.start >= 0 && !p.startId) p.startId = OLD_ORDER[p.start] ?? STEPS[p.start]?.id ?? '';
+  const i = STEPS.findIndex((s) => s.id === p.startId);
+  if (i >= 0) p.start = i;
+  return p;
+};
 function update(f: (p: Parcours) => Parcours) {
   save(KEY, f(loadParcours()));
   listeners.forEach((x) => x());
@@ -41,7 +54,7 @@ export function useParcours(): Parcours {
   return p;
 }
 
-export const setStart = (start: number) => update((p) => ({ ...p, start }));
+export const setStart = (start: number) => update((p) => ({ ...p, start, startId: STEPS[start]?.id ?? '' }));
 export const setWhere = (where: Where) => update((p) => ({ ...p, where }));
 export const markLesson = (id: string) => update((p) => (p.lessons.includes(id) ? p : { ...p, lessons: [...p.lessons, id] }));
 /** Enregistre un passage ; renvoie vrai si l'exercice vient d'être validé pour la première fois. */

@@ -19,7 +19,7 @@ const HOW: Partial<Record<string, string>> = {
   memoire: 'Des accords sont cachés : retrouve chacun parmi 4 choix.',
   guide: 'Active le micro, lance la lecture, et joue la 3ce ou la 7e de chaque accord sur le 1er temps. Arrête la lecture pour avoir le résultat.',
   gammes: 'Active le micro, lance la lecture, et improvise : vise une note de l’accord sur chaque 1er temps. Arrête la lecture pour avoir le résultat.',
-  analyse: 'Active le micro, lance la lecture, et accompagne : la 3ce et la 7e de chaque accord. Arrête la lecture pour avoir le résultat.'
+  analyse: 'Active le micro, lance la lecture, et accompagne : la 3ce et la 7e de chaque accord (la 5te pour un accord de 3 sons). Arrête la lecture pour avoir le résultat.'
 };
 
 /** Exercices d'oreille (écouteurs conseillés). */
