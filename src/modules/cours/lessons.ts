@@ -288,7 +288,7 @@ export const PARTS: Part[] = [
             t: 'p',
             text: 'Le jazz préfère **II – V – I** : Dm G C. La basse monte d’une quarte à chaque accord. Avec des 7es, c’est Dm7 G7 Cmaj7 : la suite des leçons.'
           },
-          { t: 'chords', label: 'En 3 sons, puis avec les 7es', chords: ['Dm', 'G', 'C', 'Dm7', 'G7', 'Cmaj7'], romans: ['IIm', 'V', 'I', 'IIm7', 'V7', 'IΔ7'], gap: 1.1 },
+          { t: 'chords', label: 'En 3 sons, puis avec les 7es', chords: ['Dm', 'G', 'C', 'Dm7', 'G7', 'Cmaj7'], romans: ['IIm', 'V', 'I', 'IIm7', 'V7', 'Imaj7'], gap: 1.1 },
           { t: 'tip', text: 'Écoute la basse : si elle **monte d’une quarte** d’accord en accord (D → G → C), c’est un II – V – I.' },
           {
             t: 'tip',
@@ -476,48 +476,98 @@ export const PARTS: Part[] = [
       {
         id: 'tonalite',
         title: 'Les accords de la tonalité',
-        sub: 'Harmoniser la gamme majeure et mineure',
-        minutes: 5,
+        sub: 'La gamme en accords de 4 sons, pas à pas',
+        minutes: 6,
         blocks: [
           {
             t: 'p',
-            text: 'Si on construit un accord de 4 sons sur chaque note de la gamme majeure, en restant dans la gamme, on obtient toujours la même suite :'
+            text: 'À l’étape 3, tu as construit un accord de 3 sons sur chaque note de la gamme de C : **C Dm Em F G Am B°**. Ici, on ajoute **une seule note** à chacun : la **7e**.'
+          },
+          { t: 'chords', label: 'Rappel : les accords de 3 sons de C majeur', chords: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'], romans: ['I', 'IIm', 'IIIm', 'IV', 'V', 'VIm', 'VII°'], gap: 0.9 },
+          { t: 'h', text: '1. Ajouter la 7e' },
+          {
+            t: 'p',
+            text: 'Un accord de 3 sons prend **une note de la gamme sur deux** : C (D) E (F) G. On continue de la même façon, une note sur deux : C E G **B**. C’est la 7e : la 7e note en partant de C. En C majeur, elle reste dans la gamme : que des touches blanches.'
+          },
+          { t: 'chords', label: 'Trois exemples : touche un accord, regarde 1 3 5 7 au clavier', chords: ['Cmaj7', 'Dm7', 'G7'], romans: ['IΔ7', 'IIm7', 'V7'], gap: 1.3 },
+          {
+            t: 'table',
+            head: ['Degré', 'Accord', 'Notes', 'Type'],
+            rows: [
+              ['I', 'Cmaj7', 'C E G B', 'maj7'],
+              ['II', 'Dm7', 'D F A C', 'm7'],
+              ['III', 'Em7', 'E G B D', 'm7'],
+              ['IV', 'Fmaj7', 'F A C E', 'maj7'],
+              ['V', 'G7', 'G B D F', '7'],
+              ['VI', 'Am7', 'A C E G', 'm7'],
+              ['VII', 'Bø7', 'B D F A', 'ø7']
+            ]
+          },
+          { t: 'chords', label: 'Les 7 accords de C majeur', chords: ['Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bm7b5'], romans: ['IΔ7', 'IIm7', 'IIIm7', 'IVΔ7', 'V7', 'VIm7', 'VIIø7'], gap: 0.9 },
+          { t: 'h', text: '2. La règle' },
+          {
+            t: 'p',
+            text: 'Rien de nouveau : ce sont les accords de l’étape 4. Chaque accord de 3 sons garde sa couleur et gagne sa 7e :'
           },
           {
-            t: 'chords',
-            chords: ['Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7', 'Am7', 'Bm7b5'],
-            romans: ['IΔ7', 'IIm7', 'IIIm7', 'IVΔ7', 'V7', 'VIm7', 'VIIø7'],
-            gap: 0.9
+            t: 'table',
+            head: ['En 3 sons', 'Devient', 'Où'],
+            rows: [
+              ['majeur', 'maj7', 'I et IV'],
+              ['majeur', '7 (dominante)', 'V seulement'],
+              ['mineur', 'm7', 'II, III et VI'],
+              ['diminué', 'ø7', 'VII']
+            ]
           },
           {
             t: 'p',
-            text: 'Une seule dominante (**V7**), un seul **ø7** (VII), deux maj7 (I et IV), trois m7 (II, III, VI). C’est vrai dans les 12 tonalités : en D, F♯ est le III, donc F♯m7.'
+            text: 'Pourquoi le V est différent : sa 7e (F, sur G) est un ton sous l’octave, pas un demi-ton. C’est l’accord **7**, la dominante, celui qui ramène au I. Il n’y en a qu’un par tonalité.'
           },
-          { t: 'h', text: 'En mineur' },
+          { t: 'p', text: 'Écriture : **Δ** veut dire maj7. **IΔ7**, c’est l’accord maj7 construit sur le Ier degré.' },
+          { t: 'tip', text: 'Par cœur, dans l’ordre : **maj7 · m7 · m7 · maj7 · 7 · m7 · ø7**. C’est la même suite dans les 12 tonalités : en G : Gmaj7, Am7, Bm7, Cmaj7, D7, Em7, F♯ø7.' },
           {
-            t: 'p',
-            text: 'Le jazz mélange le mineur naturel et le mineur harmonique : le V prend la **sensible** (G♯ en A mineur) pour devenir V7. Le I se joue souvent m6 ou m(maj7).'
+            t: 'quiz',
+            q: 'En C majeur, quelle note ajoute-t-on à Dm (D F A) pour avoir sa 7e ?',
+            choices: ['C', 'C♯', 'B', 'E'],
+            answer: 0,
+            explain: 'Une note sur deux après A : C. Dm7 = D F A C, toutes dans la gamme de C.'
           },
           {
-            t: 'chords',
-            chords: ['Am7', 'Bm7b5', 'Cmaj7', 'Dm7', 'E7', 'Fmaj7', 'G7', 'G#dim7'],
-            romans: ['Im7', 'IIø7', '♭IIIΔ7', 'IVm7', 'V7', '♭VIΔ7', '♭VII7', 'VII°7'],
-            gap: 0.9
+            t: 'quiz',
+            q: 'En F majeur, quel accord se construit sur C (le V) ?',
+            choices: ['Cmaj7', 'C7', 'Cm7', 'Cø7'],
+            answer: 1,
+            explain: 'Le V prend toujours 7 : C E G B♭ (B♭ est dans la gamme de F).'
           },
-          { t: 'tip', text: 'Majeur : **Δ7 m7 m7 Δ7 7 m7 ø7**. Mineur : **m7 ø7 Δ7 m7 7 Δ7 7**, et °7 sur la sensible.' },
           {
             t: 'quiz',
             q: 'En B♭ majeur, quel accord se construit sur G ?',
             choices: ['Gmaj7', 'G7', 'Gm7', 'Gø7'],
             answer: 2,
-            explain: 'G est le VI de B♭ : VIm7, Gm7.'
+            explain: 'G est le VI de B♭ : mineur en 3 sons (G B♭ D), donc m7 : Gm7.'
           },
+          { t: 'h', text: '3. Et en mineur ?' },
+          {
+            t: 'p',
+            text: 'La gamme de **A mineur** utilise les notes de C majeur, mais en partant de A : A B C D E F G. On l’appelle le mineur **naturel** : la gamme mineure telle quelle, avec la même armure que C. Ses accords sont donc ceux de C, dans un autre ordre :'
+          },
+          { t: 'chords', label: 'A mineur naturel : les accords de C, à partir de A', chords: ['Am7', 'Bm7b5', 'Cmaj7', 'Dm7', 'Em7', 'Fmaj7', 'G7'], romans: ['Im7', 'IIø7', '♭IIIΔ7', 'IVm7', 'Vm7', '♭VIΔ7', '♭VII7'], gap: 0.9 },
+          {
+            t: 'p',
+            text: 'Un seul problème : le V, Em7, ne ramène pas bien vers Am. On monte sa 3ce, G, d’un demi-ton : **G♯**, juste sous A. Une note qui « tire » ainsi vers la tonique s’appelle la **sensible**. Avec elle, Em7 devient **E7**, une vraie dominante.'
+          },
+          { t: 'chords', label: 'Écoute : Em7 → Am7, puis E7 → Am7', chords: ['Em7', 'Am7', 'E7', 'Am7'], romans: ['Vm7', 'Im7', 'V7', 'Im7'], gap: 1.3 },
+          {
+            t: 'p',
+            text: 'La gamme avec ce G♯ (A B C D E F G♯) s’appelle le mineur **harmonique**. Pour jouer, retiens seulement ceci : en mineur, on garde les accords du mineur naturel, **sauf le V, qui devient 7**.'
+          },
+          { t: 'tip', text: 'A mineur : **Am7 · Bø7 · Cmaj7 · Dm7 · E7 · Fmaj7 · G7**. Seul le V change : E7, avec G♯.' },
           {
             t: 'quiz',
-            q: 'En E mineur, quel accord se construit sur B ?',
+            q: 'En E mineur, quel accord se construit sur B (le V) ?',
             choices: ['Bm7', 'B7', 'Bø7', 'Bmaj7'],
             answer: 1,
-            explain: 'B est le V : en mineur, le V prend la sensible (D♯) et devient B7.'
+            explain: 'B est le V : on monte sa 3ce (D → D♯, la sensible, juste sous E). B D♯ F♯ A = B7.'
           }
         ]
       }

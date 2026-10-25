@@ -101,7 +101,9 @@ function BlockView({ b }: { b: Block }): JSX.Element {
 }
 
 /** Exemples : toucher un accord le joue et l'affiche ; « Écouter » joue la suite en la suivant au clavier. */
-function ChordDemo({ chords, romans, label, voicing, gap = 1.1 }: { chords: string[]; romans?: string[]; label?: string; voicing?: SeqVoicing; gap?: number }) {
+function ChordDemo({ chords, romans, label, voicing: asked, gap = 1.1 }: { chords: string[]; romans?: string[]; label?: string; voicing?: SeqVoicing; gap?: number }) {
+  // Par défaut, l'accord tel qu'on l'apprend (1 3 5 7, fondamentale en bas) : pas de 9e ni de 13e non écrites.
+  const voicing: SeqVoicing = asked ?? 'close';
   const parsed = chords.map((c) => parseChord(c)).filter((c): c is Chord => !!c);
   const voicings = sequenceVoicings(parsed, voicing);
   const [active, setActive] = useState<number | null>(null);
