@@ -1079,6 +1079,72 @@ export const PARTS: Part[] = [
         ]
       },
       {
+        id: 'reconnaitre',
+        title: 'Reconnaître une suite',
+        sub: 'À l’oreille et sur le papier : la méthode, un accord à la fois',
+        minutes: 6,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Quatre accords qui défilent, c’est trop d’un coup. On les reconnaît **un par un**, toujours dans le même ordre : d’abord le I, puis chaque accord par rapport à lui. Les exercices suivent la même progression : deux accords, puis trois, puis les suites entières.'
+          },
+          { t: 'h', text: '1. Le premier accord est le I' },
+          { t: 'p', text: 'Dans presque toutes les chansons, on commence sur le I, la maison. Retiens sa couleur : c’est le repos. Tout le reste se mesure par rapport à lui.' },
+          { t: 'h', text: '2. Suis la basse' },
+          {
+            t: 'p',
+            text: 'Chaque accord a sa note de basse, la fondamentale. Depuis le I (C) : la basse **monte de 4 notes** (C D E F) → c’est le **IV** ; elle **monte de 5 notes** (C → G) → c’est le **V** ; elle **descend de 3 notes** (C → A) → c’est le **VIm**.'
+          },
+          { t: 'chords', label: 'I → IV : la basse monte de 4 notes, le son s’ouvre', chords: ['C', 'F'], romans: ['I', 'IV'], voicing: 'triad', gap: 1.4 },
+          { t: 'chords', label: 'I → V : la basse monte de 5 notes, le son se tend', chords: ['C', 'G'], romans: ['I', 'V'], voicing: 'triad', gap: 1.4 },
+          { t: 'chords', label: 'I → VIm : la basse descend, le son devient triste', chords: ['C', 'Am'], romans: ['I', 'VIm'], voicing: 'triad', gap: 1.4 },
+          { t: 'h', text: '3. Cherche le mineur' },
+          { t: 'p', text: 'Parmi I, IV, V et VIm, **un seul accord est mineur** : le VIm. Dès que la couleur devient triste, c’est lui. Repère **à quelle place** il arrive : c’est souvent ce qui distingue deux suites.' },
+          { t: 'h', text: '4. Le V attend, le IV se pose' },
+          { t: 'p', text: 'Le V laisse en suspens : on attend le retour au I. Le IV est plus doux, plus ouvert. Une suite qui finit sur le V donne envie de recommencer : c’est pour ça qu’elle tourne en boucle.' },
+          { t: 'h', text: 'Les quatre suites de la pop, côte à côte' },
+          {
+            t: 'table',
+            head: ['Suite', 'En C', 'À l’oreille'],
+            rows: [
+              ['I – IV – V – I', 'C F G C', 'aucun accord triste ; on revient au I à la fin'],
+              ['I – VIm – IV – V', 'C Am F G', 'le triste arrive en **2e**'],
+              ['I – V – VIm – IV', 'C G Am F', 'le triste arrive en **3e**, après le V'],
+              ['VIm – IV – I – V', 'Am F C G', 'on **commence** par le triste']
+            ]
+          },
+          { t: 'chords', label: 'I – VIm – IV – V : le triste en 2e', chords: ['C', 'Am', 'F', 'G'], romans: ['I', 'VIm', 'IV', 'V'], voicing: 'triad', gap: 1.1 },
+          { t: 'chords', label: 'I – V – VIm – IV : le triste en 3e', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'VIm', 'IV'], voicing: 'triad', gap: 1.1 },
+          { t: 'h', text: 'Sur le papier' },
+          {
+            t: 'p',
+            text: 'Même méthode, avec les yeux : trouve la tonalité (souvent le premier et le dernier accord), écris le degré sous chaque accord (C = I, Dm = II, Em = III, F = IV, G = V, Am = VI en C), puis compare à la liste. Le quiz « phrase par phrase » des morceaux fait exactement ça.'
+          },
+          { t: 'tip', text: 'Ne cherche pas la suite d’un coup : **le I, puis la basse, puis le mineur**. Dans l’exercice, « Basse seule » fait entendre uniquement les notes de basse.' },
+          {
+            t: 'quiz',
+            q: 'Une suite commence par un accord triste. Laquelle ?',
+            choices: ['VIm – IV – I – V', 'I – V – VIm – IV', 'I – IV – V – I'],
+            answer: 0,
+            explain: 'Seul VIm – IV – I – V commence par le mineur.'
+          },
+          {
+            t: 'quiz',
+            q: 'Depuis le I, la basse monte de 5 notes. Quel accord ?',
+            choices: ['Le V', 'Le IV', 'Le VIm'],
+            answer: 0,
+            explain: 'C D E F G : 5 notes, G, le V.'
+          },
+          {
+            t: 'quiz',
+            q: 'C → G → Am → F : à quelle place arrive l’accord mineur ?',
+            choices: ['En 3e', 'En 2e', 'En 1er'],
+            answer: 0,
+            explain: 'Am, le VIm, arrive en 3e : c’est I – V – VIm – IV.'
+          }
+        ]
+      },
+      {
         id: 'shell',
         title: 'Le shell : un 4 sons d’une main',
         sub: 'Fondamentale, 3ce, 7e',

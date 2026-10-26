@@ -96,6 +96,20 @@ export function makeSetQuestion(set: string[], level: number, tally: Tally = {},
 }
 
 /**
+ * Suites imposées (de 2 à 4), toujours les mêmes boutons dans le même ordre, dans une tonalité au hasard.
+ * Les ratées et les confusions reviennent plus souvent ; jamais plus de 3 fois de suite la même réponse.
+ */
+export function makeProgSetQuestion(set: string[], tally: Tally = {}, recent: string[] = [], pairs: Pair[] = [], rng: Rng = Math.random): EarQuestion {
+  const run = recent.slice(-3);
+  const banned = run.length === 3 && run.every((x) => x === run[0]) ? run[0] : null;
+  const pool = set.filter((x) => x !== banned);
+  const last = set.length > 2 ? recent[recent.length - 1] : undefined;
+  const id = weightedPick(pool, (k) => weight(tally, 'prog:' + k, k, pairs, last), rng);
+  const tonic = rndInt(12, rng);
+  return { mode: 'prog', id, tonic, chords: progChords(id, tonic), choices: [...set] };
+}
+
+/**
  * Choix pour « quelle progression ? » : seulement des progressions du même nombre d'accords,
  * pour que compter les accords ne suffise pas. D'abord celles du niveau, puis les voisines.
  */

@@ -37,7 +37,12 @@ export const PROGRESSIONS: Record<string, Progression> = Object.fromEntries(
     // Accords de 3 sons (niveau débutant)
     P('I-IV-V', 'I – IV – V – I', 'major', [[0, 0, 'maj', 'I'], [3, 5, 'maj', 'IV'], [4, 7, 'maj', 'V'], [0, 0, 'maj', 'I']], 'Les trois accords majeurs de la gamme : tonique, sous-dominante, dominante. Le V ramène au I.'),
     P('I-vi-IV-V', 'I – VI – IV – V', 'major', [[0, 0, 'maj', 'I'], [5, 9, 'min', 'VIm'], [3, 5, 'maj', 'IV'], [4, 7, 'maj', 'V']], 'Tonique, relatif mineur, IV, V : la boucle des années 50.'),
-    P('I-V-vi-IV', 'I – V – VI – IV', 'major', [[0, 0, 'maj', 'I'], [4, 7, 'maj', 'V'], [5, 9, 'min', 'VIm'], [3, 5, 'maj', 'IV']], 'La boucle pop la plus jouée : le VIm est le relatif mineur du I.'),
+    P('I-V-vi-IV', 'I – V – VI – IV', 'major', [[0, 0, 'maj', 'I'], [4, 7, 'maj', 'V'], [5, 9, 'min', 'VIm'], [3, 5, 'maj', 'IV']], 'La boucle pop la plus jouée : le mineur (VIm) arrive en 3e position, après le V.'),
+    P('vi-IV-I-V', 'VI – IV – I – V', 'major', [[5, 9, 'min', 'VIm'], [3, 5, 'maj', 'IV'], [0, 0, 'maj', 'I'], [4, 7, 'maj', 'V']], 'Les accords de I – V – VI – IV, mais on part du mineur : plus sombre, le I n’arrive qu’en 3e position.'),
+    // Deux accords : depuis le I, où va-t-on ? (pour apprendre à reconnaître une suite, un accord à la fois)
+    P('I-IV', 'I → IV', 'major', [[0, 0, 'maj', 'I'], [3, 5, 'maj', 'IV']], 'La basse monte de 4 notes (C → F). Le IV est doux, ouvert : on s’éloigne sans tension.'),
+    P('I-V', 'I → V', 'major', [[0, 0, 'maj', 'I'], [4, 7, 'maj', 'V']], 'La basse monte de 5 notes (C → G). Le V est tendu : il attend de revenir au I.'),
+    P('I-vi', 'I → VIm', 'major', [[0, 0, 'maj', 'I'], [5, 9, 'min', 'VIm']], 'Le seul accord mineur : la basse descend de 3 notes (C → A) et la couleur devient triste.'),
     P('I-vi-ii-V', 'I – VI – II – V (3 sons)', 'major', [[0, 0, 'maj', 'I'], [5, 9, 'min', 'VIm'], [1, 2, 'min', 'IIm'], [4, 7, 'maj', 'V']], 'Le turnaround en accords de 3 sons : la basse descend par quintes à partir du VI.'),
     P('iiVItri', 'II – V – I (3 sons)', 'major', [[1, 2, 'min', 'IIm'], [4, 7, 'maj', 'V'], [0, 0, 'maj', 'I']], 'La cadence du jazz, sans les 7es : mineur, majeur, majeur, la basse monte de quarte.'),
     P('i-iv-V', 'I – IV – V – I mineur', 'minor', [[0, 0, 'min', 'Im'], [3, 5, 'min', 'IVm'], [4, 7, 'maj', 'V'], [0, 0, 'min', 'Im']], 'En mineur, le V est majeur grâce à la sensible : Am Dm E Am.'),

@@ -113,10 +113,14 @@ export const STEPS: Step[] = [
   {
     id: 'chanson',
     title: 'Accompagner une chanson',
-    aim: 'Enchaîner les accords sans sauter, tenir la basse à gauche, jouer en rythme, et lire une grille de chanson en degrés.',
-    lessons: ['renverser', 'main-gauche', 'pop'],
+    aim: 'Enchaîner les accords sans sauter, tenir la basse à gauche, jouer en rythme, lire une grille de chanson en degrés, et reconnaître les suites de la pop à l’oreille, un accord à la fois.',
+    lessons: ['renverser', 'main-gauche', 'pop', 'reconnaitre'],
     activities: [
-      A('c-prog', 'Les suites de la pop à l’oreille', 'I–IV–V, I–V–vi–IV… : laquelle ?', 'metro', { kind: 'ear', mode: 'prog', level: 0 }),
+      // À l'oreille, progressivement : depuis le I, un accord ; puis les deux suites les plus proches ; puis les quatre.
+      A('c-p1', 'I → IV ou I → V ?', '2 accords : la basse monte de 4 ou de 5 notes', 'metro', { kind: 'ear', mode: 'prog', level: 0, set: ['I-IV', 'I-V'] }, S12),
+      A('c-p2', 'I → IV, V ou VIm ?', '+ le seul accord mineur', 'metro', { kind: 'ear', mode: 'prog', level: 0, set: ['I-IV', 'I-V', 'I-vi'] }, S12),
+      A('c-p3', 'Le mineur en 2e ou en 3e ?', 'I – VIm – IV – V ou I – V – VIm – IV', 'metro', { kind: 'ear', mode: 'prog', level: 0, set: ['I-vi-IV-V', 'I-V-vi-IV'] }, S12),
+      A('c-prog', 'Les 4 suites de la pop', 'Le I, la basse, le mineur : laquelle ?', 'metro', { kind: 'ear', mode: 'prog', level: 0, set: ['I-IV-V', 'I-vi-IV-V', 'I-V-vi-IV', 'vi-IV-I-V'] }),
       A('g-pop', 'Let It Be, phrase par phrase', 'Les degrés de chaque accord, puis la suite', 'metro', { kind: 'chart', chart: 'let-it-be', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
       A('r-24', 'Sur 2 et 4', 'Le clic compte les 4 temps, tu tapes 2 et 4 : la caisse claire de la pop', 'metro', { kind: 'rythme', exercise: 'tempo', level: 1 }, T3),
       A('c-renv', 'I – V – vi – IV renversés', 'Au piano, en 3 sons, la main bouge le moins possible', 'piano', { kind: 'flash', type: 'triad', order: 'pop' }, { kind: 'answers', n: 8, min: 6 }),

@@ -35,3 +35,29 @@ describe('comparer deux natures', () => {
     }
   });
 });
+
+describe('suites imposées (accompagner une chanson)', () => {
+  it('toujours les mêmes choix, jamais 4 fois de suite la même suite, dans le niveau débutant que des suites en 3 sons', async () => {
+    const { makeProgSetQuestion, progChoices } = await import('./questions');
+    const { PROG_LEVELS } = await import('./data');
+    const { PROGRESSIONS } = await import('../../core/theory/progressions');
+    const { seeded } = await import('../../core/random');
+    const rng = seeded(4);
+    const set = ['I-IV', 'I-V', 'I-vi'];
+    const recent: string[] = [];
+    for (let i = 0; i < 60; i++) {
+      const q = makeProgSetQuestion(set, {}, recent, [], rng);
+      if (q.mode !== 'prog') throw new Error('mode');
+      expect(q.choices).toEqual(set);
+      expect(q.chords.length).toBe(2);
+      recent.push(q.id);
+      const r = recent.slice(-4);
+      expect(r.length === 4 && r.every((x) => x === r[0])).toBe(false);
+    }
+    // Niveau débutant : des accords de 3 sons, et des choix de même longueur (pas de doublon « avec 7es »).
+    for (const id of PROG_LEVELS[0]) {
+      expect(PROGRESSIONS[id].steps.every((s) => s[2] === 'maj' || s[2] === 'min'), id).toBe(true);
+      for (const c of progChoices(id, 0, rng)) expect(PROGRESSIONS[c].steps.length).toBe(PROGRESSIONS[id].steps.length);
+    }
+  });
+});

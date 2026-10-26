@@ -15,7 +15,7 @@ Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'acc
 | 1 | Notes et intervalles | 2 | 4 (+1) |
 | 2 | Les accords de 3 sons | 1 | 4 |
 | 3 | La gamme et ses accords | 4 | 6 (+2) |
-| 4 | Accompagner une chanson | 3 | 5 |
+| 4 | Accompagner une chanson | 4 | 8 |
 | 5 | Les accords de 4 sons | 4 | 11 (+2) |
 | 6 | Le ii–V–I | 3 | 7 |
 | 7 | Couleurs, voicings et guide tones | 3 | 5 |
@@ -24,7 +24,7 @@ Une seule question à l'ouverture : **qu'est-ce que je fais maintenant ?** L'acc
 | 10 | Substitutions et tensions | 4 | 7 (+3) |
 | 11 | Improviser sur les accords | 3 | 7 (+3) |
 
-35 leçons, 71 exercices (38 dans le métro, 20 au piano, 13 de rythme), 16 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
+36 leçons, 74 exercices (41 dans le métro, 20 au piano, 13 de rythme), 16 « pour aller plus loin ». Une étape est finie quand ses leçons sont lues et ses exercices validés.
 
 **Aucun mot avant son explication** : un test parcourt les leçons dans l'ordre du parcours et échoue si un mot du lexique (shell, dominante, 9e, SubV…) apparaît avant la leçon qui l'explique (ou le présente en passant). Dans les leçons, la première apparition de chaque mot est touchable (définition, exemple à écouter) ; page Lexique depuis l'accueil.
 
@@ -43,6 +43,7 @@ Ce que contiennent les exercices :
 - **Comping en rythme** : ii–V–I avec contrebasse et batterie, motifs 1 et 3, Charleston, anticipations ; le micro mesure chaque attaque et vérifie l'accord.
 - **Phrases** : vocabulaire sur ii–V–I en appel-réponse (arpèges, gamme bebop, encerclements, approches chromatiques, mineur, altérée) ; le micro vérifie les notes.
 - **Morceaux** : le quiz phrase par phrase de Let It Be (étape 4), du Blues en F, d'Autumn Leaves et de Wind of Change (+ Still Loving You, La Bohème) ; retrouver une grille de mémoire, jouer les guide tones, accompagner, improviser au micro.
+- **Reconnaître une suite à l’oreille** (étape 4) : la méthode, un accord à la fois (le 1er accord est le I ; la basse monte de 4 notes = IV, de 5 = V ; le seul mineur = VIm ; à quelle place arrive-t-il ?), puis les exercices progressifs : I → IV ou I → V, + VIm, le mineur en 2e ou en 3e, enfin les 4 suites de la pop ; bouton « Basse seule », comparaison des suites dans la même tonalité après chaque réponse.
 - **Accompagner une chanson** (étape 4) : enchaîner sans sauter (renversements, notes communes ; astuces I – V – vi – IV, « Amen » IV → I, V → I), la main gauche (fondamentale, octave, arpège 1-5-8) et le rythme (ballade, pop), lire une grille de chanson en degrés (majuscule = majeur, minuscule = mineur ; I – V – vi – IV et ses variantes) ; au piano : I – V – vi – IV renversés, accompagner Let It Be au micro (3ce et 5te des accords de 3 sons). **Le mineur de la pop et de la chanson** (étape 9) : le ♭VII, i – ♭VI – ♭III – ♭VII, i – iv – V – i, la dominante du vi.
 - **Rythme** : tenir le tempo (avec le clic, sur 2 et 4, clic sur 2 et 4, une mesure sur deux, seul), lire et taper (noires, croches swing, contretemps, comping, triolets, claves), reconnaître un rythme, reconnaître un style (swing, ballade, valse jazz, bossa nova, samba, afro-cubain, funk). Le décalage du téléphone se règle une fois (10 s) au premier exercice.
 

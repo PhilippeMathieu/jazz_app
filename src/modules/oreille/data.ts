@@ -31,7 +31,7 @@ export const QUALITY_LEVELS = [
 
 /** Enchaînements par niveau (identifiants de core/theory/progressions). */
 export const PROG_LEVELS = [
-  ['I-IV-V', 'I-vi-IV-V', 'I-V-vi-IV', 'iiVItri'],
+  ['I-IV-V', 'I-vi-IV-V', 'I-V-vi-IV', 'vi-IV-I-V'],
   ['iiVI', 'turn1', 'turn3', 'IVii'],
   ['iiVI', 'turn1', 'iiVim', 'sec', 'I7IV'],
   ['iiVI', 'subV', 'back', 'bridge', 'dimp'],

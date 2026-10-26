@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { QUALITIES, chordNotes, chordSymbol, rootPc, spellInChord } from '../../core/theory/chords';
 import { mod, noteName, plainName } from '../../core/theory/notes';
 import { PROGRESSIONS, romanLine } from '../../core/theory/progressions';
-import { audio, now, piano, playChord, silence } from '../../core/audio/engine';
+import { audio, bass, now, piano, playChord, silence } from '../../core/audio/engine';
 import { load, save } from '../../core/storage';
 import { Keyboard, Mark } from '../../ui/Keyboard';
 import { PlayIcon } from '../../ui/icons';
 import { AnswerActions } from '../../ui/AnswerActions';
 import { notesMarks } from '../../ui/keyboardMarks';
 import { HINTS, PROG_LEVELS, QUALITY_LEVELS, qualityDiff } from './data';
-import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, makeEarQuestion, makeSetQuestion, progChords } from './questions';
+import { EarMode, EarQuestion, Tally, checkBuild, earVoicing, makeDuelQuestion, makeEarQuestion, makeProgSetQuestion, makeSetQuestion, progChords } from './questions';
 import { FullPlay } from './FullChord';
 import { IntervalPlay } from './IntervalPlay';
 import { BassPlay } from './BassPlay';
@@ -19,6 +19,8 @@ import { changeText, changes, pairCue } from './pairs';
 
 /** Rappel de la méthode, quand il y a plus de deux accords à départager. */
 const METHOD = 'La 3ce : clair ou sombre ? La 7e : au repos ou qui tire ? Sombre et qui tire : la 5te, stable ou instable ?';
+/** La méthode pour reconnaître une suite (leçon « Reconnaître une suite », étape 4). */
+const PROG_METHOD = 'Le 1er accord est le I, retiens-le. Puis suis la basse : elle monte de 4 notes = IV, de 5 notes = V. L’accord triste, le seul mineur = VIm. « Basse seule » pour l’entendre mieux.';
 /** Les accords de 4 sons de base : on dit quelle note change de l'un à l'autre. */
 const FOUR = ['maj7', 'm7', '7', 'm7b5', 'dim7'];
 import { Domain, Pair, confusions, recordAnswer } from '../../core/confusions';
@@ -91,7 +93,7 @@ export function OreilleRun({ mode, level, duel = false, set, onExit }: { mode: E
   if (mode === 'iv') return <IntervalPlay level={lv} items={stats.items} duelMode={confused && confusions('intervalle').length > 0} onRecord={single('iv' + lv)} onStop={onExit} />;
   if (mode === 'bass') return <BassPlay level={lv} items={stats.items} onRecord={(r) => recordMany('bass' + lv, r)} onGuess={(l) => regrade('bass' + lv, l)} onStop={onExit} />;
   if (mode === 'full') return <FullPlay level={lv} items={stats.items} duelMode={confused && confusions('degre').length > 0} onRecord={single('full' + lv)} onStop={onExit} />;
-  return <EarPlay stats={stats} setStats={setStats} mode={mode} set={mode === 'ear' ? set : undefined} onStop={onExit} />;
+  return <EarPlay stats={stats} setStats={setStats} mode={mode} set={mode === 'ear' || mode === 'prog' ? set : undefined} onStop={onExit} />;
 }
 
 /** Les confusions de l'élève, par exercice d'oreille (pour proposer de les départager). */
@@ -123,6 +125,7 @@ export function progDiff(truth: string, other: string, wrong: boolean): string {
 /** Question suivante : natures imposées, duel sur une paire confondue, ou tout le niveau (confusions plus fréquentes). */
 function nextQuestion(stats: Stats, mode: EarMode, level: number, last?: string, set?: string[], recent: string[] = []): EarQuestion {
   const pairs: Pair[] = mode === 'build' ? [] : confusions(domainOf(mode));
+  if (set && mode === 'prog') return makeProgSetQuestion(set, stats.items, recent, pairs);
   if (set) return makeSetQuestion(set, level, stats.items, recent, pairs);
   if (stats.focus === 'confusions' && mode !== 'build') {
     const d = makeDuelQuestion(mode, pairs, level, last);
@@ -173,9 +176,22 @@ function EarPlay({ stats, setStats, mode, set, onStop }: { stats: Stats; setStat
       timers.current.push(window.setTimeout(() => setLit(-1), qq.chords.length * step * 1000));
     }
   };
+  /** La basse seule (les fondamentales), pour suivre les degrés. */
+  const playBass = (qq: EarQuestion) => {
+    if (qq.mode !== 'prog') return;
+    audio();
+    stop();
+    const t0 = now() + 0.06;
+    const step = 1.3;
+    qq.chords.forEach((c, i) => {
+      bass(c.notes[0], t0 + i * step, step - 0.1, 0.9);
+      timers.current.push(window.setTimeout(() => setLit(i), i * step * 1000 + 60));
+    });
+    timers.current.push(window.setTimeout(() => setLit(-1), qq.chords.length * step * 1000));
+  };
   const fresh = (m: EarMode, l: number, autoplay: boolean) => {
     stop();
-    if (q.mode === 'ear') truths.current = [...truths.current, q.q].slice(-3);
+    if (q.mode === 'ear' || q.mode === 'prog') truths.current = [...truths.current, q.mode === 'ear' ? q.q : q.id].slice(-3);
     const nq = nextQuestion(stats, m, l, last.current, set, truths.current);
     qStart.current = performance.now();
     last.current = nq.mode === 'prog' ? nq.id : nq.q;
@@ -334,7 +350,7 @@ function EarPlay({ stats, setStats, mode, set, onStop }: { stats: Stats; setStat
           Arrêter
         </button>
         <span class="play-meta">
-          {set ? set.map(qualSym).join(set.length === 2 ? ' ou ' : ' · ') : EXERCISES.find((e) => e.value === mode)?.label} · {duel && !set ? 'mes confusions · ' : ''}
+          {set ? set.map((k) => (mode === 'prog' ? romanLine(k) : qualSym(k))).join(set.length === 2 ? ' ou ' : ' · ') : EXERCISES.find((e) => e.value === mode)?.label} · {duel && !set ? 'mes confusions · ' : ''}
           {session.c}/{session.t}
           {session.streak > 1 ? ` · ${session.streak} d’affilée` : ''}
         </span>
@@ -356,14 +372,20 @@ function EarPlay({ stats, setStats, mode, set, onStop }: { stats: Stats; setStat
                 Arpège
               </button>
             ) : (
-              <div class="dots" aria-hidden="true">
-                {q.chords.map((_, i) => <i key={i} class={lit === i ? 'on' : ''} />)}
-              </div>
+              <>
+                <button class="btn" onClick={() => playBass(q)}>
+                  Basse seule
+                </button>
+                <div class="dots" aria-hidden="true">
+                  {q.chords.map((_, i) => <i key={i} class={lit === i ? 'on' : ''} />)}
+                </div>
+              </>
             )}
           </div>
         )}
         <h2 class="prompt">{PROMPT[mode]}</h2>
-        {set && set.length > 2 && !answered ? <p class="muted small">{METHOD}</p> : null}
+        {set && set.length > 2 && !answered && mode !== 'prog' ? <p class="muted small">{METHOD}</p> : null}
+        {mode === 'prog' && !answered ? <p class="muted small">{PROG_METHOD}</p> : null}
         {answered ? (
           <div class="fb">
             {q.mode === 'ear' ? (
@@ -405,6 +427,28 @@ function EarPlay({ stats, setStats, mode, set, onStop }: { stats: Stats; setStat
           </div>
         ) : null}
         {compare}
+        {answered && set && q.mode === 'prog' ? (
+          <div class="compare">
+            <span class="label">Les {set.length} suites, dans la même tonalité, pour comparer</span>
+            <div class="chips text">
+              {set.map((k) => (
+                <button
+                  key={k}
+                  class="chip"
+                  aria-pressed={k === q.id}
+                  onClick={() => {
+                    audio();
+                    stop();
+                    const t0 = now() + 0.05;
+                    progChords(k, q.tonic).forEach((c, i) => playChord(c.notes, t0 + i * 1.3, 1.2, 0.6));
+                  }}
+                >
+                  {romanLine(k)}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {answered && set && set.length > 2 && q.mode === 'ear' ? (
           <div class="compare">
             <span class="label">Les {set.length} sur {noteName(q.c.chord.root)}, pour comparer</span>
