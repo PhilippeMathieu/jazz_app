@@ -1,41 +1,46 @@
-/* Harmonie jazz : un seul thème, sombre, pensé pour jouer le soir.
-   L'ambre est réservé à l'action principale et à « ce qui se joue maintenant ». */
+/* Harmonie jazz : un thème clair et classique, celui de la partition.
+   Papier blanc sur un pupitre gris-bleu, texte gravé à l'encre noire, titres et accords en Bodoni comme sur une
+   édition de musique. Le bleu d'encre est le crayon du professeur : réservé à l'action principale et à « ce qui se
+   joue maintenant ». Les indications (étiquettes) sont en italique, comme les nuances sur une portée. */
 :root {
   /* Couleurs */
-  --bg: #0d121d;
-  --surface: #151c2b;
-  --surface-2: #1c2536;
-  --line: #263045;
-  --line-strong: #364259;
-  --fg: #e8ecf4;
-  --muted: #8b95aa;
-  --faint: #5f6a82;
-  --paper: #eceff4;
-  --ink: #121826;
-  --accent: #e8ad35;
-  --on-accent: #1a1205;
-  --accent-soft: rgba(232, 173, 53, 0.14);
-  --info: #7fc3e6;
-  --ok: #4fc49b;
-  --ok-soft: rgba(79, 196, 155, 0.14);
-  --bad: #ea6f6f;
-  --bad-soft: rgba(234, 111, 111, 0.14);
-  --key-w: #e6e9ef;
-  --key-b: #05070c;
-  --key-line: #59647a;
-  --key-lab: #121826;
-  --key-soft-w: #f1dfb6;
-  --key-soft-b: #6b5216;
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #f5f7f9;
+  --line: #d6dce3;
+  --line-strong: #aab5c2;
+  --fg: #171c23;
+  --muted: #525d6b;
+  --faint: #7e8997;
+  --paper: #ffffff;
+  --ink: #171c23;
+  --accent: #1d5aa6;
+  --on-accent: #ffffff;
+  --accent-soft: rgba(29, 90, 166, 0.09);
+  --info: #8f5b00;
+  --ok: #1e7a4f;
+  --ok-soft: rgba(30, 122, 79, 0.1);
+  --bad: #b3261e;
+  --bad-soft: rgba(179, 38, 30, 0.08);
+  --glass: rgba(255, 255, 255, 0.95);
+  --shade: rgba(23, 28, 35, 0.32);
+  --key-w: #ffffff;
+  --key-b: #1b1f26;
+  --key-line: #8e98a5;
+  --key-lab: #171c23;
+  --key-soft-w: #dbe6f3;
+  --key-soft-b: #49668c;
 
-  /* Typographie : affichage pour les accords seulement, texte en Plex Sans, notes et chiffres en Plex Mono */
-  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
-  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
-  --t-cap: 12px;
-  --t-sec: 14px;
-  --t-body: 16px;
-  --t-title: 20px;
-  --t-h1: 28px;
+  /* Typographie : Bodoni pour les titres et les accords, Source Serif pour le texte et les chiffres (degrés en
+     romain, comme en analyse classique), Noto Music pour les ♭ et ♯ (absents des deux autres). */
+  --display: 'Bodoni Moda', 'Noto Music', 'Bodoni 72', Didot, Georgia, serif;
+  --body: 'Source Serif 4', 'Noto Music', Georgia, 'Times New Roman', serif;
+  --mono: var(--body);
+  --t-cap: 13px;
+  --t-sec: 15px;
+  --t-body: 17px;
+  --t-title: 21px;
+  --t-h1: 30px;
 
   /* Espacements, rayons, cibles tactiles */
   --s1: 4px;
@@ -44,12 +49,12 @@
   --s4: 16px;
   --s5: 24px;
   --s6: 32px;
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 20px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-lg: 10px;
   --tap: 44px;
   --gutter-l: max(16px, env(safe-area-inset-left, 0px));
   --gutter-r: max(16px, env(safe-area-inset-right, 0px));
   --player-h: 76px;
-  color-scheme: dark;
+  color-scheme: light;
 }

@@ -1,0 +1,5 @@
+Polices sous licence SIL Open Font License 1.1 (https://openfontlicense.org) :
+- Source Serif 4 (Adobe), fichiers source-serif-4-*.woff2
+- Bodoni Moda (Owen Earl / indestructible type*), fichier bodoni-moda-*.woff2
+- Noto Music (Google), fichier noto-music-*.woff2 (sous-ensemble « music » : ♭ ♮ ♯)
+Fichiers repris des paquets @fontsource.

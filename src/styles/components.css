@@ -190,7 +190,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; font: i
 .verdict.bad { color: var(--bad); }
 
 /* ---------------------------------------------------------------- Panneau du bas */
-.drawer-backdrop { position: fixed; inset: 0; z-index: 30; background: rgba(5, 7, 12, 0.5); }
+.drawer-backdrop { position: fixed; inset: 0; z-index: 30; background: var(--shade); }
 .drawer {
   position: fixed;
   left: 0;
@@ -201,7 +201,7 @@ button.row { width: 100%; border: 0; background: none; text-align: left; font: i
   overflow-y: auto;
   background: var(--surface);
   border-radius: var(--r-lg) var(--r-lg) 0 0;
-  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 -8px 24px rgba(23, 28, 35, 0.14);
   padding: var(--s4) var(--gutter-r) calc(env(safe-area-inset-bottom, 0px) + var(--s5)) var(--gutter-l);
   display: flex;
   flex-direction: column;
@@ -296,7 +296,7 @@ input[type='range'] { width: 100%; accent-color: var(--accent); min-height: var(
   right: 0;
   bottom: 0;
   z-index: 20;
-  background: rgba(21, 28, 43, 0.94);
+  background: var(--glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--line);

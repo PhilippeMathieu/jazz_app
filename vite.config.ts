@@ -23,8 +23,8 @@ export default defineConfig({
         display: 'standalone',
         // Libre : le mode pupitre se lit en paysage (Android applique l'orientation du manifeste).
         orientation: 'any',
-        background_color: '#0d121d',
-        theme_color: '#0d121d',
+        background_color: '#eef1f4',
+        theme_color: '#eef1f4',
         categories: ['music', 'education'],
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },

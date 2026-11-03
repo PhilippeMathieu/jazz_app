@@ -3,7 +3,9 @@ html, body { margin: 0; background: var(--bg); color: var(--fg); }
 body {
   font-family: var(--body);
   font-size: var(--t-body);
-  line-height: 1.45;
+  line-height: 1.5;
+  font-variant-numeric: lining-nums;
+  font-optical-sizing: auto;
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
@@ -67,11 +69,11 @@ h1, h2, h3 { margin: 0; }
 .mono { font-family: var(--mono); }
 .good { color: var(--ok); }
 .bad { color: var(--bad); }
+/* Les indications, en italique comme les nuances d'une partition. */
 .label {
-  font-size: var(--t-cap);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: var(--t-sec);
+  font-style: italic;
+  font-weight: 400;
   color: var(--muted);
   margin-bottom: var(--s2);
 }
@@ -80,7 +82,7 @@ section > .label { margin-bottom: var(--s2); }
 .screen > .label { margin: var(--s2) 0 calc(-1 * var(--s2)); }
 .credits { font-size: var(--t-cap); color: var(--faint); }
 .credits a { text-decoration: underline; }
-.sym { font-family: var(--display); font-weight: 700; letter-spacing: 0.01em; }
+.sym { font-family: var(--display); font-weight: 700; letter-spacing: 0; font-variation-settings: 'opsz' 12; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
