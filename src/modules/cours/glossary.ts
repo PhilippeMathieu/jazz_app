@@ -281,6 +281,21 @@ export const TERMS: Term[] = [
     lesson: 'backdoor'
   },
   {
+    id: 'pentatonique',
+    title: 'Pentatonique',
+    forms: 'pentatoniques?',
+    text: 'Une gamme de 5 notes, sans les deux qui frottent : les 5 touches noires, ou C D E G A en C. Sur les accords de sa tonalité, presque rien ne sonne faux : c’est la gamme des débuts en impro, du blues, du rock et de la pop.',
+    why: 'Improviser tout de suite, en pensant au temps et aux silences plutôt qu’aux fausses notes.',
+    lesson: 'improviser'
+  },
+  {
+    id: 'blues',
+    title: 'Gamme blues, blue note',
+    forms: 'gammes? blues|blue notes?',
+    text: 'La pentatonique mineure (en F : F A♭ B♭ C E♭) plus une note de passage, la blue note (B en F), qui glisse vers la note voisine. Une seule gamme pour tout un blues : sur les trois accords, elle frotte juste ce qu’il faut.',
+    lesson: 'blues-simple'
+  },
+  {
     id: 'comping',
     title: 'Comping',
     forms: 'comping',

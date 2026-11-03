@@ -3,6 +3,7 @@ import { SeqVoicing } from '../../core/audio/play';
 import { GROOVES, StyleId } from '../../core/rhythm/styles';
 import { noteName } from '../../core/theory/notes';
 import { INTERVALS, spellPair } from '../oreille/intervals';
+import { STEPS } from '../../parcours/steps';
 
 export type Block =
   | { t: 'p'; text: string }
@@ -152,6 +153,58 @@ export const PARTS: Part[] = [
         ]
       },
       {
+        id: 'improviser',
+        title: 'Improviser dès maintenant',
+        sub: 'Les touches noires, des silences, une idée',
+        minutes: 4,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Improviser, c’est inventer une mélodie sur une boucle d’accords. Pas besoin de tout connaître : on commence avec **peu de notes**, une boucle qui tourne, et ses oreilles.'
+          },
+          { t: 'h', text: 'Les touches noires' },
+          {
+            t: 'p',
+            text: 'Les 5 touches noires forment une **gamme pentatonique** : 5 notes, sans les deux qui frottent. Sur la boucle de l’exercice, **aucune ne sonne faux**. Tu peux penser au reste : le temps, les silences, l’idée.'
+          },
+          { t: 'chords', label: 'La boucle de l’exercice', chords: ['G♭', 'E♭m', 'A♭m', 'D♭'], gap: 1 },
+          { t: 'h', text: 'Trois règles' },
+          {
+            t: 'table',
+            head: ['Règle', 'Pourquoi'],
+            rows: [
+              ['Garde le temps, même après une note ratée', 'Personne n’entend la note ratée ; tout le monde entend l’arrêt.'],
+              ['Laisse des silences', 'Une phrase, une respiration : comme quand on parle.'],
+              ['Répète une idée', 'L’oreille aime reconnaître : 3 notes rejouées plus haut deviennent une phrase.']
+            ]
+          },
+          {
+            t: 'p',
+            text: 'Ces règles viennent des play-alongs de Jamey Aebersold, la méthode avec laquelle des générations de musiciens ont appris : improviser **tout de suite**, sur peu de notes, avec un accompagnement.'
+          },
+          { t: 'h', text: 'La même chose en C' },
+          {
+            t: 'p',
+            text: 'En C, la pentatonique, c’est **C D E G A** : la gamme de C sans F ni B. Tu la retrouveras à l’{étape:gamme}, puis sur la suite de la pop à l’{étape:chanson}.'
+          },
+          { t: 'tip', text: 'À chaque exercice d’impro, écoute d’abord l’« Exemple » : l’appli improvise, tu entends ce qu’on attend. Puis à toi, une consigne par passage.' },
+          {
+            t: 'quiz',
+            q: 'Pourquoi commencer sur les touches noires ?',
+            choices: ['Aucune ne sonne faux sur la boucle : on pense au temps et aux silences', 'C’est plus facile pour les doigts', 'Le jazz se joue toujours en G♭'],
+            answer: 0,
+            explain: 'Ce sont les 5 notes d’une pentatonique : sur cette boucle, aucune ne frotte. Tout ton esprit va au temps, aux silences, à l’idée.'
+          },
+          {
+            t: 'quiz',
+            q: 'Tu rates une note en plein passage :',
+            choices: ['Tu t’arrêtes et tu recommences', 'Tu continues, en rythme', 'Tu joues plus fort'],
+            answer: 1,
+            explain: 'Le temps d’abord : une note ratée passe, un arrêt s’entend.'
+          }
+        ]
+      },
+      {
         id: 'armures',
         title: 'Les armures',
         sub: 'Combien de ♯ ou de ♭, quelle tonalité',
@@ -198,7 +251,7 @@ export const PARTS: Part[] = [
           { t: 'p', text: 'Même armure, tonique **1 ton ½ plus bas** (le 6e degré de la gamme majeure) : A majeur → F♯ mineur ; E♭ majeur → C mineur.' },
           {
             t: 'tip',
-            text: 'L’armure donne la tonalité du **début** du morceau. Un morceau peut ensuite passer dans d’autres tonalités sans changer d’armure : on verra comment à l’étape 6.'
+            text: 'L’armure donne la tonalité du **début** du morceau. Un morceau peut ensuite passer dans d’autres tonalités sans changer d’armure : on verra comment à l’{étape:iivi}.'
           },
           {
             t: 'quiz',
@@ -494,7 +547,7 @@ export const PARTS: Part[] = [
         blocks: [
           {
             t: 'p',
-            text: 'À l’étape 3, tu as construit un accord de 3 sons sur chaque note de la gamme de C : **C Dm Em F G Am B°**. Ici, on ajoute **une seule note** à chacun : la **7e**.'
+            text: 'À l’{étape:gamme}, tu as construit un accord de 3 sons sur chaque note de la gamme de C : **C Dm Em F G Am B°**. Ici, on ajoute **une seule note** à chacun : la **7e**.'
           },
           { t: 'chords', label: 'Rappel : les accords de 3 sons de C majeur', chords: ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'], romans: ['I', 'IIm', 'IIIm', 'IV', 'V', 'VIm', 'VII°'], gap: 0.9 },
           { t: 'h', text: '1. Ajouter la 7e' },
@@ -520,7 +573,7 @@ export const PARTS: Part[] = [
           { t: 'h', text: '2. La règle' },
           {
             t: 'p',
-            text: 'Rien de nouveau : ce sont les accords de l’étape 5. Chaque accord de 3 sons garde sa couleur et gagne sa 7e :'
+            text: 'Rien de nouveau : ce sont les accords de l’{étape:quatre}. Chaque accord de 3 sons garde sa couleur et gagne sa 7e :'
           },
           {
             t: 'table',
@@ -613,7 +666,7 @@ export const PARTS: Part[] = [
           },
           {
             t: 'p',
-            text: 'Au piano, joue-les en **shell** (étape 5) : la fondamentale, la 3ce et la 7e. Les deux notes qui bougent d’un accord à l’autre sont justement la 3ce et la 7e.'
+            text: 'Au piano, joue-les en **shell** ({étape:quatre}) : la fondamentale, la 3ce et la 7e. Les deux notes qui bougent d’un accord à l’autre sont justement la 3ce et la 7e.'
           },
           { t: 'chords', label: 'En shells : fondamentale, 3ce, 7e', chords: ['Dm7', 'G7', 'Cmaj7'], romans: ['IIm7', 'V7', 'IΔ7'], voicing: 'shell', gap: 1.4 },
           { t: 'h', text: 'Pourquoi le ii–V fait changer de tonalité' },
@@ -709,7 +762,7 @@ export const PARTS: Part[] = [
           { t: 'chords', label: 'Le III remplace le I', chords: ['Em7', 'Am7', 'Dm7', 'G7'], romans: ['IIIm7', 'VIm7', 'IIm7', 'V7'], gap: 0.9 },
           {
             t: 'p',
-            text: 'Dans les rhythm changes, le turnaround tourne en boucle sur les mesures 1 à 4 : B♭6 Gm7 Cm7 F7. D’autres variantes, plus colorées, viendront aux étapes 9 et 10.'
+            text: 'Dans les rhythm changes, le turnaround tourne en boucle sur les mesures 1 à 4 : B♭6 Gm7 Cm7 F7. D’autres variantes, plus colorées, viendront aux {étapes:mineur,subst}.'
           },
           { t: 'tip', text: 'Deux dernières mesures d’une grille, quatre accords qui descendent par quintes : turnaround.' },
           { t: 'h', text: 'Faire chanter le turnaround' },
@@ -871,6 +924,61 @@ export const PARTS: Part[] = [
         ]
       },
       {
+        id: 'blues-simple',
+        title: 'Le blues',
+        sub: '12 mesures, trois accords 7, la gamme blues',
+        minutes: 5,
+        blocks: [
+          {
+            t: 'p',
+            text: 'Le blues est né dans les chants des Afro-Américains, avant le jazz. C’est la porte d’entrée du jazz : une forme courte, **12 mesures**, et **trois accords** seulement.'
+          },
+          {
+            t: 'table',
+            head: ['Mesures', 'Blues en F', 'La phrase'],
+            rows: [
+              ['1–4', 'F7 | F7 | F7 | F7', 'On pose le I7.'],
+              ['5–8', 'B♭7 | B♭7 | F7 | F7', 'On monte au IV7, on revient.'],
+              ['9–12', 'C7 | B♭7 | F7 | C7', 'V7, IV7, I7 ; le C7 relance le tour.']
+            ]
+          },
+          { t: 'chords', label: 'Les trois accords', chords: ['F7', 'B♭7', 'C7'], romans: ['I7', 'IV7', 'V7'], gap: 1 },
+          {
+            t: 'p',
+            text: 'Ce sont des **accords 7** ({étape:quatre}) : 1, 3, 5 et 7e mineure. Ailleurs, seul le V porte cette 7e ; dans le blues, les trois accords l’ont. C’est sa couleur, un peu rugueuse.'
+          },
+          { t: 'h', text: 'Penser en 3 phrases de 4' },
+          {
+            t: 'p',
+            text: 'Ne compte pas jusqu’à 12 : pense **3 phrases de 4 mesures**. La 1re pose le I7 ; la 2e monte au IV7 et revient ; la 3e descend V7, IV7, I7, et sa dernière mesure relance. Perdu ? Écoute la basse : au IV7, elle monte d’une quarte.'
+          },
+          { t: 'h', text: 'La gamme blues' },
+          {
+            t: 'p',
+            text: 'Pour improviser, une seule gamme sur tout le blues : **F A♭ B♭ B C E♭**. C’est la pentatonique mineure de F (F A♭ B♭ C E♭) avec une note de passage, B : la **blue note**, qui glisse vers B♭ ou vers C.'
+          },
+          {
+            t: 'p',
+            text: 'Sur F7, A♭ frotte avec la 3ce, A : c’est voulu, c’est le cri du blues. Au piano, on glisse souvent de A♭ à A, comme un chanteur.'
+          },
+          { t: 'tip', text: 'Une phrase de 2 mesures sur F7, puis la même sur B♭7 : la phrase ne change pas, l’accord en dessous si. C’est tout le jeu du blues.' },
+          {
+            t: 'quiz',
+            q: 'Mesure 5 d’un blues en F :',
+            choices: ['F7', 'C7', 'B♭7'],
+            answer: 2,
+            explain: 'Début de la 2e phrase : on monte au IV7, B♭7.'
+          },
+          {
+            t: 'quiz',
+            q: 'La gamme blues de F :',
+            choices: ['F G A B♭ C D E', 'F A♭ B♭ B C E♭', 'F A C E♭'],
+            answer: 1,
+            explain: 'La pentatonique mineure (F A♭ B♭ C E♭) et la blue note, B. F A C E♭, ce sont les notes de l’accord F7.'
+          }
+        ]
+      },
+      {
         id: 'blues',
         title: 'Le blues jazz',
         sub: '12 mesures, que des 7',
@@ -878,7 +986,7 @@ export const PARTS: Part[] = [
         blocks: [
           {
             t: 'p',
-            text: '12 mesures en trois phrases de 4. Le I et le IV sont des **accords 7** : ce ne sont pas des dominantes qui résolvent, c’est la couleur blues.'
+            text: 'La forme du blues ({étape:blues}) : 12 mesures en trois phrases de 4, le I et le IV en **accords 7** (pas des dominantes qui résolvent : la couleur blues). Le jazz y ajoute des ii–V, un diminué de passage et un turnaround.'
           },
           {
             t: 'table',
@@ -912,7 +1020,7 @@ export const PARTS: Part[] = [
         blocks: [
           {
             t: 'p',
-            text: 'Tu connais les suites majeures de la pop (étape 4). Les accords du mineur leur donnent leur couleur rock ou mélancolique.'
+            text: 'Tu connais les suites majeures de la pop ({étape:chanson}). Les accords du mineur leur donnent leur couleur rock ou mélancolique.'
           },
           { t: 'h', text: 'Le ♭VII : la couleur rock' },
           {
@@ -998,7 +1106,7 @@ export const PARTS: Part[] = [
         blocks: [
           {
             t: 'p',
-            text: 'La main droite joue l’accord ; la main gauche donne la **basse** : la fondamentale, plus bas. C’est elle qui fait entendre la grille (leçon « La ligne de basse », étape 3).'
+            text: 'La main droite joue l’accord ; la main gauche donne la **basse** : la fondamentale, plus bas. C’est elle qui fait entendre la grille (leçon « La ligne de basse », {étape:gamme}).'
           },
           { t: 'chords', label: 'Basse à gauche, accord renversé à droite', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'VIm', 'IV'], voicing: 'triad', gap: 1.1 },
           { t: 'h', text: 'Trois façons de jouer la main gauche' },
@@ -1046,7 +1154,7 @@ export const PARTS: Part[] = [
           },
           {
             t: 'p',
-            text: 'Pour la comprendre, on la lit en **degrés**, comme à l’étape 3. Dans les chansons, on écrit souvent **majuscule = accord majeur** (I, IV, V), **minuscule = mineur** (ii, iii, vi) : vi veut dire VIm.'
+            text: 'Pour la comprendre, on la lit en **degrés**, comme à l’{étape:gamme}. Dans les chansons, on écrit souvent **majuscule = accord majeur** (I, IV, V), **minuscule = mineur** (ii, iii, vi) : vi veut dire VIm.'
           },
           { t: 'h', text: 'La suite de la pop' },
           { t: 'chords', label: 'I – V – vi – IV : Let It Be', chords: ['C', 'G', 'Am', 'F'], romans: ['I', 'V', 'vi', 'IV'], voicing: 'triad', gap: 1 },
@@ -1191,7 +1299,7 @@ export const PARTS: Part[] = [
           },
           {
             t: 'p',
-            text: 'Elles ne changent pas le rôle de l’accord (Cmaj9 reste un I) : elles le **colorent**. La 9e va presque partout ; la 13e surtout sur les accords 7 (G13). La 11e frotte avec la 3ce des accords majeurs : on l’y évite (détails à l’étape 10).'
+            text: 'Elles ne changent pas le rôle de l’accord (Cmaj9 reste un I) : elles le **colorent**. La 9e va presque partout ; la 13e surtout sur les accords 7 (G13). La 11e frotte avec la 3ce des accords majeurs : on l’y évite (détails à l’{étape:subst}).'
           },
           { t: 'chords', label: 'Cmaj7, puis Cmaj9 : la 9e ajoute de l’air', chords: ['Cmaj7', 'Cmaj9'], romans: ['IΔ7', 'IΔ9'], gap: 1.6 },
           { t: 'chords', label: 'G7, puis G13', chords: ['G7', 'G13'], romans: ['V7', 'V13'], gap: 1.6 },
@@ -1225,7 +1333,7 @@ export const PARTS: Part[] = [
         blocks: [
           {
             t: 'p',
-            text: 'Un voicing, c’est le choix et l’ordre des notes jouées. Tu connais le shell (1, 3, 7, étape 5). Quand une contrebasse joue déjà la fondamentale, la main gauche peut la laisser, et prendre une couleur à la place : la 9e (leçon précédente).'
+            text: 'Un voicing, c’est le choix et l’ordre des notes jouées. Tu connais le shell (1, 3, 7, {étape:quatre}). Quand une contrebasse joue déjà la fondamentale, la main gauche peut la laisser, et prendre une couleur à la place : la 9e (leçon précédente).'
           },
           { t: 'h', text: 'Sans fondamentale : A et B' },
           {
@@ -1341,7 +1449,7 @@ export const PARTS: Part[] = [
         blocks: [
           {
             t: 'p',
-            text: 'Tu connais les couleurs 9 et 13 (étape 7). Sur les accords 7, on peut aussi les **altérer**, les baisser ou les monter d’un demi-ton : **♭9, ♯9, ♯11, ♭13**. Plus tendues, elles servent surtout quand le V va vers un accord mineur. Le tableau dit ce qui sonne sur chaque accord.'
+            text: 'Tu connais les couleurs 9 et 13 ({étape:voicings}). Sur les accords 7, on peut aussi les **altérer**, les baisser ou les monter d’un demi-ton : **♭9, ♯9, ♯11, ♭13**. Plus tendues, elles servent surtout quand le V va vers un accord mineur. Le tableau dit ce qui sonne sur chaque accord.'
           },
           {
             t: 'table',
@@ -1612,6 +1720,24 @@ export const PARTS: Part[] = [
     ]
   }
 ];
+
+/**
+ * Renvois d'étape écrits {étape:id} ou {étapes:a,b} dans les textes : le numéro suit l'ordre du parcours, et reste
+ * juste quand on ajoute ou déplace une étape.
+ */
+export function stepRefs(text: string): string {
+  const no = (id: string) => {
+    const i = STEPS.findIndex((st) => st.id === id);
+    if (i < 0) throw new Error(`Renvoi vers une étape inconnue : ${id}`);
+    return i + 1;
+  };
+  return text
+    .replace(/\{étape:([a-z-]+)\}/g, (_, id: string) => `étape ${no(id)}`)
+    .replace(/\{étapes:([a-z-]+),([a-z-]+)\}/g, (_, x: string, y: string) => `étapes ${no(x)} et ${no(y)}`);
+}
+const resolveRefs = <T,>(x: T): T =>
+  typeof x === 'string' ? (stepRefs(x) as T) : Array.isArray(x) ? (x.map(resolveRefs) as T) : x && typeof x === 'object' ? (Object.fromEntries(Object.entries(x).map(([k, v]) => [k, resolveRefs(v)])) as T) : x;
+for (const p of PARTS) p.lessons = p.lessons.map(resolveRefs);
 
 export const LESSONS: Lesson[] = PARTS.flatMap((p) => p.lessons);
 export const lessonById = (id: string) => LESSONS.find((l) => l.id === id);

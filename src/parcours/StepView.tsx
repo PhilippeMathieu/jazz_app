@@ -31,7 +31,8 @@ export function StepView({ id }: { id: string }) {
   const req = step.activities.filter((a) => !a.optional);
   const rythme = req.filter((a) => a.run.kind === 'rythme');
   const metro = req.filter((a) => a.where === 'metro' && !rythme.includes(a));
-  const piano = req.filter((a) => a.where === 'piano' && !rythme.includes(a));
+  const impro = req.filter((a) => a.run.kind === 'impro');
+  const piano = req.filter((a) => a.where === 'piano' && !rythme.includes(a) && !impro.includes(a));
   const extra = step.activities.filter((a) => a.optional);
   const inStep = nextInStep(p, step);
   const nextStep = STEPS[STEPS.indexOf(step) + 1];
@@ -88,6 +89,17 @@ export function StepView({ id }: { id: string }) {
           <h2 class="label">Au piano</h2>
           <div class="list">
             {piano.map((a) => (
+              <ActRow key={a.id} a={a} p={p} />
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {impro.length ? (
+        <section>
+          <h2 class="label">Improviser</h2>
+          <div class="list">
+            {impro.map((a) => (
               <ActRow key={a.id} a={a} p={p} />
             ))}
           </div>

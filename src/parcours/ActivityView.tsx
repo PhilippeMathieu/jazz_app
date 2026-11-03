@@ -22,6 +22,13 @@ const HOW: Partial<Record<string, string>> = {
   analyse: 'Active le micro, lance la lecture, et accompagne : la 3ce et la 7e de chaque accord (la 5te pour un accord de 3 sons). Arrête la lecture pour avoir le résultat.'
 };
 
+/** Comment faire, pour l'impro guidée. */
+const IMPRO_HOW = [
+  '« Exemple » : l’appli improvise d’abord. Écoute ce qu’on attend.',
+  '« Jouer » : un décompte, puis la boucle tourne. Improvise à la main droite, sur les touches marquées.',
+  'Suis la consigne du passage. Il n’y a pas de fausse note sur les touches marquées : seuls comptent le temps, les silences et l’idée.'
+];
+
 /** Exercices d'oreille (écouteurs conseillés). */
 const EAR = ['ear', 'full', 'iv', 'bass'];
 
@@ -149,6 +156,13 @@ function ActivityRun({ step, act }: { step: Step; act: Activity }) {
       <h1 class="step-title">{act.title}</h1>
       <p class="intro">{act.sub}.</p>
       {act.run.kind === 'chart' && HOW[act.run.mode] ? <p class="ls-p">{HOW[act.run.mode]}</p> : null}
+      {act.run.kind === 'impro' ? (
+        <ol class="howto">
+          {IMPRO_HOW.map((h) => (
+            <li key={h}>{h}</li>
+          ))}
+        </ol>
+      ) : null}
       {act.run.kind === 'rythme' ? (
         <ol class="howto">
           {rythmeHow(act.run.exercise).map((h) => (
@@ -164,7 +178,7 @@ function ActivityRun({ step, act }: { step: Step; act: Activity }) {
       {act.where === 'piano' ? (
         <p class="muted small">
           {mic === 'on' ? 'Le micro écoute ton piano.' : 'Active le micro (en haut à droite) : il valide ce que tu joues. Sans micro, tu pourras valider toi-même.'}
-          {act.run.kind === 'comping' || act.run.kind === 'phrase' ? ' Mets un écouteur : sinon le micro entend l’accompagnement.' : ''}
+          {act.run.kind === 'comping' || act.run.kind === 'phrase' || act.run.kind === 'impro' ? ' Mets un écouteur : sinon le micro entend l’accompagnement.' : ''}
         </p>
       ) : EAR.includes(act.run.kind) || (act.run.kind === 'rythme' && (act.run.exercise === 'oreille' || act.run.exercise === 'style')) ? (
         <p class="muted small">Avec des écouteurs : c’est un exercice d’oreille.</p>

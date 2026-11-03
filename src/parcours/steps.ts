@@ -1,5 +1,5 @@
-// Le parcours : 11 étapes, du débutant à l'improvisation. Chaque étape : des leçons, des exercices dans le
-// métro (sans piano) et au piano (le micro valide), parfois un morceau. Les exercices réutilisent les briques
+// Le parcours : 12 étapes, du débutant à l'improvisation. Chaque étape : des leçons, des exercices dans le
+// métro (sans piano) et au piano (le micro valide), parfois un morceau, et une impro guidée dès l'étape 1. Les exercices réutilisent les briques
 // de l'appli avec un réglage fixé ici et un objectif clair.
 import type { VoicingType } from '../core/audio/voicing';
 import type { Order } from '../modules/flash/batch';
@@ -24,7 +24,9 @@ export type Run =
   | { kind: 'phrase'; line: string }
   | { kind: 'chart'; chart: string; mode: 'analyser' | 'memoire' | 'guide' | 'gammes' | 'analyse'; memLevel?: number }
   /** Rythme : niveau = variante (tenir le tempo) ou niveau de rythme ; au piano, le micro écoute les coups. */
-  | { kind: 'rythme'; exercise: RythmeExercise; level: number };
+  | { kind: 'rythme'; exercise: RythmeExercise; level: number }
+  /** Impro guidée sur une boucle (niveaux : src/modules/impro/impro.ts). */
+  | { kind: 'impro'; level: string };
 
 /** Quand l'exercice est validé. */
 export type Goal =
@@ -64,6 +66,8 @@ const T3: Goal = { kind: 'answers', n: 3, min: 2, takes: true };
 const T5: Goal = { kind: 'answers', n: 5, min: 3, takes: true };
 /** Oreille, natures imposées : 10 justes sur 12 (à deux réponses, le hasard ne suffit pas). */
 const S12: Goal = { kind: 'answers', n: 12, min: 10 };
+/** Impro guidée : 3 passages, 2 réussis. */
+const I3: Goal = { kind: 'answers', n: 3, min: 2, takes: true };
 /** Les 5 accords de 4 sons, dans l'ordre de la chaîne : de l'un au suivant, une note baisse d'un demi-ton. */
 const FIVE = ['maj7', '7', 'm7', 'm7b5', 'dim7'];
 const A = (id: string, title: string, sub: string, where: Where, run: Run, goal: Goal = Q10, optional = false): Activity => ({ id, title, sub, where, run, goal, optional });
@@ -72,13 +76,14 @@ export const STEPS: Step[] = [
   {
     id: 'notes',
     title: 'Notes et intervalles',
-    aim: 'Trouver les notes, compter tons et demi-tons, reconnaître les intervalles qui font les accords. Et taper un tempo régulier.',
-    lessons: ['clavier', 'intervalles'],
+    aim: 'Trouver les notes, compter tons et demi-tons, reconnaître les intervalles qui font les accords, taper un tempo régulier. Et improviser dès maintenant, sur les touches noires.',
+    lessons: ['clavier', 'intervalles', 'improviser'],
     activities: [
       A('n-lire', 'Lire les notes', 'Une note sur la portée, tu la trouves au clavier', 'metro', { kind: 'lecture', level: 1, answer: 'clavier' }),
       A('n-iv', 'Intervalles à l’oreille', '3ce mineure ou majeure, 4te, 5te, octave', 'metro', { kind: 'iv', level: 0 }),
       A('n-piano', 'Jouer les notes lues', 'Au piano : le micro vérifie la note', 'piano', { kind: 'lecture', level: 1, answer: 'piano' }),
       A('r-tempo', 'Tenir le tempo', 'Taper les 4 temps avec le métronome', 'metro', { kind: 'rythme', exercise: 'tempo', level: 0 }, T3),
+      A('n-impro', 'Improviser sur les touches noires', 'La boucle tourne, aucune fausse note possible : le temps, les silences, une idée', 'piano', { kind: 'impro', level: 'noires' }, I3),
       A('n-fa', 'La clé de fa', 'Les notes de la main gauche', 'metro', { kind: 'lecture', level: 2, answer: 'clavier' }, Q10, true)
     ]
   },
@@ -91,7 +96,8 @@ export const STEPS: Step[] = [
       A('t-build', 'Construire l’accord', 'Un symbole (Em, B♭…), tu touches ses 3 notes', 'metro', { kind: 'ear', mode: 'build', level: 0 }),
       A('t-ear', 'Majeur ou mineur ?', 'À l’oreille', 'metro', { kind: 'ear', mode: 'ear', level: 0 }),
       A('r-noires', 'Lire et taper un rythme', 'Des noires : l’écouter, le taper', 'metro', { kind: 'rythme', exercise: 'taper', level: 0 }, T5),
-      A('t-piano', 'Jouer les accords', 'Au piano, dans le renversement que tu veux', 'piano', { kind: 'flash', type: 'triad', order: 'random' })
+      A('t-piano', 'Jouer les accords', 'Au piano, dans le renversement que tu veux', 'piano', { kind: 'flash', type: 'triad', order: 'random' }),
+      A('t-impro', 'Phrases et silences', 'Sur C D E F G : 2 mesures de jeu, 2 mesures de silence', 'piano', { kind: 'impro', level: 'cinq' }, I3)
     ]
   },
   {
@@ -107,7 +113,8 @@ export const STEPS: Step[] = [
       A('r-ear0', 'Reconnaître un rythme', 'Des noires et des silences : l’entendre, le retrouver écrit', 'metro', { kind: 'rythme', exercise: 'oreille', level: 0 }),
       A('g-arm7', 'Armures : jusqu’à 7 ♯', 'Jusqu’à C♯ majeur', 'metro', { kind: 'armures', level: 1 }, Q10, true),
       A('v-iv', 'Les 12 intervalles', 'À l’oreille, en montant', 'metro', { kind: 'iv', level: 2 }, Q10, true),
-      A('g-piano', 'Enchaîner ii–V–I', 'En 3 sons, le renversement le plus proche', 'piano', { kind: 'flash', type: 'triad', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 })
+      A('g-piano', 'Enchaîner ii–V–I', 'En 3 sons, le renversement le plus proche', 'piano', { kind: 'flash', type: 'triad', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 }),
+      A('g-impro', 'La pentatonique de C', 'C D E G A sur I – VIm – IV – V', 'piano', { kind: 'impro', level: 'penta-c' }, I3)
     ]
   },
   {
@@ -124,7 +131,8 @@ export const STEPS: Step[] = [
       A('g-pop', 'Let It Be, phrase par phrase', 'Les degrés de chaque accord, puis la suite', 'metro', { kind: 'chart', chart: 'let-it-be', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
       A('r-24', 'Sur 2 et 4', 'Le clic compte les 4 temps, tu tapes 2 et 4 : la caisse claire de la pop', 'metro', { kind: 'rythme', exercise: 'tempo', level: 1 }, T3),
       A('c-renv', 'I – V – vi – IV renversés', 'Au piano, en 3 sons, la main bouge le moins possible', 'piano', { kind: 'flash', type: 'triad', order: 'pop' }, { kind: 'answers', n: 8, min: 6 }),
-      A('c-joue', 'Accompagner Let It Be', 'Au micro, avec basse et batterie : la 3ce et la 5te de chaque accord', 'piano', { kind: 'chart', chart: 'let-it-be', mode: 'analyse' }, { kind: 'listen', ratio: 0.8, chords: 12 })
+      A('c-joue', 'Accompagner Let It Be', 'Au micro, avec basse et batterie : la 3ce et la 5te de chaque accord', 'piano', { kind: 'chart', chart: 'let-it-be', mode: 'analyse' }, { kind: 'listen', ratio: 0.8, chords: 12 }),
+      A('c-impro', 'Improviser sur la suite de la pop', 'La pentatonique, une note de l’accord sur chaque 1er temps', 'piano', { kind: 'impro', level: 'penta-pop' }, I3)
     ]
   },
   {
@@ -145,23 +153,37 @@ export const STEPS: Step[] = [
       A('q-ear2', 'Les 5 accords', 'maj7, 7, m7, ø7 ou °7 : le but de l’étape', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: FIVE }, { kind: 'answers', n: 15, min: 12 }),
       A('r-clic24', 'Clic sur 2 et 4', 'Le clic sur 2 et 4 seulement : tu tapes les 4 temps', 'metro', { kind: 'rythme', exercise: 'tempo', level: 2 }, T3),
       A('q-piano', 'Shells : 1, 3, 7', 'Au piano, main gauche', 'piano', { kind: 'flash', type: 'shell', order: 'random', level: 2 }),
+      A('q-impro', 'Un seul accord : Dm7', 'Les touches blanches sur Dm7, avec un rythme imposé', 'piano', { kind: 'impro', level: 'dorien' }, I3),
       A('q-p3', 'maj7 ou m7 ?', '2 accords : la 3ce et la 7e changent', 'metro', { kind: 'ear', mode: 'ear', level: 1, set: ['maj7', 'm7'] }, S12, true),
       A('q-ear5r', 'Les 5, renversés', 'Les mêmes accords, la basse n’est plus toujours la fondamentale', 'metro', { kind: 'ear', mode: 'ear', level: 3, set: FIVE }, { kind: 'answers', n: 15, min: 12 }, true)
     ]
   },
   {
+    id: 'blues',
+    title: 'Le blues',
+    aim: 'La forme du blues (12 mesures, trois accords 7), le swing, et une première vraie impro avec la gamme blues.',
+    lessons: ['blues-simple', 'swing'],
+    activities: [
+      A('bl-analyse', 'Le blues, phrase par phrase', 'Trois phrases de 4 mesures : I7, IV7, V7', 'metro', { kind: 'chart', chart: 'blues-simple', mode: 'analyser' }, { kind: 'analyse', ratio: 0.66 }),
+      A('bl-mem', 'Le blues de mémoire', 'La moitié des accords cachés', 'metro', { kind: 'chart', chart: 'blues-simple', mode: 'memoire', memLevel: 1 }, { kind: 'memoire', ratio: 0.8 }),
+      A('r-croches', 'Taper des croches swing', 'Longue-courte : « dou-ba »', 'metro', { kind: 'rythme', exercise: 'taper', level: 1 }, T5),
+      A('bl-joue', 'Accompagner le blues', 'Au micro, avec basse et batterie : la 3ce et la 7e de chaque accord', 'piano', { kind: 'chart', chart: 'blues-simple', mode: 'analyse' }, { kind: 'listen', ratio: 0.8, chords: 12 }),
+      A('bl-impro', 'Improviser avec la gamme blues', 'F A♭ B♭ B C E♭ sur les 12 mesures', 'piano', { kind: 'impro', level: 'blues' }, I3)
+    ]
+  },
+  {
     id: 'iivi',
     title: 'Le ii–V–I',
-    aim: 'Reconnaître le ii–V–I partout : à la lecture, à l’oreille, dans la basse.',
-    lessons: ['tonalite', 'iiVI', 'swing'],
+    aim: 'Reconnaître le ii–V–I partout : à la lecture, à l’oreille, dans la basse. Et improviser dessus en visant les notes de l’accord.',
+    lessons: ['tonalite', 'iiVI'],
     activities: [
       A('i-ton', 'Les accords de la tonalité', 'En 4 sons : IΔ7, IIm7, V7…', 'metro', { kind: 'tonalite', level: 1 }),
       A('i-exp', 'Analyser des enchaînements', 'Degrés, ii–V, tonalité', 'metro', { kind: 'express', level: 1 }, { kind: 'answers', n: 12, min: 10 }),
       A('i-prog', 'Reconnaître les enchaînements', 'À l’oreille : ii–V–I, turnarounds', 'metro', { kind: 'ear', mode: 'prog', level: 1 }),
       A('i-bass', 'La basse des grilles', 'I, II, IV, V, VI', 'metro', { kind: 'bass', level: 1 }, { kind: 'answers', n: 20, min: 16 }),
-      A('r-croches', 'Taper des croches swing', 'Longue-courte : « dou-ba »', 'metro', { kind: 'rythme', exercise: 'taper', level: 1 }, T5),
       A('r-ear1', 'Reconnaître un rythme', 'Croches swing : l’entendre, le retrouver écrit', 'metro', { kind: 'rythme', exercise: 'oreille', level: 1 }),
-      A('i-piano', 'ii–V–I en shells', 'Au piano, dans toutes les tonalités', 'piano', { kind: 'flash', type: 'shell', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 })
+      A('i-piano', 'ii–V–I en shells', 'Au piano, dans toutes les tonalités', 'piano', { kind: 'flash', type: 'shell', order: 'iiVI' }, { kind: 'answers', n: 9, min: 7 }),
+      A('i-impro', 'Les notes de l’accord sur le 1er temps', 'Sur Dm7 – G7 – Cmaj7 : une cible à chaque mesure', 'piano', { kind: 'impro', level: 'cibles' }, I3)
     ]
   },
   {

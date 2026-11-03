@@ -18,6 +18,19 @@ notes: La forme la plus jouée en jam. I7 et IV7 sont des couleurs blues, puis i
 | B♭7 | B°7 | F7 | Am7 D7 |
 | Gm7 | C7 | F7 D7 | Gm7 C7 |
 `,
+  'blues-simple': `
+title: Blues simple en F
+subtitle: 12 mesures, trois accords 7
+key: F
+tempo: 100
+style: blues
+level: 1
+notes: Le blues de départ : I7, IV7, V7, en trois phrases de 4 mesures. La forme de tous les blues, avant les ii–V du blues jazz.
+[A]
+| F7 | F7 | F7 | F7 |
+| B♭7 | B♭7 | F7 | F7 |
+| C7 | B♭7 | F7 | C7 |
+`,
   'autumn-leaves': `
 title: Autumn Leaves
 subtitle: Standard, forme AAB, 32 mesures

@@ -9,6 +9,7 @@ import { chartById } from '../library/charts';
 import { improvPlan } from '../core/analysis/improv';
 import { storyOf } from '../core/analysis/story';
 import { quizOf } from '../modules/grilles/Story';
+import { IMPRO } from '../modules/impro/impro';
 
 // Stockage en mémoire (tests sous Node).
 const mem = new Map<string, string>();
@@ -62,6 +63,19 @@ describe('parcours : contenu', () => {
   });
   it('du rythme à chaque étape', () => {
     for (const s of STEPS) expect(s.activities.some((a) => a.run.kind === 'rythme' && !a.optional)).toBe(true);
+  });
+  it('improviser dès l’étape 1 : une impro guidée à chaque étape jusqu’au ii–V–I, des niveaux qui existent', () => {
+    const upTo = STEPS.findIndex((s) => s.id === 'iivi');
+    STEPS.slice(0, upTo + 1).forEach((s) => expect(s.activities.some((a) => a.run.kind === 'impro' && !a.optional), s.id).toBe(true));
+    for (const a of all) if (a.run.kind === 'impro') expect(IMPRO[a.run.level], a.id).toBeDefined();
+  });
+  it('le blues vient avant le ii–V–I', () => {
+    expect(STEPS.findIndex((s) => s.id === 'blues')).toBeLessThan(STEPS.findIndex((s) => s.id === 'iivi'));
+  });
+  it('renvois d’étape dans les leçons : tous résolus, au bon numéro', () => {
+    expect(JSON.stringify(LESSONS)).not.toMatch(/\{étapes?:/);
+    const n = STEPS.findIndex((s) => s.id === 'blues') + 1;
+    expect(JSON.stringify(LESSONS.find((l) => l.id === 'blues'))).toContain(`(étape ${n})`);
   });
 });
 

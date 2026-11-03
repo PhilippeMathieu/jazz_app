@@ -727,3 +727,12 @@
 .term.demo { cursor: default; }
 .term-card { display: flex; flex-direction: column; gap: var(--s2); }
 .row-wrap .term-card { padding: var(--s2) var(--s3) var(--s4); }
+
+/* ---------------------------------------------------------------- Impro guidée */
+.impro-head { display: flex; flex-direction: column; gap: var(--s1); }
+.impro-name { font-family: var(--display); font-weight: 600; font-size: 24px; line-height: 1.1; font-variation-settings: 'opsz' 28; }
+.impro-tip { margin-top: var(--s1); padding: var(--s2) var(--s3); border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 var(--r-md) var(--r-md) 0; }
+.impro-grid .comp-bar b { font-family: var(--display); font-size: 17px; }
+.comp-bar.rest { background: var(--surface-2); border-style: dashed; }
+.comp-bar.rest b { color: var(--faint); }
+.comp-bar.rest small { font-style: italic; }

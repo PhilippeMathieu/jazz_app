@@ -12,6 +12,7 @@ import { CompingRun } from '../modules/flash/Comping';
 import { PhraseRun } from '../modules/phrases/Phrases';
 import { ChartView } from '../modules/grilles/ChartView';
 import { RythmeRun } from '../modules/rythme/Rythme';
+import { ImproRun } from '../modules/impro/Impro';
 import { chartById } from '../library/charts';
 
 /** total : nombre de réponses de la série (pour l'affichage du compteur). where : au piano, le micro écoute. */
@@ -43,6 +44,8 @@ export function renderRun(run: Run, total: number, onExit: () => void, where: Wh
       const chart = chartById(run.chart);
       return chart ? <ChartView chart={chart} initialMode={run.mode} onBack={onExit} memLevel={run.memLevel} /> : null;
     }
+    case 'impro':
+      return <ImproRun level={run.level} onExit={onExit} />;
     case 'rythme':
       return <RythmeRun exercise={run.exercise} level={run.level} input={where === 'piano' ? 'mic' : 'tap'} onExit={onExit} />;
   }
