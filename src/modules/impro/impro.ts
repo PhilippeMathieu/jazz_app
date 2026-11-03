@@ -41,6 +41,8 @@ export interface ImproLevel {
   rhythm?: number[];
   /** Une note de l'accord sur le 1er temps de chaque mesure. */
   target?: boolean;
+  /** Ou seulement sur ces mesures (à partir de 0) : les mesures-pivots, où l'on entend si l'on suit la grille. */
+  targetBars?: number[];
   /** Consignes, une par passage (la dernière revient ensuite). */
   tips: string[];
   need: ImproNeed;
@@ -141,12 +143,14 @@ export const IMPRO: Record<string, ImproLevel> = {
     feel: 'swing',
     tempo: 100,
     bars: 12,
+    targetBars: [4, 8],
     tips: [
       'D’abord 3 notes : F, A♭, B♭. Puis ajoute les autres.',
+      'Mesures 5 et 9 : une note bleue sur le 1er temps. C’est là qu’on entend si tu suis la grille.',
       'Le B ne se tient pas : il glisse vers B♭ ou vers C.',
       'Une phrase de 2 mesures sur F7, la même sur B♭7 : c’est ça, le blues.'
     ],
-    need: { notes: 16, inScale: 85, breaths: 3 }
+    need: { notes: 16, inScale: 85, breaths: 3, targets: 50 }
   },
   cibles: {
     id: 'cibles',
@@ -168,6 +172,10 @@ export const IMPRO: Record<string, ImproLevel> = {
 };
 
 export const scaleOf = (l: ImproLevel) => l.names.map((n) => PC[n]);
+
+/** Mesures où l'on vise une note de l'accord sur le 1er temps (aucune si le niveau n'a pas de cibles). */
+export const targetBarsOf = (l: ImproLevel): number[] =>
+  l.targetBars ?? (l.target ? Array.from({ length: l.bars }, (_, b) => b).filter((b) => !l.rests?.includes(b)) : []);
 
 /** Les accords du passage, mesure par mesure. */
 export function barsOf(l: ImproLevel): Chord[] {
@@ -234,9 +242,9 @@ export function scoreTake(l: ImproLevel, notes: TakeNote[], onsets: number[], sp
     const targets = rhythmBeats(l, swing).map((b) => b * spb);
     r.rhythm = pct(scoreTiming(targets, onsets, tolMs, 0, 0.25).good, targets.length);
   }
-  if (l.target) {
+  if (l.target || l.targetBars) {
     const chords = barsOf(l);
-    const bars = chords.map((_, b) => b).filter((b) => !l.rests?.includes(b));
+    const bars = targetBarsOf(l);
     const hit = bars.filter((b) => {
       const pcs = chordPcs(chords[b]);
       return ns.some((n) => n.t >= b * bar - 0.35 * spb && n.t < b * bar + 0.6 * spb && pcs.includes(mod(n.midi, 12)));
@@ -283,7 +291,8 @@ export function exampleLine(l: ImproLevel, swing: number, rng: () => number = Ma
     // Question-réponse : on ne joue que sur les mesures de jeu ; sinon une phrase par paire de mesures.
     const base = l.rhythm ?? EX_RHYTHMS[Math.floor(rng() * EX_RHYTHMS.length)];
     // Avec des cibles : une note sur chaque 1er temps.
-    const rhythm = l.target ? [...new Set([0, 8, ...base])].sort((x, y) => x - y) : base;
+    const aimed = targetBarsOf(l);
+    const rhythm = aimed.length ? [...new Set([...(aimed.includes(two * 2) ? [0] : []), ...(aimed.includes(two * 2 + 1) ? [8] : []), ...base])].sort((x, y) => x - y) : base;
     const eighths = rhythm.filter((e) => {
       const b = two * 2 + Math.floor(e / 8);
       return b < l.bars && !l.rests?.includes(b);
@@ -295,7 +304,7 @@ export function exampleLine(l: ImproLevel, swing: number, rng: () => number = Ma
       const pcs = chordPcs(chords[b]).filter((p) => scale.includes(p));
       const downbeat = e % 8 === 0;
       const last = k === eighths.length - 1;
-      if ((downbeat && l.target) || last) {
+      if ((downbeat && aimed.includes(b)) || last) {
         // Sur le 1er temps (ou en fin de phrase) : la note de l'accord la plus proche.
         const cands = pool.map((m, j) => ({ m, j })).filter((x) => pcs.includes(mod(x.m, 12)));
         if (cands.length) i = cands.reduce((a, x) => (Math.abs(x.j - i) < Math.abs(a.j - i) ? x : a)).j;

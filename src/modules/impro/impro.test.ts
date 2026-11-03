@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { IMPRO, barsOf, exampleLine, rhythmBeats, scaleOf, scoreTake } from './impro';
+import { IMPRO, barsOf, exampleLine, rhythmBeats, scaleOf, scoreTake, targetBarsOf } from './impro';
 import { chordPcs } from '../../core/theory/chords';
 import { mod } from '../../core/theory/notes';
 
@@ -17,8 +17,8 @@ describe('impro guidée', () => {
   });
 
   it('les cibles sont jouables : chaque accord a une note de l’accord dans les notes permises', () => {
-    for (const l of Object.values(IMPRO).filter((x) => x.target)) {
-      for (const c of barsOf(l)) expect(chordPcs(c).some((p) => scaleOf(l).includes(p))).toBe(true);
+    for (const l of Object.values(IMPRO).filter((x) => x.target || x.targetBars)) {
+      for (const c of targetBarsOf(l).map((b) => barsOf(l)[b])) expect(chordPcs(c).some((p) => scaleOf(l).includes(p))).toBe(true);
     }
   });
 
@@ -33,7 +33,7 @@ describe('impro guidée', () => {
         expect(r.inScale, l.id).toBe(100);
         if (l.rests) expect(r.rests, l.id).toBe(100);
         if (l.rhythm) expect(r.rhythm, l.id).toBe(100);
-        if (l.target) expect(r.targets, l.id).toBe(100);
+        if (l.target || l.targetBars) expect(r.targets, l.id).toBe(100);
         if (l.need.breaths) expect(r.breaths, l.id).toBeGreaterThanOrEqual(l.need.breaths);
         expect(r.notes, l.id).toBeGreaterThanOrEqual(l.need.notes);
         expect(r.ok, `${l.id} ${r.fix.join(' | ')}`).toBe(true);

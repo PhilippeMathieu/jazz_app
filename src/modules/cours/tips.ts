@@ -31,6 +31,10 @@ const V3: Step = [4, 7, 'maj', 'V'];
 const VI3: Step = [5, 9, 'min', 'VIm'];
 const V: Step = [4, 7, '7', 'V7'];
 const I: Step = [0, 0, 'maj7', 'IΔ7'];
+// Le blues : trois accords 7.
+const B7I: Step = [0, 0, '7', 'I7'];
+const B7IV: Step = [3, 5, '7', 'IV7'];
+const B7V: Step = [4, 7, '7', 'V7'];
 
 // Intervalles usuels depuis la fondamentale de l'accord.
 const R: Rel = [0, 0];
@@ -222,6 +226,17 @@ export const TIPS: Tip[] = [
     mode: 'major',
     chords: [V3, I3],
     line: [[M3, P5, R], [R, M3, P5]],
+    together: true,
+    left: 'octave',
+    gap: 1.6
+  },
+  {
+    id: 'blues-37',
+    title: 'Le blues avec deux notes',
+    rule: 'Sur C7, joue B♭ et E : la 7e en bas, la 3ce au-dessus. Vers F7, chaque note descend d’un demi-ton : A et E♭, la 3ce et la 7e de F7. Retour sur C7 : elles remontent. Vers G7, elles montent d’un demi-ton : B et F. Deux notes et la basse, et tout le blues sonne.',
+    mode: 'major',
+    chords: [B7I, B7IV, B7I, B7V],
+    line: [[m7, M3], [M3, m7], [m7, M3], [M3, m7]],
     together: true,
     left: 'octave',
     gap: 1.6

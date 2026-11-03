@@ -16,7 +16,7 @@ import { MicPill } from '../../ui/MicPill';
 import { PlayIcon } from '../../ui/icons';
 import { useWakeLock } from '../../ui/wakeLock';
 import { micOffset } from '../reglages/Calibrate';
-import { IMPRO, ImproLevel, TakeNote, TakeResult, barsOf, exampleLine, scaleOf, scoreTake, tipOf } from './impro';
+import { IMPRO, ImproLevel, TakeNote, TakeResult, barsOf, exampleLine, scaleOf, scoreTake, targetBarsOf, tipOf } from './impro';
 
 type Phase = 'ready' | 'count' | 'play' | 'result';
 
@@ -163,7 +163,7 @@ function Run({ l, onEnd }: { l: ImproLevel; onEnd: () => void }) {
   const shown = chords[Math.max(0, curBar)];
   const marks: Record<number, Mark> = {};
   const labels: Record<number, string> = {};
-  const targets = l.target ? chordPcs(shown) : [];
+  const targets = targetBarsOf(l).includes(Math.max(0, curBar)) ? chordPcs(shown) : [];
   for (let m = LO; m <= HI; m++) {
     const i = scale.indexOf(mod(m, 12));
     if (i < 0) continue;

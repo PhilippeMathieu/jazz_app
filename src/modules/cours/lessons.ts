@@ -962,6 +962,23 @@ export const PARTS: Part[] = [
             text: 'Sur F7, A♭ frotte avec la 3ce, A : c’est voulu, c’est le cri du blues. Au piano, on glisse souvent de A♭ à A, comme un chanteur.'
           },
           { t: 'tip', text: 'Une phrase de 2 mesures sur F7, puis la même sur B♭7 : la phrase ne change pas, l’accord en dessous si. C’est tout le jeu du blues.' },
+          { t: 'h', text: 'Au piano : deux notes par accord' },
+          {
+            t: 'p',
+            text: 'Pour accompagner un blues, pas besoin d’accords pleins : la **3ce et la 7e** suffisent, avec la basse à la main gauche. D’un accord à l’autre, chaque doigt bouge d’un demi-ton, ou ne bouge pas.'
+          },
+          { t: 'astuce', id: 'blues-37' },
+          { t: 'h', text: 'La main gauche qui marche' },
+          {
+            t: 'table',
+            head: ['Temps', 'Note de la basse', 'En F7, vers B♭7'],
+            rows: [
+              ['1', 'La fondamentale', 'F'],
+              ['2 et 3', 'Des notes de l’accord (3ce, 5te) ou de la gamme', 'A, C'],
+              ['4', 'Un demi-ton au-dessus ou en dessous de la fondamentale suivante', 'B (ou A), qui mène à B♭']
+            ]
+          },
+          { t: 'tip', text: 'Commence par la fondamentale en blanches, puis en noires. Le demi-ton du 4e temps vient en dernier : c’est lui qui donne l’élan.' },
           {
             t: 'quiz',
             q: 'Mesure 5 d’un blues en F :',

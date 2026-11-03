@@ -120,6 +120,53 @@ notes: Un seul accord pendant 8 mesures : dorien de ré, puis dorien de mi♭ au
 | Dm7 | % | % | % |
 | % | % | % | % |
 `,
+  'maiden-voyage': `
+title: Maiden Voyage
+subtitle: Modal, accords sus, forme AABA, 32 mesures
+key: D
+tempo: 100
+style: bossa
+level: 1
+notes: Quatre accords sus, 4 mesures chacun : D7sus4 (Am7 sur D), F7sus4 (Cm7 sur F), E♭7sus4 (B♭m7 sur E♭) au pont, puis C♯m7. Quatre gammes doriennes à retenir ; des phrases longues et chantantes plutôt que des notes rapides.
+[A]
+| D7sus4 | % | % | % |
+| F7sus4 | % | % | % |
+[A]
+| D7sus4 | % | % | % |
+| F7sus4 | % | % | % |
+[B]
+| E♭7sus4 | % | % | % |
+| C♯m7 | % | % | % |
+[A]
+| D7sus4 | % | % | % |
+| F7sus4 | % | % | % |
+`,
+  doxy: `
+title: Doxy
+subtitle: Swing, 16 mesures
+key: B♭
+tempo: 120
+style: swing
+level: 1
+notes: Un thème de 16 mesures tout en accords 7 : B♭7 A♭7, puis une chaîne de dominantes G7 C7 F7 qui ramène à B♭7. Au milieu, E♭7 (le IV) et le diminué E°7. La gamme blues de B♭ marche partout ; ajoute les notes de chaque accord pour suivre la grille.
+[A]
+| B♭7 A♭7 | G7 | C7 F7 | B♭7 |
+| B♭7 A♭7 | G7 | C7 | F7 |
+[B]
+| B♭7 | % | E♭7 | E°7 |
+| B♭7 A♭7 | G7 | C7 F7 | B♭7 |
+`,
+  'iii-vi-ii-v': `
+title: III–VI–II–V
+subtitle: Grille d'exercice, 4 mesures en boucle
+key: D♭
+tempo: 108
+style: swing
+level: 2
+notes: Fm7 B♭7 E♭m7 A♭7 : le iii–VI–ii–V de D♭, une phrase de 4 mesures qu'on retrouve dans beaucoup de standards (fin de pont, turnaround). Vise la 3ce de chaque accord sur le 1er ou le 3e temps.
+[A]
+| Fm7 | B♭7 | E♭m7 | A♭7 |
+`,
   'a-train': `
 title: Take the A Train
 subtitle: Standard, forme AABA, 32 mesures
