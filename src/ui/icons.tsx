@@ -7,6 +7,9 @@ export const PlayIcon = () => (
 export const StopIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" /></svg>
 );
+export const PauseIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" /><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" /></svg>
+);
 export const BackIcon = () => (
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" {...S} stroke-width={2.2} /></svg>
 );

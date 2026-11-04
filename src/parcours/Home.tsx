@@ -100,6 +100,13 @@ export function Home() {
             </span>
             <ChevronIcon />
           </a>
+          <a class="row" href="#/bandes">
+            <span class="row-main">
+              <span class="row-title">Bandes-son</span>
+              <span class="row-sub">Tes play-alongs Aebersold, avec la tonalité en cours et les notes de la gamme</span>
+            </span>
+            <ChevronIcon />
+          </a>
           <a class="row" href="#/lexique">
             <span class="row-main">
               <span class="row-title">Lexique</span>

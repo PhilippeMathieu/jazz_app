@@ -19,6 +19,7 @@ import { RythmeRun } from './modules/rythme/Rythme';
 import { chartById } from './library/charts';
 import { lessonById } from './modules/cours/lessons';
 import { Lexique } from './modules/cours/Lexique';
+import { BandesList, BandesPlayer } from './modules/bandes/Bandes';
 
 export function App() {
   const [page, a, b] = useRoute();
@@ -45,6 +46,7 @@ export function App() {
   if (page === 'revoir' && (a === 'rythme' || a === 'style')) return <RythmeRun key={a} exercise={a === 'rythme' ? 'oreille' : 'style'} level={1} duel onExit={() => go('/')} />;
   if (page === 'revoir' && a) return <OreilleRun key={a} mode={a as OreilleMode} level={4} duel onExit={() => go('/')} />;
   if (page === 'lexique') return <Lexique />;
+  if (page === 'bandes') return a ? <BandesPlayer key={a} id={a} /> : <BandesList />;
   if (page === 'morceaux') return <ChartList />;
   if (page === 'importer') return <Import />;
   if (page === 'grille') {

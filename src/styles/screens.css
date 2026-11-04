@@ -736,3 +736,24 @@
 .comp-bar.rest { background: var(--surface-2); border-style: dashed; }
 .comp-bar.rest b { color: var(--faint); }
 .comp-bar.rest small { font-style: italic; }
+
+/* ---------------------------------------------------------------- Bandes-son */
+.bandes .row.absent { color: var(--muted); pointer-events: none; }
+.bandes .row.absent .row-title { color: var(--muted); }
+.bandes-vol { margin: -4px 0 var(--s2); }
+.bandes label.btn { cursor: pointer; }
+.bp-now { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); }
+.bp-cur { display: flex; align-items: baseline; gap: var(--s3); flex-wrap: wrap; }
+.bp-sym { font-size: 56px; line-height: 1; color: var(--accent); }
+.bp-scale { font-style: italic; color: var(--muted); }
+.bp-meta { display: flex; flex-direction: column; gap: 2px; font-size: var(--t-sec); }
+.bp-next b { font-size: 18px; }
+.bp-beats { display: flex; gap: 6px; margin-top: var(--s1); }
+.bp-beats i { width: 18px; height: 6px; border-radius: 3px; background: var(--line); }
+.bp-beats i.on { background: var(--accent); }
+.bp-keys { display: flex; flex-wrap: wrap; gap: 6px; }
+.bp-keys .pchip { min-width: 44px; }
+.bp-grid .comp-bar { min-height: 44px; text-align: left; font: inherit; color: inherit; }
+.bp-grid .comp-bar b { font-family: var(--display); font-size: 16px; }
+.bp-time { text-align: right; margin-top: -8px; }
+.btn.on { border-color: var(--accent); color: var(--accent); }
